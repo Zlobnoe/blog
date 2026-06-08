@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лето — 6 способов</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;700&family=Manrope:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;
+  --surface:#171b26;
+  --border:#262c3d;
+  --text:#e8eaf0;
+  --muted:#6b7280;
+  --accent:#f5a623;
+  --accent2:#e85d4a;
+  --accent3:#4ade80;
+  --radius:16px;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Manrope',sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:40px 20px 60px;
+  gap:0;
+}
+
+/* Header */
+.header{text-align:center;margin-bottom:48px}
+.title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(1.4rem,4vw,2.2rem);letter-spacing:-.03em;color:var(--text)}
+.title span{color:var(--accent)}
+.subtitle{font-size:.85rem;color:var(--muted);margin-top:8px;letter-spacing:.02em}
+
+/* Tab switcher */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:40px;background:var(--surface);padding:6px;border-radius:14px;border:1px solid var(--border)}
+.tab{padding:8px 16px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Manrope',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:.02em}
+.tab.active{background:var(--accent);color:#0f1117}
+.tab:hover:not(.active){color:var(--text);background:var(--border)}
+
+/* Card */
+.card{width:min(640px,100%);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px 36px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 0%,rgba(245,166,35,.04) 0%,transparent 60%);pointer-events:none}
+
+/* Shared info */
+.info-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px}
+.days-count{font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(3rem,10vw,5rem);letter-spacing:-.04em;line-height:1;color:var(--accent)}
+.days-count sub{font-size:.3em;font-weight:300;color:var(--muted);font-family:'Manrope',sans-serif;letter-spacing:0;vertical-align:baseline;margin-left:4px}
+.info-aside{text-align:right}
+.info-aside .lbl{font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.info-aside .val{font-size:1.1rem;font-weight:600;color:var(--text);margin-top:2px}
+
+/* Viz container */
+.viz{min-height:200px;display:flex;align-items:center;justify-content:center}
+
+/* Bottom meta */
+.meta-row{display:flex;justify-content:space-between;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+.meta-item{text-align:center}
+.meta-val{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text)}
+.meta-key{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
+
+/* ===================== VIZ 1: PROGRESS BAR ===================== */
+#v1 .prog-wrap{width:100%}
+#v1 .prog-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:10px;letter-spacing:.04em}
+#v1 .prog-track{height:28px;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;position:relative;border:1px solid var(--border)}
+#v1 .prog-fill{height:100%;background:linear-gradient(90deg,#e85d4a,var(--accent),#f0c060);border-radius:8px;transition:width 1.8s cubic-bezier(.16,1,.3,1);width:0;position:relative}
+#v1 .prog-fill::after{content:attr(data-pct);position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.75rem;font-weight:700;color:rgba(0,0,0,.7);font-family:'Unbounded',sans-serif}
+#v1 .prog-segments{position:absolute;inset:0;display:flex;pointer-events:none}
+#v1 .seg{flex:1;border-right:1px solid rgba(255,255,255,.06)}
+#v1 .prog-months{display:flex;justify-content:space-around;font-size:.65rem;color:var(--muted);margin-top:8px;letter-spacing:.06em;text-transform:uppercase}
+#v1 .tick-row{display:flex;justify-content:space-between;padding:0 0;margin-bottom:4px}
+#v1 .tick{width:1px;height:6px;background:var(--border)}
+#v1 .tick.major{height:10px;background:var(--muted)}
+
+/* ===================== VIZ 2: GRID ===================== */
+#v2 .grid-wrap{width:100%}
+#v2 .month-label{font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+#v2 .month-block{margin-bottom:16px}
+#v2 .day-grid{display:flex;flex-wrap:wrap;gap:4px}
+#v2 .day{
+  width:calc((100% - 29*4px) / 30);
+  min-width:14px;
+  aspect-ratio:1;
+  border-radius:3px;
+  border:1px solid var(--border);
+  position:relative;
+  transition:transform .1s;
+  cursor:default;
+}
+#v2 .day:hover{transform:scale(1.3);z-index:2}
+#v2 .day.past{background:var(--accent);border-color:var(--accent)}
+#v2 .day.past::after{content:'';position:absolute;inset:2px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cline x1='0' y1='0' x2='10' y2='10' stroke='rgba(0,0,0,.3)' stroke-width='1.5'/%3E%3C/svg%3E")}
+#v2 .day.today{border-color:#fff;box-shadow:0 0 8px rgba(245,166,35,.6)}
+#v2 .day.future{background:rgba(255,255,255,.03)}
+
+/* ===================== VIZ 3: RADIAL ===================== */
+#v3 .radial-wrap{position:relative;width:240px;height:240px;margin:0 auto}
+#v3 .radial-wrap svg{width:100%;height:100%}
+#v3 .radial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+#v3 .r-num{font-family:'Unbounded',sans-serif;font-size:2.8rem;font-weight:700;color:var(--accent);line-height:1}
+#v3 .r-sub{font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+#v3 .arc-labels{display:flex;justify-content:space-between;width:240px;margin:0 auto;font-size:.65rem;color:var(--muted);padding:0 8px}
+
+/* ===================== VIZ 4: BEADS ===================== */
+#v4 .beads-wrap{width:100%;overflow:hidden}
+#v4 .month-row{margin-bottom:20px}
+#v4 .month-name{font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+#v4 .bead-line{display:flex;align-items:center;gap:0}
+#v4 .bead{
+  flex:1;
+  height:20px;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+#v4 .bead::before{
+  content:'';
+  position:absolute;
+  top:50%;left:0;right:0;
+  height:2px;
+  background:var(--border);
+  transform:translateY(-50%);
+  z-index:0;
+}
+#v4 .bead-dot{
+  width:14px;height:14px;
+  border-radius:50%;
+  border:2px solid var(--border);
+  background:var(--bg);
+  position:relative;z-index:1;
+  transition:all .3s;
+  flex-shrink:0;
+}
+#v4 .bead.past .bead-dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px rgba(245,166,35,.4)}
+#v4 .bead.today .bead-dot{background:#fff;border-color:#fff;box-shadow:0 0 10px rgba(255,255,255,.6);transform:scale(1.3)}
+#v4 .bead.future .bead-dot{background:transparent;border-color:var(--border)}
+
+/* ===================== VIZ 5: SUN RAYS ===================== */
+#v5 .sun-wrap{position:relative;width:260px;height:260px;margin:0 auto}
+#v5 .sun-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+#v5 .s-num{font-family:'Unbounded',sans-serif;font-size:2.4rem;font-weight:700;color:var(--accent);line-height:1}
+#v5 .s-sub{font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+
+/* ===================== VIZ 6: HOURGLASS ===================== */
+#v6 .hg-wrap{position:relative;width:160px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+#v6 .hg-svg{width:160px}
+#v6 .hg-label-top{font-size:.65rem;color:var(--muted);letter-spacing:.08em;text-align:center;margin-bottom:6px;text-transform:uppercase}
+#v6 .hg-label-bot{font-size:.65rem;color:var(--muted);letter-spacing:.08em;text-align:center;margin-top:6px;text-transform:uppercase}
+#v6 .hg-num-row{display:flex;justify-content:space-between;width:100%;margin-top:16px;font-size:.8rem}
+#v6 .hg-piece{text-align:center}
+#v6 .hg-piece span{display:block;font-family:'Unbounded',sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent)}
+#v6 .hg-piece small{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+
+/* panel visibility */
+.panel{display:none}
+.panel.active{display:flex;flex-direction:column;align-items:center;width:100%}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Лето <span id="yr-head"></span></div>
+  <div class="subtitle">6 способов посмотреть на прожитые дни</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="setTab(0)">① Полоска</button>
+  <button class="tab" onclick="setTab(1)">② Квадратики</button>
+  <button class="tab" onclick="setTab(2)">③ Циферблат</button>
+  <button class="tab" onclick="setTab(3)">④ Бусины</button>
+  <button class="tab" onclick="setTab(4)">⑤ Солнце</button>
+  <button class="tab" onclick="setTab(5)">⑥ Часы</button>
+</div>
+
+<div class="card">
+
+  <!-- shared top -->
+  <div class="info-row">
+    <div>
+      <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Прошло дней</div>
+      <div class="days-count"><span id="dc">0</span><sub>из 92</sub></div>
+    </div>
+    <div class="info-aside">
+      <div class="lbl">сегодня</div>
+      <div class="val" id="today-display">—</div>
+    </div>
+  </div>
+
+  <!-- VIZ 1: Progress bar -->
+  <div class="panel active" id="panel-0">
+    <div class="viz" id="v1" style="display:block;width:100%">
+      <div class="prog-wrap">
+        <div class="tick-row" id="tick-row"></div>
+        <div class="prog-track">
+          <div class="prog-segments" id="seg-row"></div>
+          <div class="prog-fill" id="pf1" data-pct="0%"></div>
+        </div>
+        <div class="prog-months">
+          <span>Июнь</span><span>Июль</span><span>Август</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIZ 2: Grid -->
+  <div class="panel" id="panel-1">
+    <div class="viz" id="v2" style="display:block;width:100%">
+      <div class="grid-wrap" id="grid-wrap"></div>
+    </div>
+  </div>
+
+  <!-- VIZ 3: Radial -->
+  <div class="panel" id="panel-2">
+    <div class="viz" id="v3" style="flex-direction:column;gap:8px">
+      <div class="radial-wrap">
+        <svg viewBox="0 0 240 240" fill="none">
+          <!-- bg circle -->
+          <circle cx="120" cy="120" r="100" stroke="rgba(255,255,255,.05)" stroke-width="18"/>
+          <!-- month separators -->
+          <line x1="120" y1="20" x2="120" y2="36" stroke="var(--border)" stroke-width="2"/>
+          <line id="r-sep1" x1="" y1="" x2="" y2="" stroke="var(--border)" stroke-width="2"/>
+          <line id="r-sep2" x1="" y1="" x2="" y2="" stroke="var(--border)" stroke-width="2"/>
+          <!-- progress arc -->
+          <circle id="r-arc" cx="120" cy="120" r="100" stroke="url(#rg)" stroke-width="18" stroke-linecap="round"
+            stroke-dasharray="628.32" stroke-dashoffset="628.32"
+            transform="rotate(-90 120 120)" style="transition:stroke-dashoffset 2s cubic-bezier(.16,1,.3,1)"/>
+          <defs>
+            <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#e85d4a"/>
+              <stop offset="100%" stop-color="#f5a623"/>
+            </linearGradient>
+          </defs>
+          <!-- tick marks -->
+          <g id="r-ticks"></g>
+        </svg>
+        <div class="radial-center">
+          <div class="r-num" id="r-num">0</div>
+          <div class="r-sub">дней</div>
+        </div>
+      </div>
+      <div class="arc-labels"><span>1 июня</span><span id="r-pct">0%</span><span>31 авг.</span></div>
+    </div>
+  </div>
+
+  <!-- VIZ 4: Beads -->
+  <div class="panel" id="panel-3">
+    <div class="viz" id="v4" style="display:block;width:100%">
+      <div class="beads-wrap" id="beads-wrap"></div>
+    </div>
+  </div>
+
+  <!-- VIZ 5: Sun rays -->
+  <div class="panel" id="panel-4">
+    <div class="viz" id="v5" style="flex-direction:column;gap:8px">
+      <div class="sun-wrap">
+        <svg id="sun-svg" viewBox="0 0 260 260" width="260" height="260"></svg>
+        <div class="sun-center">
+          <div class="s-num" id="s-num">0</div>
+          <div class="s-sub">дней</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIZ 6: Hourglass -->
+  <div class="panel" id="panel-5">
+    <div class="viz" id="v6" style="flex-direction:column">
+      <div class="hg-wrap">
+        <div class="hg-label-top">Осталось</div>
+        <svg class="hg-svg" id="hg-svg" viewBox="0 0 160 200" fill="none"></svg>
+        <div class="hg-label-bot">Прошло</div>
+        <div class="hg-num-row">
+          <div class="hg-piece"><span id="hg-past">0</span><small>прошло</small></div>
+          <div class="hg-piece"><span id="hg-left">92</span><small>осталось</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- shared bottom meta -->
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-val" id="m-pct">0%</div><div class="meta-key">прошло</div></div>
+    <div class="meta-item"><div class="meta-val" id="m-left">—</div><div class="meta-key">осталось дней</div></div>
+    <div class="meta-item"><div class="meta-val" id="m-week">—</div><div class="meta-key">неделя лета</div></div>
+  </div>
+
+</div>
+
+<script>
+// ─── Data ───────────────────────────────────────────────────────────────────
+const now = new Date();
+const Y = now.getFullYear();
+const summerStart = new Date(Y, 5, 1);
+const summerEnd   = new Date(Y, 7, 31, 23, 59, 59);
+const TOTAL = 92;
+const MONTHS = [
+  {name:'Июнь', days:30},
+  {name:'Июль', days:31},
+  {name:'Август', days:31}
+];
+
+let elapsed = 0, pct = 0, left = TOTAL;
+if(now >= summerStart && now <= summerEnd){
+  elapsed = Math.floor((now - summerStart)/86400000)+1;
+  pct = Math.round(elapsed/TOTAL*100);
+  left = TOTAL - elapsed;
+} else if(now > summerEnd){
+  elapsed = TOTAL; pct = 100; left = 0;
+}
+
+// ─── Shared UI ──────────────────────────────────────────────────────────────
+document.getElementById('yr-head').textContent = Y;
+document.getElementById('today-display').textContent =
+  now.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+document.getElementById('m-pct').textContent = pct+'%';
+document.getElementById('m-left').textContent = left;
+document.getElementById('m-week').textContent = elapsed ? Math.ceil(elapsed/7) : '—';
+
+function animNum(el, t, dur){
+  const st=performance.now();
+  (function f(n){
+    const p=Math.min((n-st)/dur,1), e=1-Math.pow(1-p,4);
+    el.textContent=Math.round(t*e);
+    if(p<1)requestAnimationFrame(f); else el.textContent=t;
+  })(performance.now());
+}
+animNum(document.getElementById('dc'), elapsed, 1200);
+
+// ─── Tab switching ───────────────────────────────────────────────────────────
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+const rendered = new Set();
+function setTab(i){
+  tabs.forEach((t,j)=>t.classList.toggle('active',j===i));
+  panels.forEach((p,j)=>p.classList.toggle('active',j===i));
+  if(!rendered.has(i)){ rendered.add(i); renderViz(i); }
+}
+
+// ─── VIZ 1: Progress Bar ─────────────────────────────────────────────────────
+function renderV1(){
+  // Ticks
+  const tr = document.getElementById('tick-row');
+  for(let i=0;i<=TOTAL;i++){
+    const t=document.createElement('div');
+    t.className='tick'+(i===0||i===30||i===61||i===TOTAL?' major':'');
+    tr.appendChild(t);
+  }
+  // Segments (month dividers)
+  const sr = document.getElementById('seg-row');
+  for(let i=0;i<3;i++){
+    const s=document.createElement('div');
+    s.className='seg';
+    s.style.flex=['30','31','31'][i];
+    sr.appendChild(s);
+  }
+  const pf = document.getElementById('pf1');
+  pf.setAttribute('data-pct', pct+'%');
+  setTimeout(()=>pf.style.width=pct+'%', 200);
+}
+
+// ─── VIZ 2: Grid ─────────────────────────────────────────────────────────────
+function renderV2(){
+  const wrap = document.getElementById('grid-wrap');
+  wrap.innerHTML='';
+  let dayIdx = 0;
+  MONTHS.forEach(({name,days},mi)=>{
+    const mb = document.createElement('div');
+    mb.className='month-block';
+    const lbl = document.createElement('div');
+    lbl.className='month-label';
+    lbl.textContent = name;
+    mb.appendChild(lbl);
+    const grid = document.createElement('div');
+    grid.className='day-grid';
+    for(let d=0;d<days;d++){
+      dayIdx++;
+      const cell=document.createElement('div');
+      cell.className='day';
+      if(dayIdx<elapsed) cell.classList.add('past');
+      else if(dayIdx===elapsed) cell.classList.add('today');
+      else cell.classList.add('future');
+      grid.appendChild(cell);
+    }
+    mb.appendChild(grid);
+    wrap.appendChild(mb);
+  });
+}
+
+// ─── VIZ 3: Radial ───────────────────────────────────────────────────────────
+function renderV3(){
+  // Arc
+  const circ=628.32;
+  const arc=document.getElementById('r-arc');
+  setTimeout(()=>arc.style.strokeDashoffset=circ*(1-pct/100),200);
+  // Tick marks on the circle
+  const tg=document.getElementById('r-ticks');
+  for(let i=0;i<TOTAL;i++){
+    const angle=(i/TOTAL)*360-90;
+    const rad=angle*Math.PI/180;
+    const isMajor=(i===0||i===30||i===61);
+    const r1=isMajor?88:91, r2=isMajor?112:109;
+    const x1=120+r1*Math.cos(rad), y1=120+r1*Math.sin(rad);
+    const x2=120+r2*Math.cos(rad), y2=120+r2*Math.sin(rad);
+    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+    l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+    l.setAttribute('stroke',isMajor?'rgba(255,255,255,.3)':'rgba(255,255,255,.1)');
+    l.setAttribute('stroke-width',isMajor?'2':'1');
+    tg.appendChild(l);
+  }
+  // Month separators
+  [[0,'r-sep1'],[30,'r-sep2']].forEach(([idx,id])=>{
+    const angle=(idx/TOTAL)*360-90;
+    const rad=angle*Math.PI/180;
+    const el=document.getElementById(id);
+    const r1=84,r2=116;
+    el.setAttribute('x1',120+r1*Math.cos(rad));el.setAttribute('y1',120+r1*Math.sin(rad));
+    el.setAttribute('x2',120+r2*Math.cos(rad));el.setAttribute('y2',120+r2*Math.sin(rad));
+  });
+  animNum(document.getElementById('r-num'), elapsed, 1200);
+  document.getElementById('r-pct').textContent=pct+'%';
+}
+
+// ─── VIZ 4: Beads ────────────────────────────────────────────────────────────
+function renderV4(){
+  const wrap=document.getElementById('beads-wrap');
+  wrap.innerHTML='';
+  let idx=0;
+  MONTHS.forEach(({name,days})=>{
+    const row=document.createElement('div');
+    row.className='month-row';
+    const mn=document.createElement('div');
+    mn.className='month-name';mn.textContent=name;
+    row.appendChild(mn);
+    const line=document.createElement('div');
+    line.className='bead-line';
+    for(let d=0;d<days;d++){
+      idx++;
+      const bead=document.createElement('div');
+      bead.className='bead';
+      if(idx<elapsed) bead.classList.add('past');
+      else if(idx===elapsed) bead.classList.add('today');
+      else bead.classList.add('future');
+      const dot=document.createElement('div');
+      dot.className='bead-dot';
+      bead.appendChild(dot);
+      line.appendChild(bead);
+    }
+    row.appendChild(line);
+    wrap.appendChild(row);
+  });
+}
+
+// ─── VIZ 5: Sun rays ─────────────────────────────────────────────────────────
+function renderV5(){
+  const svg=document.getElementById('sun-svg');
+  const cx=130,cy=130;
+  const r1=52,r2=115;
+  const gap=2;
+  // rays
+  for(let i=0;i<TOTAL;i++){
+    const angle=(i/TOTAL)*360-90;
+    const rad=angle*Math.PI/180;
+    const past=i<elapsed, isToday=i===elapsed-1;
+    const x1=cx+(r1+2)*Math.cos(rad), y1=cy+(r1+2)*Math.sin(rad);
+    const x2=cx+(r2-(past&&!isToday?0:0))*Math.cos(rad), y2=cy+r2*Math.sin(rad);
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1);line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+    const w=past?3:1.5;
+    line.setAttribute('stroke-width',w);
+    if(isToday) line.setAttribute('stroke','#ffffff');
+    else if(past) line.setAttribute('stroke',`hsl(${35+i*0.3},90%,55%)`);
+    else line.setAttribute('stroke','rgba(255,255,255,.1)');
+    line.setAttribute('stroke-linecap','round');
+    svg.appendChild(line);
+  }
+  // center sun circle
+  const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',48);
+  c.setAttribute('fill','rgba(245,166,35,.12)');c.setAttribute('stroke','rgba(245,166,35,.3)');c.setAttribute('stroke-width','1.5');
+  svg.appendChild(c);
+  animNum(document.getElementById('s-num'), elapsed, 1200);
+}
+
+// ─── VIZ 6: Hourglass ────────────────────────────────────────────────────────
+function renderV6(){
+  const svg=document.getElementById('hg-svg');
+  svg.innerHTML='';
+  const W=160,H=200;
+  const neckY=H/2, neckW=14;
+  const topW=W-16, botW=W-16;
+  const topH=neckY-10, botH=H-neckY-10;
+
+  // Outline shape
+  function hgPath(){
+    return `M8,4 L${W-8},4 L${W/2+neckW/2},${neckY} L${W-8},${H-4} L8,${H-4} L${W/2-neckW/2},${neckY} Z`;
+  }
+  // bg
+  const bg=document.createElementNS('http://www.w3.org/2000/svg','path');
+  bg.setAttribute('d',hgPath());
+  bg.setAttribute('fill','rgba(255,255,255,.03)');
+  bg.setAttribute('stroke','var(--border)');
+  bg.setAttribute('stroke-width','1.5');
+  svg.appendChild(bg);
+
+  // Sand remaining (top half) — represents days left
+  const leftFrac = left/TOTAL;
+  if(leftFrac>0){
+    // top trapezoid clipped
+    const topFull=topH; const sandH=topFull*leftFrac;
+    const sandY=neckY-10-sandH;
+    const wAtTop=topW*(sandY>4?(sandY-4)/(neckY-14):0);
+    const wAtBot=topW;
+    // interpolate width at sandY and at neckY
+    const wx=(y)=>{
+      const t=(y-4)/(neckY-14);
+      return Math.max(neckW, (1-t)*topW + t*neckW);
+    };
+    const wTop=wx(sandY+4); const wBot=neckW+2;
+    const sand=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const bx=W/2;
+    // simple trapezoid for top sand
+    sand.setAttribute('d',
+      `M${bx-wx(sandY)/2},${sandY} L${bx+wx(sandY)/2},${sandY} L${bx+neckW/2},${neckY-2} L${bx-neckW/2},${neckY-2} Z`
+    );
+    sand.setAttribute('fill','rgba(232,93,74,.35)');
+    svg.appendChild(sand);
+  }
+
+  // Sand fallen (bottom half) — represents elapsed
+  const pastFrac=elapsed/TOTAL;
+  if(pastFrac>0){
+    const botFull=botH; const sandH=botFull*pastFrac;
+    const sandTop=neckY+10;
+    const sandBot=sandTop+sandH;
+    const wx2=(y)=>{
+      const t=(y-(neckY+10))/(H-14-(neckY+10));
+      return Math.max(neckW, t*botW+neckW*(1-t));
+    };
+    const sand2=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const bx=W/2;
+    sand2.setAttribute('d',
+      `M${bx-neckW/2},${sandTop} L${bx+neckW/2},${sandTop} L${bx+wx2(sandBot)/2},${sandBot} L${bx-wx2(sandBot)/2},${sandBot} Z`
+    );
+    sand2.setAttribute('fill','rgba(245,166,35,.45)');
+    svg.appendChild(sand2);
+  }
+
+  // outline on top
+  const fg=document.createElementNS('http://www.w3.org/2000/svg','path');
+  fg.setAttribute('d',hgPath());
+  fg.setAttribute('fill','none');
+  fg.setAttribute('stroke','rgba(255,255,255,.15)');
+  fg.setAttribute('stroke-width','1.5');
+  svg.appendChild(fg);
+
+  document.getElementById('hg-past').textContent=elapsed;
+  document.getElementById('hg-left').textContent=left;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+const RENDERERS=[renderV1,renderV2,renderV3,renderV4,renderV5,renderV6];
+function renderViz(i){ RENDERERS[i](); }
+
+// render first tab immediately
+rendered.add(0);
+renderV1();
+</script>
+</body>
+</html>
