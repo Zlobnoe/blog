@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Блог</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;700&family=Manrope:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0c12;--surface:#12151f;--border:#1e2433;
+  --text:#e8eaf0;--muted:#5a6278;
+  --accent:#7c6ff7;--accent2:#f5a623;
+  --radius:14px;
+}
+body{
+  background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:60px 20px;gap:36px;
+}
+.header{text-align:center}
+.title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(1.4rem,4vw,2.2rem);letter-spacing:-.03em}
+.title span{color:var(--accent)}
+.sub{font-size:.85rem;color:var(--muted);margin-top:8px;line-height:1.6}
+
+.cards{display:flex;flex-direction:column;gap:16px;width:min(560px,100%)}
+.card{
+  display:block;text-decoration:none;color:var(--text);
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 24px;transition:border-color .15s,transform .15s;
+}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card.summer:hover{border-color:var(--accent2)}
+.card-title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1rem;letter-spacing:-.02em}
+.card.life .card-title{color:var(--accent)}
+.card.summer .card-title{color:var(--accent2)}
+.card-desc{font-size:.8rem;color:var(--muted);margin-top:8px;line-height:1.6}
+.card-arrow{font-size:.75rem;color:var(--muted);margin-top:12px;transition:color .15s}
+.card:hover .card-arrow{color:var(--text)}
+
+.footer{font-size:.7rem;color:var(--muted);margin-top:auto}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Мои <span>странички</span></div>
+  <div class="sub">визуализации времени и жизни</div>
+</div>
+
+<div class="cards">
+  <a class="card life" href="life-grid-months.html">
+    <div class="card-title">Жизнь в месяцах</div>
+    <div class="card-desc">Вся жизнь как сетка из месяцев: прожитые, текущий и оставшиеся — с учётом возраста, пола и сценариев продолжительности жизни.</div>
+    <div class="card-arrow">Открыть →</div>
+  </a>
+  <a class="card summer" href="summer-progress-variants.html">
+    <div class="card-title">Лето — 6 способов</div>
+    <div class="card-desc">Шесть вариантов визуализации прогресса лета: сколько уже прошло и сколько ещё осталось.</div>
+    <div class="card-arrow">Открыть →</div>
+  </a>
+</div>
+
+<div class="footer">zlobnoe.github.io/blog</div>
+
+</body>
+</html>
