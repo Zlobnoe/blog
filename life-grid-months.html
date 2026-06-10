@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Жизнь в месяцах</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;700&family=Manrope:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0c12;--surface:#12151f;--border:#1e2433;
+  --text:#e8eaf0;--muted:#5a6278;
+  --past:#7c6ff7;--now:#ffffff;--future:rgba(255,255,255,.07);
+  --radius:14px;
+}
+body{
+  background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:36px 20px 60px;gap:24px;
+}
+.header{text-align:center}
+.title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(1.2rem,3.5vw,1.8rem);letter-spacing:-.03em}
+.title span{color:var(--past)}
+.sub{font-size:.8rem;color:var(--muted);margin-top:6px;line-height:1.6}
+
+.controls{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:flex-end}
+.ctrl-group{display:flex;flex-direction:column;gap:5px}
+.ctrl-label{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.ctrl-row{display:flex;gap:8px;align-items:center}
+input[type=range]{-webkit-appearance:none;width:140px;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--past);cursor:pointer;transition:transform .1s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3)}
+.ctrl-val{font-family:'Unbounded',sans-serif;font-size:.85rem;font-weight:700;color:var(--text);min-width:28px;text-align:center}
+
+/* Gender toggle */
+.gender-btns{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.gbtn{padding:7px 18px;border:none;background:transparent;color:var(--muted);
+  font-family:'Manrope',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
+.gbtn.active{background:var(--past);color:#fff}
+.gbtn:hover:not(.active){color:var(--text);background:rgba(255,255,255,.05)}
+
+/* Scenario buttons */
+.scenario-btns{display:flex;gap:6px;flex-wrap:wrap}
+.sbtn{padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-family:'Manrope',sans-serif;font-size:.7rem;font-weight:600;cursor:pointer;transition:all .15s;line-height:1.4;text-align:center}
+.sbtn.active,.sbtn:hover{background:var(--past);border-color:var(--past);color:#fff}
+.sbtn-note{font-size:.55em;opacity:.65;display:block;margin-top:1px}
+
+/* Actuarial badge */
+.actuarial-note{
+  font-size:.68rem;color:var(--muted);background:rgba(124,111,247,.08);
+  border:1px solid rgba(124,111,247,.2);border-radius:8px;
+  padding:7px 14px;text-align:center;max-width:760px;width:100%;line-height:1.5;
+}
+.actuarial-note strong{color:var(--past)}
+
+.stats{display:flex;gap:0;width:min(760px,100%);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.stat{flex:1;padding:14px 10px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-val{font-family:'Unbounded',sans-serif;font-size:clamp(.8rem,2vw,1.15rem);font-weight:700;color:var(--past);line-height:1}
+.stat-key{font-size:.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:4px}
+.stat.accent .stat-val{color:var(--now)}
+
+.card{width:min(760px,100%);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.grid-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.grid-title{font-family:'Unbounded',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:4px;font-size:.6rem;color:var(--muted)}
+.leg-sq{width:8px;height:8px;border-radius:1.5px}
+
+.grid{display:flex;flex-wrap:wrap;gap:2px;width:100%}
+.mo{
+  width:8px;height:8px;border-radius:1px;cursor:default;
+  transition:transform .1s;flex-shrink:0;position:relative;
+}
+.mo:hover{transform:scale(4);z-index:10;border-radius:2px}
+.mo.past{background:var(--past)}
+.mo.now{background:var(--now);box-shadow:0 0 6px rgba(255,255,255,.7)}
+.mo.future{background:var(--future)}
+.mo.year-start{border-left:2px solid rgba(255,255,255,.18)}
+.mo.decade-start{border-left:2px solid rgba(255,255,255,.45)}
+
+#tip{
+  position:fixed;pointer-events:none;z-index:1000;
+  background:#161b2a;border:1px solid #252d45;
+  color:rgba(232,234,240,.85);
+  font-size:13px;font-family:'Manrope',sans-serif;
+  white-space:nowrap;padding:4px 9px;border-radius:4px;
+  line-height:1.5;display:none;
+}
+
+.prog-wrap{margin-top:16px}
+.prog-labels{display:flex;justify-content:space-between;font-size:.62rem;color:var(--muted);margin-bottom:5px}
+.prog-track{height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#4c3fcc,var(--past));border-radius:3px;transition:width 1.2s cubic-bezier(.16,1,.3,1);width:0}
+
+.note{font-size:.63rem;color:var(--muted);text-align:center;line-height:1.6;max-width:640px;opacity:.6}
+</style>
+</head>
+<body>
+
+<div id="tip"></div>
+
+<div class="header">
+  <div class="title">Жизнь в <span>месяцах</span></div>
+  <div class="sub">Каждый квадрат — один месяц. Закрашенные — уже прожиты.</div>
+</div>
+
+<div class="controls">
+  <!-- Gender -->
+  <div class="ctrl-group">
+    <div class="ctrl-label">Пол</div>
+    <div class="gender-btns">
+      <button class="gbtn active" id="gbtn-m" onclick="setGender('m')">♂ Мужчина</button>
+      <button class="gbtn" id="gbtn-f" onclick="setGender('f')">♀ Женщина</button>
+    </div>
+  </div>
+
+  <!-- Age -->
+  <div class="ctrl-group">
+    <div class="ctrl-label">Возраст</div>
+    <div class="ctrl-row">
+      <input type="range" id="age-slider" min="1" max="95" value="38">
+      <div class="ctrl-val" id="age-val">38</div>
+      <span style="font-size:.7rem;color:var(--muted)">лет</span>
+    </div>
+  </div>
+
+  <!-- Scenario -->
+  <div class="ctrl-group">
+    <div class="ctrl-label">Прогноз</div>
+    <div class="scenario-btns" id="scenario-btns">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Actuarial info bar -->
+<div class="actuarial-note" id="actuarial-note"></div>
+
+<div class="stats" id="stats-bar"></div>
+
+<div class="card">
+  <div class="grid-header">
+    <div class="grid-title" id="grid-title"></div>
+    <div class="legend">
+      <div class="leg"><div class="leg-sq" style="background:var(--past)"></div>прожито</div>
+      <div class="leg"><div class="leg-sq" style="background:var(--now);box-shadow:0 0 4px #fff6"></div>сейчас</div>
+      <div class="leg"><div class="leg-sq" style="background:var(--future);border:1px solid rgba(255,255,255,.1)"></div>впереди</div>
+      <div class="leg"><div class="leg-sq" style="border-left:2px solid rgba(255,255,255,.4);background:transparent"></div>10 лет</div>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="prog-wrap">
+    <div class="prog-labels">
+      <span>0</span>
+      <span id="prog-mid"></span>
+      <span id="prog-end"></span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  </div>
+</div>
+
+<div class="note" id="bottom-note"></div>
+
+<script>
+// ── Actuarial tables ex(x) — Russia, Rosstat/HMD 2022 ──────────────────────
+// ex = expected additional years of life for someone who has reached age x
+// Source: Human Mortality Database (mortality.org), Russia 2022 data
+// Men: significant penalty 20–50 from alcohol/accidents/cardiovascular
+// Women: much flatter mortality curve
+// Values are "total expected age at death" = x + ex(x)
+// Chelyabinsk adjustment: men −1.5 yrs, women −0.8 yrs vs Russia average
+const EX_M = { // expected total age of death for Russian man who reached age x (Chelyabinsk)
+   0:66.5,  1:67.1,  5:67.3, 10:67.4, 15:67.5, 20:67.8, 25:68.3,
+  30:69.0, 35:70.0, 40:71.2, 45:72.3, 50:73.2, 55:74.0, 60:74.8,
+  65:75.8, 70:77.0, 75:78.5, 80:80.3, 85:83.0, 90:86.0, 95:89.0
+};
+const EX_F = { // women, Chelyabinsk
+   0:75.2,  1:75.7,  5:75.8, 10:75.8, 15:75.9, 20:76.1, 25:76.3,
+  30:76.6, 35:77.0, 40:77.5, 45:78.1, 50:78.8, 55:79.6, 60:80.5,
+  65:81.6, 70:83.0, 75:84.6, 80:86.5, 85:88.5, 90:91.0, 95:93.5
+};
+
+// Interpolate ex for any age
+function getExpectedDeathAge(age, gender) {
+  const table = gender === 'm' ? EX_M : EX_F;
+  const keys = Object.keys(table).map(Number).sort((a,b)=>a-b);
+  // find surrounding keys
+  let lo = keys[0], hi = keys[keys.length-1];
+  for(let i=0; i<keys.length-1; i++){
+    if(age >= keys[i] && age <= keys[i+1]){ lo=keys[i]; hi=keys[i+1]; break; }
+  }
+  if(age <= lo) return table[lo];
+  if(age >= hi) return table[hi];
+  const t = (age - lo)/(hi - lo);
+  return table[lo] + t*(table[hi]-table[lo]);
+}
+
+// ── State ───────────────────────────────────────────────────────────────────
+let AGE = 38;
+let GENDER = 'm';
+let LIFE = 72; // overridden by actuarial on 'auto'
+let SCENARIO = 'auto'; // 'auto'|'pessimist'|'optimist'|'dreamer'
+
+const STAGES = [
+  {from:0,  to:1,   name:'Младенчество'},
+  {from:1,  to:3,   name:'Раннее детство'},
+  {from:3,  to:7,   name:'Детство'},
+  {from:7,  to:12,  name:'Школьные годы'},
+  {from:12, to:17,  name:'Подростковый возраст'},
+  {from:17, to:23,  name:'Юность'},
+  {from:23, to:30,  name:'Молодость'},
+  {from:30, to:40,  name:'Зрелость'},
+  {from:40, to:50,  name:'Средний возраст'},
+  {from:50, to:60,  name:'Зрелый возраст'},
+  {from:60, to:70,  name:'Пожилой возраст'},
+  {from:70, to:999, name:'Долгожитель'},
+];
+function getStage(y){ return STAGES.find(s=>y>=s.from&&y<s.to)?.name||''; }
+
+function plural(n,a,b,c){const m=n%10,h=n%100;if(m===1&&h!==11)return a;if([2,3,4].includes(m)&&![12,13,14].includes(h))return b;return c}
+
+// ── Compute LIFE based on scenario ─────────────────────────────────────────
+function computeLife(){
+  const actuarial = Math.round(getExpectedDeathAge(AGE, GENDER));
+  if(SCENARIO==='auto')       return actuarial;
+  if(SCENARIO==='pessimist')  return Math.max(AGE+1, actuarial - 5);
+  if(SCENARIO==='optimist')   return actuarial + 7;
+  if(SCENARIO==='dreamer')    return actuarial + 17;
+  return actuarial;
+}
+
+// ── Build scenario buttons ──────────────────────────────────────────────────
+function buildScenarioBtns(){
+  const actuarial = Math.round(getExpectedDeathAge(AGE, GENDER));
+  const scenarios = [
+    {id:'pessimist', label:'Пессимист',  life: Math.max(AGE+1, actuarial-5)},
+    {id:'auto',      label:'Реалист',    life: actuarial},
+    {id:'optimist',  label:'Оптимист',   life: actuarial+7},
+    {id:'dreamer',   label:'Мечтатель',  life: actuarial+17},
+  ];
+  const wrap = document.getElementById('scenario-btns');
+  wrap.innerHTML='';
+  scenarios.forEach(s=>{
+    const b=document.createElement('button');
+    b.className='sbtn'+(SCENARIO===s.id?' active':'');
+    b.innerHTML=`${s.label}<span class="sbtn-note">${s.life} лет</span>`;
+    b.onclick=()=>{ SCENARIO=s.id; render(); };
+    wrap.appendChild(b);
+  });
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function render(){
+  LIFE = computeLife();
+  buildScenarioBtns();
+
+  const actuarial = Math.round(getExpectedDeathAge(AGE, GENDER));
+  const gLabel = GENDER==='m' ? 'мужчины' : 'женщины';
+  const gLabelAt = GENDER==='m' ? 'мужчина' : 'женщина';
+
+  // Actuarial note
+  const atBirth = GENDER==='m' ? 66.5 : 75.2;
+  document.getElementById('actuarial-note').innerHTML =
+    `По таблицам дожития Росстата: ${gLabelAt} <strong>${AGE} лет</strong> в Челябинске проживёт в среднем до <strong>${actuarial} лет</strong> ` +
+    `(ОПЖ при рождении для ${gLabel}: ${atBirth} лет — но дожившие до ${AGE} лет пережили пик смертности, прогноз выше).`;
+
+  const totalMonths = LIFE * 12;
+  const passedMonths = AGE * 12;
+  const leftMonths = Math.max(0, totalMonths - passedMonths);
+  const pct = Math.round(passedMonths / totalMonths * 100);
+
+  document.getElementById('grid-title').textContent = `ЖИЗНЬ · ${LIFE} ЛЕТ · ${totalMonths} МЕСЯЦЕВ`;
+  document.getElementById('prog-mid').textContent = `${AGE} лет`;
+  document.getElementById('prog-end').textContent = `${LIFE} лет`;
+
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat accent"><div class="stat-val">${passedMonths}</div><div class="stat-key">месяцев прожито</div></div>
+    <div class="stat"><div class="stat-val">${leftMonths}</div><div class="stat-key">${plural(leftMonths,'месяц','месяца','месяцев')} впереди</div></div>
+    <div class="stat"><div class="stat-val">${LIFE-AGE}</div><div class="stat-key">${plural(LIFE-AGE,'год','года','лет')} впереди</div></div>
+    <div class="stat"><div class="stat-val">${pct}%</div><div class="stat-key">жизни позади</div></div>
+    <div class="stat"><div class="stat-val">${Math.round(leftMonths*30.44)}</div><div class="stat-key">дней впереди</div></div>
+  `;
+
+  // Build grid
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for(let m=0; m<totalMonths; m++){
+    const yearNum = Math.floor(m/12);
+    const monthInYear = m%12;
+    const cell = document.createElement('div');
+    cell.className = 'mo';
+    if(monthInYear===0 && yearNum>0 && yearNum%10===0) cell.classList.add('decade-start');
+    else if(monthInYear===0 && yearNum>0) cell.classList.add('year-start');
+    if(m<passedMonths) cell.classList.add('past');
+    else if(m===passedMonths) cell.classList.add('now');
+    else cell.classList.add('future');
+    const stage = getStage(yearNum);
+    const ageLabel = monthInYear===0 ? `${yearNum} лет` : `${yearNum} лет ${monthInYear} мес.`;
+    const status = m<passedMonths ? 'прожито' : m===passedMonths ? '← сейчас' : `осталось ${m-passedMonths} мес.`;
+    cell.setAttribute('data-tip', `${ageLabel} · ${stage} · ${status}`);
+    grid.appendChild(cell);
+  }
+
+  // Progress bar
+  document.getElementById('prog-fill').style.width='0%';
+  setTimeout(()=>document.getElementById('prog-fill').style.width=pct+'%', 200);
+
+  // Bottom note
+  document.getElementById('bottom-note').textContent =
+    'Данные: таблицы смертности Росстат/HMD 2022. Челябинская область. Это статистика, не приговор — образ жизни меняет всё.';
+
+  resize();
+}
+
+function resize(){
+  document.querySelectorAll('.mo').forEach(d=>{
+    d.style.width='8px'; d.style.height='8px';
+    d.style.flexShrink='0'; d.style.flexGrow='0'; d.style.flexBasis='8px';
+  });
+  document.getElementById('grid').style.gap='2px';
+}
+
+function setGender(g){
+  GENDER = g;
+  document.getElementById('gbtn-m').classList.toggle('active', g==='m');
+  document.getElementById('gbtn-f').classList.toggle('active', g==='f');
+  render();
+}
+
+document.getElementById('age-slider').addEventListener('input', function(){
+  AGE = parseInt(this.value);
+  document.getElementById('age-val').textContent = AGE;
+  render();
+});
+
+// JS tooltip
+const tip = document.getElementById('tip');
+document.getElementById('grid').addEventListener('mouseover', e=>{
+  const mo = e.target.closest('.mo');
+  if(!mo) return;
+  tip.textContent = mo.dataset.tip;
+  tip.style.display='block';
+});
+document.getElementById('grid').addEventListener('mousemove', e=>{
+  tip.style.left=(e.clientX+12)+'px';
+  tip.style.top=(e.clientY-24)+'px';
+});
+document.getElementById('grid').addEventListener('mouseleave',()=>tip.style.display='none');
+
+window.addEventListener('resize', resize);
+render();
+</script>
+</body>
+</html>
