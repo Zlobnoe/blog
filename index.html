@@ -1,67 +1,193 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Блог</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;700&family=Manrope:wght@300;400;600&display=swap" rel="stylesheet">
+<title>zlobnoe</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0a0c12;--surface:#12151f;--border:#1e2433;
-  --text:#e8eaf0;--muted:#5a6278;
-  --accent:#7c6ff7;--accent2:#f5a623;
-  --radius:14px;
+
+:root[data-theme="light"]{
+  --bg:#fafaf8;--border:#e5e0d8;
+  --text:#1a1a1a;--sub:#6b6b6b;--muted:#aaa;
+  --accent:#5c6ac4;--surface:#f0ede8;
 }
+:root[data-theme="dark"]{
+  --bg:#0a0c12;--border:#1e2433;
+  --text:#e8eaf0;--sub:#8890a8;--muted:#5a6278;
+  --accent:#7c6ff7;--surface:#12151f;
+}
+
 body{
-  background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  padding:60px 20px;gap:36px;
+  background:var(--bg);color:var(--text);
+  font-family:'Manrope',sans-serif;font-size:15px;
+  line-height:1.6;transition:background .2s,color .2s;
 }
-.header{text-align:center}
-.title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(1.4rem,4vw,2.2rem);letter-spacing:-.03em}
-.title span{color:var(--accent)}
-.sub{font-size:.85rem;color:var(--muted);margin-top:8px;line-height:1.6}
 
-.cards{display:flex;flex-direction:column;gap:16px;width:min(560px,100%)}
-.card{
-  display:block;text-decoration:none;color:var(--text);
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:22px 24px;transition:border-color .15s,transform .15s;
+.wrap{width:min(640px,100%);margin:0 auto;padding:0 20px}
+
+/* ── header ── */
+header{padding:36px 0 28px;border-bottom:1px solid var(--border)}
+.h-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.logo{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:-.03em}
+.logo em{color:var(--accent);font-style:normal}
+.tagline{font-size:.76rem;color:var(--muted);margin-top:5px}
+.theme-btn{
+  flex-shrink:0;background:none;border:1px solid var(--border);
+  border-radius:8px;padding:6px 11px;cursor:pointer;
+  font-size:.82rem;color:var(--muted);
+  transition:border-color .15s,color .15s;line-height:1
 }
-.card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.card.summer:hover{border-color:var(--accent2)}
-.card-title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1rem;letter-spacing:-.02em}
-.card.life .card-title{color:var(--accent)}
-.card.summer .card-title{color:var(--accent2)}
-.card-desc{font-size:.8rem;color:var(--muted);margin-top:8px;line-height:1.6}
-.card-arrow{font-size:.75rem;color:var(--muted);margin-top:12px;transition:color .15s}
-.card:hover .card-arrow{color:var(--text)}
+.theme-btn:hover{border-color:var(--accent);color:var(--text)}
 
-.footer{font-size:.7rem;color:var(--muted);margin-top:auto}
+/* ── filters ── */
+.filters{
+  padding:16px 0;display:flex;gap:7px;flex-wrap:wrap;
+  border-bottom:1px solid var(--border)
+}
+.f-btn{
+  background:none;border:1px solid var(--border);border-radius:20px;
+  padding:4px 13px;font-size:.73rem;font-family:'Manrope',sans-serif;
+  font-weight:500;color:var(--muted);cursor:pointer;
+  transition:all .15s
+}
+.f-btn:hover{color:var(--text);border-color:var(--sub)}
+.f-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── feed ── */
+.feed{padding:4px 0 64px}
+.note{padding:22px 0;border-bottom:1px solid var(--border)}
+
+.note-meta{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.note-tag{font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.dot{font-size:.65rem;color:var(--border)}
+.note-date{font-size:.72rem;color:var(--muted)}
+
+.note-title{font-weight:600;font-size:.975rem;line-height:1.4;margin-bottom:7px;color:var(--text)}
+
+.note-text{font-size:.845rem;color:var(--sub);line-height:1.68}
+
+.note-open{
+  display:inline-flex;align-items:center;gap:3px;margin-top:11px;
+  font-size:.76rem;color:var(--muted);text-decoration:none;
+  transition:color .15s
+}
+.note-open:hover{color:var(--accent)}
+
+/* ── tag colors ── */
+.t-viz{color:#7c6ff7}
+.t-life{color:#4caf84}
+.t-thoughts{color:#5b8dee}
+.t-tech{color:#e8805a}
+.t-books{color:#f5a623}
+
+/* ── footer ── */
+footer{
+  border-top:1px solid var(--border);
+  padding:28px 0;text-align:center;
+  font-size:.7rem;color:var(--muted)
+}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="header">
-  <div class="title">Мои <span>странички</span></div>
-  <div class="sub">визуализации времени и жизни</div>
+<header>
+  <div class="h-inner">
+    <div>
+      <div class="logo">zlo<em>bnoe</em></div>
+      <div class="tagline">мысли, наблюдения, визуализации</div>
+    </div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
+  </div>
+</header>
+
+<div class="filters">
+  <button class="f-btn on" data-f="all"   onclick="filter(this,'all')">Всё</button>
+  <button class="f-btn"    data-f="viz"   onclick="filter(this,'viz')">Визуализации</button>
+  <button class="f-btn"    data-f="life"  onclick="filter(this,'life')">Жизнь</button>
+  <button class="f-btn"    data-f="thoughts" onclick="filter(this,'thoughts')">Мысли</button>
 </div>
 
-<div class="cards">
-  <a class="card life" href="life-grid-months.html">
-    <div class="card-title">Жизнь в месяцах</div>
-    <div class="card-desc">Вся жизнь как сетка из месяцев: прожитые, текущий и оставшиеся — с учётом возраста, пола и сценариев продолжительности жизни.</div>
-    <div class="card-arrow">Открыть →</div>
-  </a>
-  <a class="card summer" href="summer-progress-variants.html">
-    <div class="card-title">Лето — 6 способов</div>
-    <div class="card-desc">Шесть вариантов визуализации прогресса лета: сколько уже прошло и сколько ещё осталось.</div>
-    <div class="card-arrow">Открыть →</div>
-  </a>
+<div class="feed">
+
+  <div class="note" data-tag="viz">
+    <div class="note-meta">
+      <span class="note-tag t-viz">Визуализации</span>
+      <span class="dot">●</span>
+      <span class="note-date">8 мая</span>
+    </div>
+    <div class="note-title">Жизнь в месяцах</div>
+    <div class="note-text">Вся жизнь как сетка из месяцев: прожитые, текущий и оставшиеся — с учётом возраста, пола и сценариев продолжительности жизни.</div>
+    <a class="note-open" href="life-grid-months.html">Открыть →</a>
+  </div>
+
+  <div class="note" data-tag="thoughts">
+    <div class="note-meta">
+      <span class="note-tag t-thoughts">Мысли</span>
+      <span class="dot">●</span>
+      <span class="note-date">15 мая</span>
+    </div>
+    <div class="note-title">О привычке замечать время</div>
+    <div class="note-text">Все знают, что жизнь конечна, но мало кто держит это в голове по-настоящему. Визуализации помогают: когда видишь сетку месяцев, это перестаёт быть абстракцией.</div>
+  </div>
+
+  <div class="note" data-tag="viz">
+    <div class="note-meta">
+      <span class="note-tag t-viz">Визуализации</span>
+      <span class="dot">●</span>
+      <span class="note-date">1 июн</span>
+    </div>
+    <div class="note-title">Лето — 6 способов</div>
+    <div class="note-text">Шесть вариантов визуализации прогресса лета: сколько уже прошло и сколько ещё осталось.</div>
+    <a class="note-open" href="summer-progress-variants.html">Открыть →</a>
+  </div>
+
+  <div class="note" data-tag="life">
+    <div class="note-meta">
+      <span class="note-tag t-life">Жизнь</span>
+      <span class="dot">●</span>
+      <span class="note-date">11 июн</span>
+    </div>
+    <div class="note-title">Про лето и ощущение срочности</div>
+    <div class="note-text">Лето короткое — это знает каждый. Но когда видишь, что уже прошла треть, это немного подталкивает что-то сделать с оставшимися двумя третями.</div>
+  </div>
+
 </div>
 
-<div class="footer">zlobnoe.github.io/blog</div>
+<footer>zlobnoe.github.io/blog</footer>
+</div>
 
+<script>
+(function(){
+  const saved = localStorage.getItem('theme');
+  const sys   = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  applyTheme(saved || sys);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (!localStorage.getItem('theme')) applyTheme(e.matches ? 'dark' : 'light');
+  });
+})();
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = t === 'dark' ? '☀' : '☾';
+}
+
+function toggleTheme(){
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+}
+
+function filter(btn, tag){
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.note').forEach(n => {
+    n.style.display = (tag === 'all' || n.dataset.tag === tag) ? '' : 'none';
+  });
+}
+</script>
 </body>
 </html>
