@@ -9,13 +9,14 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0c12;--sur:#12151f;--bdr:#1e2433;--txt:#e8eaf0;--sub:#8890a8;--mut:#5a6278;--acc:#40916c}
 body{background:var(--bg);color:var(--txt);font-family:'Manrope',sans-serif;min-height:100vh;padding:28px 20px}
-.page{max-width:900px;margin:0 auto}
+.page{max-width:920px;margin:0 auto}
 a.back{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;color:var(--mut);text-decoration:none;margin-bottom:14px;transition:color .15s}
 a.back:hover{color:var(--txt)}
 h1{font-family:'Unbounded',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:-.03em;margin-bottom:20px}
 h1 b{color:var(--acc);font-weight:inherit}
-.lay{display:grid;grid-template-columns:1fr 268px;gap:16px;align-items:start}
-@media(max-width:680px){.lay{grid-template-columns:1fr}}
+
+.lay{display:grid;grid-template-columns:1fr 272px;gap:16px;align-items:start}
+@media(max-width:700px){.lay{grid-template-columns:1fr}}
 .card{background:var(--sur);border:1px solid var(--bdr);border-radius:14px;padding:18px}
 
 /* pond */
@@ -37,13 +38,23 @@ canvas#pond{width:100%;aspect-ratio:1;display:block;border-radius:8px;cursor:poi
 .chart-card{margin-top:14px}
 .card-lbl{font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
 canvas#chart{width:100%;height:90px;display:block}
-.legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.legend{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
 .leg{display:flex;align-items:center;gap:4px;font-size:.69rem;color:var(--mut)}
-.ld{width:7px;height:7px;border-radius:50%}
+.ld{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
 /* panel */
-.panel{display:flex;flex-direction:column;gap:14px}
+.panel{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 80px);overflow-y:auto;scrollbar-width:none}
+.panel::-webkit-scrollbar{display:none}
+.sec-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
 .sec{font-size:.67rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.tog-wrap{display:flex;align-items:center;gap:0}
+.tog{position:relative;width:32px;height:18px;cursor:pointer}
+.tog input{opacity:0;width:0;height:0}
+.tog-sl{position:absolute;inset:0;background:var(--bdr);border-radius:9px;transition:.2s}
+.tog-sl:before{content:'';position:absolute;width:12px;height:12px;left:3px;top:3px;background:#666;border-radius:50%;transition:.2s}
+.tog input:checked+.tog-sl{background:var(--acc)}
+.tog input:checked+.tog-sl:before{background:#fff;transform:translateX(14px)}
+
 .ctrl{display:flex;flex-direction:column;gap:5px}
 .ctrl-h{display:flex;justify-content:space-between;align-items:baseline}
 .ctrl-nm{font-size:.79rem;color:var(--sub)}
@@ -51,6 +62,9 @@ canvas#chart{width:100%;height:90px;display:block}
 input[type=range]{width:100%;height:3px;-webkit-appearance:none;appearance:none;background:var(--bdr);border-radius:2px;outline:none;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--acc);cursor:pointer;transition:transform .1s}
 input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.ctrl-group{display:flex;flex-direction:column;gap:12px}
+.ctrl-group.disabled{opacity:.35;pointer-events:none}
+
 .btns{display:flex;gap:7px}
 .btn{flex:1;padding:9px;border:1px solid var(--bdr);border-radius:9px;background:none;color:var(--sub);font-family:'Manrope',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .15s}
 .btn:hover{border-color:var(--acc);color:var(--txt)}
@@ -61,7 +75,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .spd-btns{display:flex;gap:4px}
 .spd-b{padding:3px 8px;border:1px solid var(--bdr);border-radius:6px;background:none;color:var(--mut);font-size:.69rem;font-family:'Manrope',sans-serif;cursor:pointer;transition:all .15s}
 .spd-b:hover,.spd-b.on{border-color:var(--acc);color:var(--txt)}
-.hint{font-size:.69rem;color:var(--mut);line-height:1.5}
+.hint{font-size:.68rem;color:var(--mut);line-height:1.5}
+.divider{border:none;border-top:1px solid var(--bdr);margin:2px 0}
 </style>
 </head>
 <body>
@@ -70,20 +85,21 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 <h1>Кувшинки <b>в пруду</b></h1>
 
 <div class="lay">
+  <!-- LEFT -->
   <div>
     <div class="card">
       <div class="pondwrap">
         <canvas id="pond" width="480" height="480" onclick="clickStep()" title="Клик — шаг вперёд"></canvas>
         <div class="overlay" id="ov">
-          <div class="ov-title" id="ov-title">Пруд покрыт!</div>
-          <div class="ov-sub" id="ov-sub"></div>
+          <div class="ov-title" id="ov-title"></div>
+          <div class="ov-sub"  id="ov-sub"></div>
         </div>
       </div>
       <div class="stats">
         <div class="st"><div class="st-n" id="sDay">0</div><div class="st-l">День</div></div>
         <div class="st"><div class="st-n" id="sCnt">1</div><div class="st-l">Кувшинок</div></div>
         <div class="st"><div class="st-n" id="sCov">0%</div><div class="st-l">Покрытие</div></div>
-        <div class="st"><div class="st-n" id="sDead">0</div><div class="st-l">Погибло</div></div>
+        <div class="st"><div class="st-n" id="sPred">0</div><div class="st-l">Хищников</div></div>
       </div>
     </div>
     <div class="card chart-card">
@@ -93,11 +109,14 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
         <div class="leg"><div class="ld" style="background:#74c69d"></div>Молодые</div>
         <div class="leg"><div class="ld" style="background:#40916c"></div>Взрослые</div>
         <div class="leg"><div class="ld" style="background:#c77d08"></div>Стареющие</div>
+        <div class="leg"><div class="ld" style="background:#e8a838"></div>Хищники</div>
       </div>
     </div>
   </div>
 
+  <!-- RIGHT -->
   <div class="card panel">
+
     <div class="sec">Жизненный цикл</div>
     <div class="ctrl">
       <div class="ctrl-h"><span class="ctrl-nm">Возраст взросления</span><span class="ctrl-v" id="vPub">3 дн.</span></div>
@@ -111,6 +130,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
       <div class="ctrl-h"><span class="ctrl-nm">Репродуктивный период</span><span class="ctrl-v" id="vRep">14 дн.</span></div>
       <input type="range" min="1" max="40" value="14" oninput="setP('reproLife',+this.value,'vRep',v=>v+' дн.')">
     </div>
+
+    <hr class="divider">
     <div class="sec">Пруд</div>
     <div class="ctrl">
       <div class="ctrl-h"><span class="ctrl-nm">Размер пруда</span><span class="ctrl-v" id="vPond">250</span></div>
@@ -120,6 +141,44 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
       <div class="ctrl-h"><span class="ctrl-nm">Размер кувшинки</span><span class="ctrl-v" id="vLily">10</span></div>
       <input type="range" min="3" max="30" value="10" oninput="setP('lilyR',+this.value,'vLily',v=>v)">
     </div>
+
+    <hr class="divider">
+    <div class="sec-row">
+      <span class="sec">Хищники</span>
+      <label class="tog"><input type="checkbox" id="togPred" checked onchange="toggleFeature('predEnabled',this.checked,'pred-ctrls')"><span class="tog-sl"></span></label>
+    </div>
+    <div class="ctrl-group" id="pred-ctrls">
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Начальное количество</span><span class="ctrl-v" id="vPC">3</span></div>
+        <input type="range" min="1" max="10" value="3" oninput="setP('predCount',+this.value,'vPC',v=>v)">
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Скорость</span><span class="ctrl-v" id="vPS">15</span></div>
+        <input type="range" min="3" max="50" value="15" oninput="setP('predSpeed',+this.value,'vPS',v=>v)">
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Энергия от еды</span><span class="ctrl-v" id="vPE">30</span></div>
+        <input type="range" min="5" max="80" value="30" oninput="setP('predEatE',+this.value,'vPE',v=>v)">
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Потеря энергии/день</span><span class="ctrl-v" id="vPL">4</span></div>
+        <input type="range" min="1" max="20" value="4" oninput="setP('predLossE',+this.value,'vPL',v=>v)">
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="sec-row">
+      <span class="sec">Сезоны</span>
+      <label class="tog"><input type="checkbox" id="togSeas" checked onchange="toggleFeature('seasonEnabled',this.checked,'seas-ctrls')"><span class="tog-sl"></span></label>
+    </div>
+    <div class="ctrl-group" id="seas-ctrls">
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Длина сезона</span><span class="ctrl-v" id="vSL">20 дн.</span></div>
+        <input type="range" min="5" max="60" value="20" oninput="setP('seasonLen',+this.value,'vSL',v=>v+' дн.')">
+      </div>
+    </div>
+
+    <hr class="divider">
     <div class="sec">Управление</div>
     <div class="btns">
       <button class="btn pri" id="btnPlay" onclick="togglePlay()">▶ Старт</button>
@@ -134,36 +193,58 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
         <button class="spd-b" onclick="setSpd(100,this)">×100</button>
       </div>
     </div>
-    <div class="hint">Клик по пруду — шаг вперёд на 1 день (на паузе).</div>
+    <div class="hint">Клик по пруду — шаг вперёд (на паузе).</div>
   </div>
 </div>
 </div>
 
 <script>
-const P = { pubAge:3, splitInt:1, reproLife:14, pondR:250, lilyR:10 };
-const VISUAL_R = 228, CX = 240, CY = 240, MS_PER_STEP = 380;
+// ── Config ───────────────────────────────────────────────────────
+const P = {
+  pubAge:3, splitInt:1, reproLife:14, pondR:250, lilyR:10,
+  predEnabled:true, predCount:3, predSpeed:15, predEatE:30, predLossE:4,
+  seasonEnabled:true, seasonLen:20,
+};
+const VISUAL_R=228, CX=240, CY=240, MS_PER_STEP=380;
+const SEASON_NAMES = ['Весна','Лето','Осень','Зима'];
+const SEASON_KEYS  = ['spring','summer','autumn','winter'];
+const SEASON_SPLIT_MULT = {spring:1, summer:0.5, autumn:2, winter:Infinity};
+const SEASON_COLORS = {
+  spring:['#0e3042','#06151f'], summer:['#0a2e1a','#05120a'],
+  autumn:['#1c1a08','#0c0c06'], winter:['#0a1028','#060810']
+};
+const SEASON_BADGE_COLOR = {spring:'#74c69d',summer:'#90e890',autumn:'#e8c060',winter:'#90b8f8'};
 
-let lilies, day, dead, running, speed, raf, ts0, accum, hist, grid, uid, noSplitRuns, done;
+// ── State ─────────────────────────────────────────────────────────
+let lilies, predators, day, running, speed, raf, ts0, accum, hist, grid, uid, predUid, noSplitRuns, done;
 
 function initState() {
-  lilies=[]; day=0; dead=0; running=false; speed=1;
-  raf=null; ts0=null; accum=0; hist=[]; grid=new Map(); uid=0; noSplitRuns=0; done=false;
+  lilies=[]; predators=[]; day=0; running=false; speed=1;
+  raf=null; ts0=null; accum=0; hist=[]; grid=new Map(); uid=0; predUid=0;
+  noSplitRuns=0; done=false;
 }
 
-// spatial hash
+// ── Spatial hash (lilies) ────────────────────────────────────────
 function cs(){ return P.lilyR*2; }
 function gk(x,y){ const c=cs(); return Math.floor(x/c)+'_'+Math.floor(y/c); }
 function gadd(l){ const k=gk(l.x,l.y); if(!grid.has(k))grid.set(k,[]); grid.get(k).push(l); }
 function grm(l){ const a=grid.get(gk(l.x,l.y)); if(a){ const i=a.indexOf(l); if(i>=0)a.splice(i,1); } }
 function ghit(x,y){ const c=cs(),r2=c*c,gx=Math.floor(x/c),gy=Math.floor(y/c);
   for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++){
-    const a=grid.get((gx+dx)+'_'+(gy+dy)); if(!a) continue;
+    const a=grid.get((gx+dx)+'_'+(gy+dy)); if(!a)continue;
     for(const l of a){ const ex=l.x-x,ey=l.y-y; if(ex*ex+ey*ey<r2)return true; }
   } return false; }
 
-function newLily(x,y){ return {id:uid++,x,y,born:day,rot:Math.random()*Math.PI*2}; }
-function age(l){ return day-l.born; }
-function state(l){ const a=age(l),m=a-P.pubAge; if(m<0)return'y'; if(m<P.reproLife)return'a'; return'o'; }
+function liliesNear(x,y,r2){ const c=cs(),gx=Math.floor(x/c),gy=Math.floor(y/c),res=[];
+  for(let dx=-2;dx<=2;dx++) for(let dy=-2;dy<=2;dy++){
+    const a=grid.get((gx+dx)+'_'+(gy+dy)); if(!a)continue;
+    for(const l of a){ const ex=l.x-x,ey=l.y-y; if(ex*ex+ey*ey<r2)res.push(l); }
+  } return res; }
+
+// ── Lily ─────────────────────────────────────────────────────────
+function newLily(x,y){ return {id:uid++, x, y, born:day, rot:Math.random()*Math.PI*2}; }
+function lAge(l){ return day-l.born; }
+function lState(l){ const a=lAge(l),m=a-P.pubAge; if(m<0)return'y'; if(m<P.reproLife)return'a'; return'o'; }
 
 function findSpot(px,py){
   const d=P.lilyR*2.15, pr=P.pondR-P.lilyR;
@@ -174,55 +255,125 @@ function findSpot(px,py){
   } return null;
 }
 
+// ── Predator ─────────────────────────────────────────────────────
+function newPred(x,y){ return {id:predUid++, x, y, angle:Math.random()*Math.PI*2, energy:60}; }
+
+function stepPred(pred, season){
+  const lossMultiplier = season==='winter' ? 2 : 1;
+  pred.energy -= P.predLossE * lossMultiplier;
+
+  // random walk
+  pred.angle += (Math.random()-0.5)*0.8;
+
+  const substeps = Math.ceil(P.predSpeed/P.lilyR);
+  const dx = Math.cos(pred.angle)*P.predSpeed/substeps;
+  const dy = Math.sin(pred.angle)*P.predSpeed/substeps;
+  const pr = P.pondR - P.lilyR*1.5;
+
+  for(let s=0;s<substeps;s++){
+    pred.x += dx; pred.y += dy;
+    const dist = Math.sqrt(pred.x**2+pred.y**2);
+    if(dist > pr){
+      const nx=pred.x/dist, ny=pred.y/dist;
+      const dot=dx*nx+dy*ny;
+      pred.x = nx*(pr-1); pred.y = ny*(pr-1);
+      pred.angle = Math.atan2(dy-2*dot*ny, dx-2*dot*nx) + (Math.random()-.5)*.4;
+    }
+    // eat nearby lilies
+    const eatR2 = (P.lilyR*2)**2;
+    const toEat = liliesNear(pred.x, pred.y, eatR2);
+    for(const l of toEat){
+      grm(l);
+      const idx=lilies.indexOf(l); if(idx>=0) lilies.splice(idx,1);
+      pred.energy += P.predEatE;
+    }
+  }
+}
+
+// ── Season ───────────────────────────────────────────────────────
+function currentSeason(){
+  if(!P.seasonEnabled) return 'summer';
+  const idx = Math.floor(day/P.seasonLen) % 4;
+  return SEASON_KEYS[idx];
+}
+
+// ── Step ─────────────────────────────────────────────────────────
 function step(){
   if(done) return;
   day++;
+  const season = currentSeason();
+  const splitMult = SEASON_SPLIT_MULT[season];
   const add=[], die=[];
   let matureSplit=0, splitOk=0;
 
   for(const l of lilies){
-    const a=age(l), ma=a-P.pubAge;
+    const a=lAge(l), ma=a-P.pubAge;
+    // winter kills young lilies
+    if(season==='winter' && ma<0 && Math.random()<0.25){ die.push(l); continue; }
     if(ma>=P.reproLife){ die.push(l); continue; }
-    if(ma>=0 && ma%P.splitInt===0){
-      matureSplit++;
-      const s=findSpot(l.x,l.y);
-      if(s){ add.push(newLily(s.x,s.y)); splitOk++; }
-    }
+    if(ma>=0 && splitMult!==Infinity){
+      const effSplit = Math.max(1, Math.round(P.splitInt*splitMult));
+      if(ma%effSplit===0){
+        matureSplit++;
+        const s=findSpot(l.x,l.y);
+        if(s){ add.push(newLily(s.x,s.y)); splitOk++; }
+      }
+    } else if(ma>=0){ matureSplit++; } // winter: counts but doesn't split
   }
 
   const dieSet=new Set(die);
   for(const l of die) grm(l);
   lilies=lilies.filter(l=>!dieSet.has(l));
-  dead+=die.length;
   for(const l of add){ lilies.push(l); gadd(l); }
 
-  if(matureSplit>0 && splitOk===0) noSplitRuns++; else noSplitRuns=0;
+  // predators
+  if(P.predEnabled){
+    const newPreds=[];
+    for(const p of predators){
+      stepPred(p, season);
+      if(p.energy>=100){ p.energy-=55; newPreds.push(newPred(p.x+(Math.random()-.5)*20,p.y+(Math.random()-.5)*20)); }
+    }
+    predators=predators.filter(p=>p.energy>0);
+    predators.push(...newPreds);
+  }
+
+  if(matureSplit>0 && splitOk===0 && !P.seasonEnabled) noSplitRuns++;
+  else if(splitOk>0) noSplitRuns=0;
 
   let y=0,at=0,o=0;
-  for(const l of lilies){ const s=state(l); if(s==='y')y++; else if(s==='a')at++; else o++; }
-  hist.push({day,y,a:at,o,tot:lilies.length});
+  for(const l of lilies){ const s=lState(l); if(s==='y')y++; else if(s==='a')at++; else o++; }
+  hist.push({day,y,a:at,o,tot:lilies.length,pred:predators.length});
 
   if(noSplitRuns>=3){ done=true; showOverlay('Пруд покрыт!','За '+day+' дней'); stopPlay(); }
-  if(lilies.length===0 && day>1){ done=true; showOverlay('Все погибли','Популяция вымерла на день '+day); stopPlay(); }
-  updateStats();
+  if(lilies.length===0&&day>3){ done=true; showOverlay('Кувшинки исчезли','День '+day); stopPlay(); }
+  if(P.predEnabled&&predators.length===0&&lilies.length===0&&day>5){ done=true; showOverlay('Экосистема рухнула','День '+day); stopPlay(); }
+  updateStats(season);
 }
 
-// canvas
+// ── Rendering ────────────────────────────────────────────────────
 const cvs=document.getElementById('pond'), ctx=cvs.getContext('2d');
 const CC={y:'#74c69d',a:'#2d6a4f',o:'#c77d08'};
 
 function toScr(x,y){ const s=VISUAL_R/P.pondR; return [CX+x*s,CY+y*s]; }
-function lpx(){ return P.lilyR*VISUAL_R/P.pondR; }
+function lpx(){ return Math.max(2, P.lilyR*VISUAL_R/P.pondR); }
 
-function drawPond(){
+function drawPond(season){
+  const [c0,c1]=SEASON_COLORS[season];
   const g=ctx.createRadialGradient(CX,CY,0,CX,CY,VISUAL_R+8);
-  g.addColorStop(0,'#0e2e42'); g.addColorStop(1,'#06151f');
+  g.addColorStop(0,c0); g.addColorStop(1,c1);
   ctx.beginPath(); ctx.arc(CX,CY,VISUAL_R,0,Math.PI*2);
   ctx.fillStyle=g; ctx.fill();
-  ctx.strokeStyle='rgba(80,160,220,0.06)'; ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(80,160,220,0.05)'; ctx.lineWidth=1;
   for(let i=1;i<7;i++){ ctx.beginPath(); ctx.arc(CX,CY,VISUAL_R*i/7,0,Math.PI*2); ctx.stroke(); }
+  // winter frost
+  if(season==='winter'){
+    const fr=ctx.createRadialGradient(CX,CY,VISUAL_R*.72,CX,CY,VISUAL_R);
+    fr.addColorStop(0,'rgba(160,210,255,0)'); fr.addColorStop(1,'rgba(160,210,255,0.22)');
+    ctx.beginPath(); ctx.arc(CX,CY,VISUAL_R,0,Math.PI*2);
+    ctx.fillStyle=fr; ctx.fill();
+  }
   ctx.beginPath(); ctx.arc(CX,CY,VISUAL_R,0,Math.PI*2);
-  ctx.strokeStyle='rgba(64,145,108,0.25)'; ctx.lineWidth=2; ctx.stroke();
+  ctx.strokeStyle='rgba(64,145,108,0.22)'; ctx.lineWidth=2; ctx.stroke();
 }
 
 function drawLily(cx,cy,r,st,rot){
@@ -231,7 +382,7 @@ function drawLily(cx,cy,r,st,rot){
   ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,notch,Math.PI*2-notch); ctx.closePath();
   ctx.fillStyle=CC[st]; ctx.fill();
   const hl=ctx.createRadialGradient(-r*.2,-r*.3,0,0,0,r);
-  hl.addColorStop(0,'rgba(255,255,255,0.15)'); hl.addColorStop(1,'rgba(0,0,0,0.18)');
+  hl.addColorStop(0,'rgba(255,255,255,0.14)'); hl.addColorStop(1,'rgba(0,0,0,0.18)');
   ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,notch,Math.PI*2-notch); ctx.closePath();
   ctx.fillStyle=hl; ctx.fill();
   if(r>=5){ ctx.strokeStyle='rgba(0,0,0,0.18)'; ctx.lineWidth=0.4;
@@ -239,18 +390,44 @@ function drawLily(cx,cy,r,st,rot){
   ctx.restore();
 }
 
-function render(){
-  ctx.clearRect(0,0,480,480); drawPond();
-  const r=lpx();
-  for(const l of lilies){ const [cx,cy]=toScr(l.x,l.y); drawLily(cx,cy,r,state(l),l.rot); }
+function drawPredator(pred){
+  const [cx,cy]=toScr(pred.x,pred.y);
+  const r=Math.max(5, lpx()*1.5);
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(pred.angle);
+  ctx.beginPath();
+  ctx.moveTo(r*1.4,0); ctx.lineTo(-r*.8,r*.7); ctx.lineTo(-r*.4,0); ctx.lineTo(-r*.8,-r*.7);
+  ctx.closePath();
+  ctx.fillStyle='#e8a838'; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
 }
 
-// chart
+function drawSeasonBadge(season){
+  const name=SEASON_NAMES[SEASON_KEYS.indexOf(season)];
+  const color=SEASON_BADGE_COLOR[season];
+  ctx.font='bold 11px "Manrope", sans-serif';
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillRect(8,8,ctx.measureText(name).width+12,22);
+  ctx.fillStyle=color;
+  ctx.fillText(name,14,23);
+}
+
+function render(){
+  const season=currentSeason();
+  ctx.clearRect(0,0,480,480);
+  drawPond(season);
+  const r=lpx();
+  for(const l of lilies){ const [cx,cy]=toScr(l.x,l.y); drawLily(cx,cy,r,lState(l),l.rot); }
+  if(P.predEnabled) for(const p of predators) drawPredator(p);
+  if(P.seasonEnabled) drawSeasonBadge(season);
+}
+
+// ── Chart ─────────────────────────────────────────────────────────
 const cch=document.getElementById('chart'), cctx=cch.getContext('2d');
 function drawChart(){
   const W=cch.width,H=cch.height; cctx.clearRect(0,0,W,H);
   if(hist.length<2) return;
-  const maxT=Math.max(1,...hist.map(h=>h.tot));
+  const maxT=Math.max(1,...hist.map(h=>Math.max(h.tot,h.pred)));
   const pad=2,w=W-pad*2,h=H-pad*2;
   const xi=i=>pad+i/(hist.length-1)*w, yv=v=>pad+h-v/maxT*h;
   cctx.strokeStyle='rgba(255,255,255,0.05)'; cctx.lineWidth=1;
@@ -260,16 +437,20 @@ function drawChart(){
     hist.forEach((p,i)=>{ i===0?cctx.moveTo(xi(i),yv(p[key])):cctx.lineTo(xi(i),yv(p[key])); });
     cctx.strokeStyle=col; cctx.lineWidth=lw; cctx.stroke();
   }
-  line('o','rgba(199,125,8,.8)'); line('a','rgba(64,145,108,.85)'); line('y','rgba(116,198,157,.85)');
-  cctx.setLineDash([3,4]); line('tot','rgba(232,234,240,.3)',1); cctx.setLineDash([]);
+  line('o','rgba(199,125,8,.8)');
+  line('a','rgba(64,145,108,.85)');
+  line('y','rgba(116,198,157,.85)');
+  if(P.predEnabled) line('pred','rgba(232,168,56,.9)',2);
 }
 
-function updateStats(){
+// ── Stats ─────────────────────────────────────────────────────────
+function updateStats(season){
+  season=season||currentSeason();
   document.getElementById('sDay').textContent=day;
   document.getElementById('sCnt').textContent=lilies.length;
   const cov=Math.min(100,Math.round(lilies.length*P.lilyR**2/P.pondR**2*100));
   document.getElementById('sCov').textContent=cov+'%';
-  document.getElementById('sDead').textContent=dead;
+  document.getElementById('sPred').textContent=P.predEnabled?predators.length:'—';
   drawChart();
 }
 
@@ -279,13 +460,13 @@ function showOverlay(title,sub){
   document.getElementById('ov').classList.add('show');
 }
 
-// animation
+// ── Animation ─────────────────────────────────────────────────────
 function tick(ts){
   if(!ts0) ts0=ts;
   const dt=ts-ts0; ts0=ts;
   accum+=dt*speed;
-  let cap=50;
-  while(accum>=MS_PER_STEP && cap-->0){ step(); accum-=MS_PER_STEP; }
+  let cap=80;
+  while(accum>=MS_PER_STEP&&cap-->0){ step(); accum-=MS_PER_STEP; }
   render();
   if(running) raf=requestAnimationFrame(tick);
 }
@@ -308,14 +489,30 @@ function doReset(){
   document.getElementById('ov').classList.remove('show');
   initState();
   const l=newLily(0,0); lilies=[l]; gadd(l);
+  if(P.predEnabled){
+    for(let i=0;i<P.predCount;i++){
+      const a=i/P.predCount*Math.PI*2, r=P.pondR*.45;
+      predators.push(newPred(Math.cos(a)*r, Math.sin(a)*r));
+    }
+  }
   updateStats(); render();
 }
+
 function setP(k,v,lid,fmt){ P[k]=v; document.getElementById(lid).textContent=fmt(v); doReset(); }
 function setSpd(s,btn){ speed=s; document.querySelectorAll('.spd-b').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+function toggleFeature(key,val,groupId){
+  P[key]=val;
+  document.getElementById(groupId).classList.toggle('disabled',!val);
+  doReset();
+}
 
-// init
+// ── Init ──────────────────────────────────────────────────────────
 initState();
 const first=newLily(0,0); lilies=[first]; gadd(first);
+for(let i=0;i<P.predCount;i++){
+  const a=i/P.predCount*Math.PI*2, r=P.pondR*.45;
+  predators.push(newPred(Math.cos(a)*r, Math.sin(a)*r));
+}
 updateStats(); render();
 </script>
 </body>
