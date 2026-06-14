@@ -164,6 +164,14 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
         <div class="ctrl-h"><span class="ctrl-nm">Потеря энергии/день</span><span class="ctrl-v" id="vPL">4</span></div>
         <input type="range" min="1" max="20" value="4" oninput="setP('predLossE',+this.value,'vPL',v=>v)">
       </div>
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Порог насыщения</span><span class="ctrl-v" id="vPSat">70</span></div>
+        <input type="range" min="20" max="150" value="70" oninput="setP('predSatiated',+this.value,'vPSat',v=>v)">
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Сытых дней для потомства</span><span class="ctrl-v" id="vPRD">5 дн.</span></div>
+        <input type="range" min="1" max="20" value="5" oninput="setP('predReproDays',+this.value,'vPRD',v=>v+' дн.')">
+      </div>
     </div>
 
     <hr class="divider">
@@ -203,6 +211,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 const P = {
   pubAge:3, splitInt:1, reproLife:14, pondR:250, lilyR:10,
   predEnabled:true, predCount:3, predSpeed:15, predEatE:30, predLossE:4,
+  predSatiated:70, predReproDays:5,
   seasonEnabled:true, seasonLen:20,
 };
 const VISUAL_R=228, CX=240, CY=240, MS_PER_STEP=380;
@@ -256,14 +265,35 @@ function findSpot(px,py){
 }
 
 // ── Predator ─────────────────────────────────────────────────────
-function newPred(x,y){ return {id:predUid++, x, y, angle:Math.random()*Math.PI*2, energy:60}; }
+function newPred(x,y){ return {id:predUid++, x, y, angle:Math.random()*Math.PI*2, energy:60, fedDays:0}; }
+
+function findNearestLily(x,y){
+  const c=cs(), cells=Math.ceil(P.pondR/c)+1, gx=Math.floor(x/c), gy=Math.floor(y/c);
+  let best=null, bestD2=Infinity;
+  for(let dx=-cells;dx<=cells;dx++) for(let dy=-cells;dy<=cells;dy++){
+    const a=grid.get((gx+dx)+'_'+(gy+dy)); if(!a) continue;
+    for(const l of a){ const ex=l.x-x,ey=l.y-y,d2=ex*ex+ey*ey; if(d2<bestD2){bestD2=d2;best=l;} }
+  } return best;
+}
 
 function stepPred(pred, season){
-  const lossMultiplier = season==='winter' ? 2 : 1;
-  pred.energy -= P.predLossE * lossMultiplier;
+  pred.energy -= P.predLossE * (season==='winter' ? 2 : 1);
 
-  // random walk
-  pred.angle += (Math.random()-0.5)*0.8;
+  const hungry = pred.energy < P.predSatiated;
+
+  // Steering: голодная → разворачивается к ближайшей кувшинке; сытая → случайная прогулка
+  if(hungry && lilies.length > 0){
+    const target = findNearestLily(pred.x, pred.y);
+    if(target){
+      const toFood = Math.atan2(target.y-pred.y, target.x-pred.x);
+      let diff = toFood - pred.angle;
+      while(diff > Math.PI) diff -= 2*Math.PI;
+      while(diff < -Math.PI) diff += 2*Math.PI;
+      pred.angle += diff * 0.4;
+    }
+  } else {
+    pred.angle += (Math.random()-0.5)*0.8;
+  }
 
   const substeps = Math.ceil(P.predSpeed/P.lilyR);
   const dx = Math.cos(pred.angle)*P.predSpeed/substeps;
@@ -279,15 +309,22 @@ function stepPred(pred, season){
       pred.x = nx*(pr-1); pred.y = ny*(pr-1);
       pred.angle = Math.atan2(dy-2*dot*ny, dx-2*dot*nx) + (Math.random()-.5)*.4;
     }
-    // eat nearby lilies
-    const eatR2 = (P.lilyR*2)**2;
-    const toEat = liliesNear(pred.x, pred.y, eatR2);
-    for(const l of toEat){
-      grm(l);
-      const idx=lilies.indexOf(l); if(idx>=0) lilies.splice(idx,1);
-      pred.energy += P.predEatE;
+    // Ест только когда голодная, останавливается при насыщении
+    if(pred.energy < P.predSatiated){
+      const eatR2 = (P.lilyR*2)**2;
+      const toEat = liliesNear(pred.x, pred.y, eatR2);
+      for(const l of toEat){
+        grm(l);
+        const idx=lilies.indexOf(l); if(idx>=0) lilies.splice(idx,1);
+        pred.energy += P.predEatE;
+        if(pred.energy >= P.predSatiated) break;
+      }
     }
   }
+
+  // Счётчик сытых дней для размножения (порог = 65% от насыщения)
+  if(pred.energy >= P.predSatiated * 0.65) pred.fedDays++;
+  else pred.fedDays = 0;
 }
 
 // ── Season ───────────────────────────────────────────────────────
@@ -331,7 +368,7 @@ function step(){
     const newPreds=[];
     for(const p of predators){
       stepPred(p, season);
-      if(p.energy>=100){ p.energy-=55; newPreds.push(newPred(p.x+(Math.random()-.5)*20,p.y+(Math.random()-.5)*20)); }
+      if(p.fedDays>=P.predReproDays){ p.fedDays=0; newPreds.push(newPred(p.x+(Math.random()-.5)*20,p.y+(Math.random()-.5)*20)); }
     }
     predators=predators.filter(p=>p.energy>0);
     predators.push(...newPreds);
