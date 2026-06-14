@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кувшинки в пруду</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Unbounded:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0c12;--sur:#12151f;--bdr:#1e2433;--txt:#e8eaf0;--sub:#8890a8;--mut:#5a6278;--acc:#40916c}
+body{background:var(--bg);color:var(--txt);font-family:'Manrope',sans-serif;min-height:100vh;padding:28px 20px}
+.page{max-width:900px;margin:0 auto}
+a.back{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;color:var(--mut);text-decoration:none;margin-bottom:14px;transition:color .15s}
+a.back:hover{color:var(--txt)}
+h1{font-family:'Unbounded',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:-.03em;margin-bottom:20px}
+h1 b{color:var(--acc);font-weight:inherit}
+.lay{display:grid;grid-template-columns:1fr 268px;gap:16px;align-items:start}
+@media(max-width:680px){.lay{grid-template-columns:1fr}}
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:14px;padding:18px}
+
+/* pond */
+.pondwrap{position:relative}
+canvas#pond{width:100%;aspect-ratio:1;display:block;border-radius:8px;cursor:pointer}
+.overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,.72);border-radius:8px}
+.overlay.show{display:flex}
+.ov-title{font-family:'Unbounded',sans-serif;font-size:.95rem;color:#74c69d}
+.ov-sub{font-size:.72rem;color:var(--mut)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--bdr);margin-top:14px;padding-top:13px}
+.st{text-align:center}
+.st+.st{border-left:1px solid var(--bdr)}
+.st-n{font-size:1.4rem;font-weight:600;line-height:1}
+.st-l{font-size:.67rem;color:var(--mut);margin-top:3px}
+
+/* chart */
+.chart-card{margin-top:14px}
+.card-lbl{font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+canvas#chart{width:100%;height:90px;display:block}
+.legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:4px;font-size:.69rem;color:var(--mut)}
+.ld{width:7px;height:7px;border-radius:50%}
+
+/* panel */
+.panel{display:flex;flex-direction:column;gap:14px}
+.sec{font-size:.67rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.ctrl{display:flex;flex-direction:column;gap:5px}
+.ctrl-h{display:flex;justify-content:space-between;align-items:baseline}
+.ctrl-nm{font-size:.79rem;color:var(--sub)}
+.ctrl-v{font-size:.79rem;font-weight:600}
+input[type=range]{width:100%;height:3px;-webkit-appearance:none;appearance:none;background:var(--bdr);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--acc);cursor:pointer;transition:transform .1s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.btns{display:flex;gap:7px}
+.btn{flex:1;padding:9px;border:1px solid var(--bdr);border-radius:9px;background:none;color:var(--sub);font-family:'Manrope',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .15s}
+.btn:hover{border-color:var(--acc);color:var(--txt)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.pri:hover{opacity:.88}
+.spd-row{display:flex;align-items:center;gap:8px}
+.spd-l{font-size:.71rem;color:var(--mut);flex-shrink:0}
+.spd-btns{display:flex;gap:4px}
+.spd-b{padding:3px 8px;border:1px solid var(--bdr);border-radius:6px;background:none;color:var(--mut);font-size:.69rem;font-family:'Manrope',sans-serif;cursor:pointer;transition:all .15s}
+.spd-b:hover,.spd-b.on{border-color:var(--acc);color:var(--txt)}
+.hint{font-size:.69rem;color:var(--mut);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+<a class="back" href="index.html">← Назад</a>
+<h1>Кувшинки <b>в пруду</b></h1>
+
+<div class="lay">
+  <div>
+    <div class="card">
+      <div class="pondwrap">
+        <canvas id="pond" width="480" height="480" onclick="clickStep()" title="Клик — шаг вперёд"></canvas>
+        <div class="overlay" id="ov">
+          <div class="ov-title" id="ov-title">Пруд покрыт!</div>
+          <div class="ov-sub" id="ov-sub"></div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="st"><div class="st-n" id="sDay">0</div><div class="st-l">День</div></div>
+        <div class="st"><div class="st-n" id="sCnt">1</div><div class="st-l">Кувшинок</div></div>
+        <div class="st"><div class="st-n" id="sCov">0%</div><div class="st-l">Покрытие</div></div>
+        <div class="st"><div class="st-n" id="sDead">0</div><div class="st-l">Погибло</div></div>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-lbl">Популяция по дням</div>
+      <canvas id="chart" width="800" height="90"></canvas>
+      <div class="legend">
+        <div class="leg"><div class="ld" style="background:#74c69d"></div>Молодые</div>
+        <div class="leg"><div class="ld" style="background:#40916c"></div>Взрослые</div>
+        <div class="leg"><div class="ld" style="background:#c77d08"></div>Стареющие</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card panel">
+    <div class="sec">Жизненный цикл</div>
+    <div class="ctrl">
+      <div class="ctrl-h"><span class="ctrl-nm">Возраст взросления</span><span class="ctrl-v" id="vPub">3 дн.</span></div>
+      <input type="range" min="0" max="15" value="3" oninput="setP('pubAge',+this.value,'vPub',v=>v+' дн.')">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-h"><span class="ctrl-nm">Интервал деления</span><span class="ctrl-v" id="vSpl">1 дн.</span></div>
+      <input type="range" min="1" max="10" value="1" oninput="setP('splitInt',+this.value,'vSpl',v=>v+' дн.')">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-h"><span class="ctrl-nm">Репродуктивный период</span><span class="ctrl-v" id="vRep">14 дн.</span></div>
+      <input type="range" min="1" max="40" value="14" oninput="setP('reproLife',+this.value,'vRep',v=>v+' дн.')">
+    </div>
+    <div class="sec">Пруд</div>
+    <div class="ctrl">
+      <div class="ctrl-h"><span class="ctrl-nm">Размер пруда</span><span class="ctrl-v" id="vPond">250</span></div>
+      <input type="range" min="80" max="450" value="250" oninput="setP('pondR',+this.value,'vPond',v=>v)">
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-h"><span class="ctrl-nm">Размер кувшинки</span><span class="ctrl-v" id="vLily">10</span></div>
+      <input type="range" min="3" max="30" value="10" oninput="setP('lilyR',+this.value,'vLily',v=>v)">
+    </div>
+    <div class="sec">Управление</div>
+    <div class="btns">
+      <button class="btn pri" id="btnPlay" onclick="togglePlay()">▶ Старт</button>
+      <button class="btn" onclick="doReset()">↺ Сброс</button>
+    </div>
+    <div class="spd-row">
+      <span class="spd-l">Скорость:</span>
+      <div class="spd-btns">
+        <button class="spd-b on" onclick="setSpd(1,this)">×1</button>
+        <button class="spd-b" onclick="setSpd(5,this)">×5</button>
+        <button class="spd-b" onclick="setSpd(20,this)">×20</button>
+        <button class="spd-b" onclick="setSpd(100,this)">×100</button>
+      </div>
+    </div>
+    <div class="hint">Клик по пруду — шаг вперёд на 1 день (на паузе).</div>
+  </div>
+</div>
+</div>
+
+<script>
+const P = { pubAge:3, splitInt:1, reproLife:14, pondR:250, lilyR:10 };
+const VISUAL_R = 228, CX = 240, CY = 240, MS_PER_STEP = 380;
+
+let lilies, day, dead, running, speed, raf, ts0, accum, hist, grid, uid, noSplitRuns, done;
+
+function initState() {
+  lilies=[]; day=0; dead=0; running=false; speed=1;
+  raf=null; ts0=null; accum=0; hist=[]; grid=new Map(); uid=0; noSplitRuns=0; done=false;
+}
+
+// spatial hash
+function cs(){ return P.lilyR*2; }
+function gk(x,y){ const c=cs(); return Math.floor(x/c)+'_'+Math.floor(y/c); }
+function gadd(l){ const k=gk(l.x,l.y); if(!grid.has(k))grid.set(k,[]); grid.get(k).push(l); }
+function grm(l){ const a=grid.get(gk(l.x,l.y)); if(a){ const i=a.indexOf(l); if(i>=0)a.splice(i,1); } }
+function ghit(x,y){ const c=cs(),r2=c*c,gx=Math.floor(x/c),gy=Math.floor(y/c);
+  for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++){
+    const a=grid.get((gx+dx)+'_'+(gy+dy)); if(!a) continue;
+    for(const l of a){ const ex=l.x-x,ey=l.y-y; if(ex*ex+ey*ey<r2)return true; }
+  } return false; }
+
+function newLily(x,y){ return {id:uid++,x,y,born:day,rot:Math.random()*Math.PI*2}; }
+function age(l){ return day-l.born; }
+function state(l){ const a=age(l),m=a-P.pubAge; if(m<0)return'y'; if(m<P.reproLife)return'a'; return'o'; }
+
+function findSpot(px,py){
+  const d=P.lilyR*2.15, pr=P.pondR-P.lilyR;
+  for(let i=0;i<72;i++){
+    const a=Math.random()*Math.PI*2, x=px+Math.cos(a)*d, y=py+Math.sin(a)*d;
+    if(x*x+y*y>pr*pr) continue;
+    if(!ghit(x,y)) return {x,y};
+  } return null;
+}
+
+function step(){
+  if(done) return;
+  day++;
+  const add=[], die=[];
+  let matureSplit=0, splitOk=0;
+
+  for(const l of lilies){
+    const a=age(l), ma=a-P.pubAge;
+    if(ma>=P.reproLife){ die.push(l); continue; }
+    if(ma>=0 && ma%P.splitInt===0){
+      matureSplit++;
+      const s=findSpot(l.x,l.y);
+      if(s){ add.push(newLily(s.x,s.y)); splitOk++; }
+    }
+  }
+
+  const dieSet=new Set(die);
+  for(const l of die) grm(l);
+  lilies=lilies.filter(l=>!dieSet.has(l));
+  dead+=die.length;
+  for(const l of add){ lilies.push(l); gadd(l); }
+
+  if(matureSplit>0 && splitOk===0) noSplitRuns++; else noSplitRuns=0;
+
+  let y=0,at=0,o=0;
+  for(const l of lilies){ const s=state(l); if(s==='y')y++; else if(s==='a')at++; else o++; }
+  hist.push({day,y,a:at,o,tot:lilies.length});
+
+  if(noSplitRuns>=3){ done=true; showOverlay('Пруд покрыт!','За '+day+' дней'); stopPlay(); }
+  if(lilies.length===0 && day>1){ done=true; showOverlay('Все погибли','Популяция вымерла на день '+day); stopPlay(); }
+  updateStats();
+}
+
+// canvas
+const cvs=document.getElementById('pond'), ctx=cvs.getContext('2d');
+const CC={y:'#74c69d',a:'#2d6a4f',o:'#c77d08'};
+
+function toScr(x,y){ const s=VISUAL_R/P.pondR; return [CX+x*s,CY+y*s]; }
+function lpx(){ return P.lilyR*VISUAL_R/P.pondR; }
+
+function drawPond(){
+  const g=ctx.createRadialGradient(CX,CY,0,CX,CY,VISUAL_R+8);
+  g.addColorStop(0,'#0e2e42'); g.addColorStop(1,'#06151f');
+  ctx.beginPath(); ctx.arc(CX,CY,VISUAL_R,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(80,160,220,0.06)'; ctx.lineWidth=1;
+  for(let i=1;i<7;i++){ ctx.beginPath(); ctx.arc(CX,CY,VISUAL_R*i/7,0,Math.PI*2); ctx.stroke(); }
+  ctx.beginPath(); ctx.arc(CX,CY,VISUAL_R,0,Math.PI*2);
+  ctx.strokeStyle='rgba(64,145,108,0.25)'; ctx.lineWidth=2; ctx.stroke();
+}
+
+function drawLily(cx,cy,r,st,rot){
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot);
+  const notch=0.22;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,notch,Math.PI*2-notch); ctx.closePath();
+  ctx.fillStyle=CC[st]; ctx.fill();
+  const hl=ctx.createRadialGradient(-r*.2,-r*.3,0,0,0,r);
+  hl.addColorStop(0,'rgba(255,255,255,0.15)'); hl.addColorStop(1,'rgba(0,0,0,0.18)');
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,notch,Math.PI*2-notch); ctx.closePath();
+  ctx.fillStyle=hl; ctx.fill();
+  if(r>=5){ ctx.strokeStyle='rgba(0,0,0,0.18)'; ctx.lineWidth=0.4;
+    for(let i=0;i<7;i++){ const a=i/7*Math.PI*2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); ctx.stroke(); } }
+  ctx.restore();
+}
+
+function render(){
+  ctx.clearRect(0,0,480,480); drawPond();
+  const r=lpx();
+  for(const l of lilies){ const [cx,cy]=toScr(l.x,l.y); drawLily(cx,cy,r,state(l),l.rot); }
+}
+
+// chart
+const cch=document.getElementById('chart'), cctx=cch.getContext('2d');
+function drawChart(){
+  const W=cch.width,H=cch.height; cctx.clearRect(0,0,W,H);
+  if(hist.length<2) return;
+  const maxT=Math.max(1,...hist.map(h=>h.tot));
+  const pad=2,w=W-pad*2,h=H-pad*2;
+  const xi=i=>pad+i/(hist.length-1)*w, yv=v=>pad+h-v/maxT*h;
+  cctx.strokeStyle='rgba(255,255,255,0.05)'; cctx.lineWidth=1;
+  [.25,.5,.75].forEach(f=>{ cctx.beginPath(); cctx.moveTo(pad,yv(maxT*f)); cctx.lineTo(pad+w,yv(maxT*f)); cctx.stroke(); });
+  function line(key,col,lw=1.5){
+    cctx.beginPath();
+    hist.forEach((p,i)=>{ i===0?cctx.moveTo(xi(i),yv(p[key])):cctx.lineTo(xi(i),yv(p[key])); });
+    cctx.strokeStyle=col; cctx.lineWidth=lw; cctx.stroke();
+  }
+  line('o','rgba(199,125,8,.8)'); line('a','rgba(64,145,108,.85)'); line('y','rgba(116,198,157,.85)');
+  cctx.setLineDash([3,4]); line('tot','rgba(232,234,240,.3)',1); cctx.setLineDash([]);
+}
+
+function updateStats(){
+  document.getElementById('sDay').textContent=day;
+  document.getElementById('sCnt').textContent=lilies.length;
+  const cov=Math.min(100,Math.round(lilies.length*P.lilyR**2/P.pondR**2*100));
+  document.getElementById('sCov').textContent=cov+'%';
+  document.getElementById('sDead').textContent=dead;
+  drawChart();
+}
+
+function showOverlay(title,sub){
+  document.getElementById('ov-title').textContent=title;
+  document.getElementById('ov-sub').textContent=sub;
+  document.getElementById('ov').classList.add('show');
+}
+
+// animation
+function tick(ts){
+  if(!ts0) ts0=ts;
+  const dt=ts-ts0; ts0=ts;
+  accum+=dt*speed;
+  let cap=50;
+  while(accum>=MS_PER_STEP && cap-->0){ step(); accum-=MS_PER_STEP; }
+  render();
+  if(running) raf=requestAnimationFrame(tick);
+}
+
+function togglePlay(){ running?stopPlay():startPlay(); }
+function startPlay(){
+  if(done) return;
+  running=true; ts0=null; accum=0;
+  document.getElementById('btnPlay').textContent='⏸ Пауза';
+  raf=requestAnimationFrame(tick);
+}
+function stopPlay(){
+  running=false; cancelAnimationFrame(raf);
+  document.getElementById('btnPlay').textContent='▶ Старт';
+}
+function clickStep(){ if(!running){ step(); render(); } }
+
+function doReset(){
+  stopPlay();
+  document.getElementById('ov').classList.remove('show');
+  initState();
+  const l=newLily(0,0); lilies=[l]; gadd(l);
+  updateStats(); render();
+}
+function setP(k,v,lid,fmt){ P[k]=v; document.getElementById(lid).textContent=fmt(v); doReset(); }
+function setSpd(s,btn){ speed=s; document.querySelectorAll('.spd-b').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+
+// init
+initState();
+const first=newLily(0,0); lilies=[first]; gadd(first);
+updateStats(); render();
+</script>
+</body>
+</html>
