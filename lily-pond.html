@@ -347,7 +347,10 @@ function step(){
     const a=lAge(l), ma=a-P.pubAge;
     // winter kills young lilies
     if(season==='winter' && ma<0 && Math.random()<0.25){ die.push(l); continue; }
-    if(ma>=P.reproLife){ die.push(l); continue; }
+    // 3 дня в состоянии 'old' (жёлтые), потом гибнут
+    if(ma >= P.reproLife + 3){ die.push(l); continue; }
+    // старые — не делятся, просто стареют
+    if(ma >= P.reproLife){ continue; }
     if(ma>=0 && splitMult!==Infinity){
       const effSplit = Math.max(1, Math.round(P.splitInt*splitMult));
       if(ma%effSplit===0){
