@@ -172,6 +172,10 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
         <div class="ctrl-h"><span class="ctrl-nm">Сытых дней для потомства</span><span class="ctrl-v" id="vPRD">5 дн.</span></div>
         <input type="range" min="1" max="20" value="5" oninput="setP('predReproDays',+this.value,'vPRD',v=>v+' дн.')">
       </div>
+      <div class="ctrl">
+        <div class="ctrl-h"><span class="ctrl-nm">Продолжительность жизни</span><span class="ctrl-v" id="vPLife">40 дн.</span></div>
+        <input type="range" min="5" max="120" value="40" oninput="setP('predLifespan',+this.value,'vPLife',v=>v+' дн.')">
+      </div>
     </div>
 
     <hr class="divider">
@@ -211,7 +215,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 const P = {
   pubAge:3, splitInt:1, reproLife:14, pondR:250, lilyR:10,
   predEnabled:true, predCount:3, predSpeed:15, predEatE:30, predLossE:4,
-  predSatiated:70, predReproDays:5,
+  predSatiated:70, predReproDays:5, predLifespan:40,
   seasonEnabled:true, seasonLen:20,
 };
 const VISUAL_R=228, CX=240, CY=240, MS_PER_STEP=380;
@@ -265,7 +269,7 @@ function findSpot(px,py){
 }
 
 // ── Predator ─────────────────────────────────────────────────────
-function newPred(x,y){ return {id:predUid++, x, y, angle:Math.random()*Math.PI*2, energy:60, fedDays:0}; }
+function newPred(x,y){ return {id:predUid++, x, y, angle:Math.random()*Math.PI*2, energy:60, fedDays:0, born:day}; }
 
 function findNearestLily(x,y){
   const c=cs(), cells=Math.ceil(P.pondR/c)+1, gx=Math.floor(x/c), gy=Math.floor(y/c);
@@ -373,11 +377,12 @@ function step(){
       stepPred(p, season);
       if(p.fedDays>=P.predReproDays){ p.fedDays=0; newPreds.push(newPred(p.x+(Math.random()-.5)*20,p.y+(Math.random()-.5)*20)); }
     }
-    predators=predators.filter(p=>p.energy>0);
+    predators=predators.filter(p=>p.energy>0 && (day-p.born)<P.predLifespan);
     predators.push(...newPreds);
   }
 
-  if(matureSplit>0 && splitOk===0 && !P.seasonEnabled) noSplitRuns++;
+  // Pond-full: считаем долю неудачных делений (не зависит от сезонов)
+  if(splitMult!==Infinity && matureSplit>3 && splitOk===0) noSplitRuns++;
   else if(splitOk>0) noSplitRuns=0;
 
   let y=0,at=0,o=0;
