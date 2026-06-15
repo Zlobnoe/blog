@@ -389,7 +389,7 @@ function step(){
   for(const l of lilies){ const s=lState(l); if(s==='y')y++; else if(s==='a')at++; else o++; }
   hist.push({day,y,a:at,o,tot:lilies.length,pred:predators.length});
 
-  if(noSplitRuns>=3){ done=true; showOverlay('Пруд покрыт!','За '+day+' дней'); stopPlay(); }
+  if(noSplitRuns>=3 && (!P.predEnabled || predators.length===0)){ done=true; showOverlay('Пруд покрыт!','За '+day+' дней'); stopPlay(); }
   if(lilies.length===0&&day>3){ done=true; showOverlay('Кувшинки исчезли','День '+day); stopPlay(); }
   if(P.predEnabled&&predators.length===0&&lilies.length===0&&day>5){ done=true; showOverlay('Экосистема рухнула','День '+day); stopPlay(); }
   updateStats(season);
