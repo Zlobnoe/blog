@@ -257,9 +257,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
       <div class="ctrl">
         <div class="ctrl-h" style="margin-bottom:6px"><span class="ctrl-nm">Сезон размножения</span></div>
         <div class="spd-btns">
-          <button class="spd-b on" id="bs-any"    onclick="setBreedSeason('any',this)">Любой</button>
+          <button class="spd-b"    id="bs-any"    onclick="setBreedSeason('any',this)">Любой</button>
           <button class="spd-b"    id="bs-spring"  onclick="setBreedSeason('spring',this)">Весна</button>
-          <button class="spd-b"    id="bs-summer"  onclick="setBreedSeason('summer',this)">Лето</button>
+          <button class="spd-b on" id="bs-summer"  onclick="setBreedSeason('summer',this)">Лето</button>
           <button class="spd-b"    id="bs-autumn"  onclick="setBreedSeason('autumn',this)">Осень</button>
           <button class="spd-b"    id="bs-winter"  onclick="setBreedSeason('winter',this)">Зима</button>
         </div>
@@ -303,7 +303,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 const P = {
   pubAge:2, splitInt:1, reproLife:28, pondR:187, lilyR:10,
   predEnabled:true, predCount:3, predSpeed:3, predEatE:41, predLossE:4,
-  predSatiated:70, predReproDays:12, predLifespan:79, predBreedSeason:'any',
+  predSatiated:70, predReproDays:12, predLifespan:79, predBreedSeason:'summer',
   seasonEnabled:true, seasonLen:20,
 };
 const VISUAL_R=228, CX=240, CY=240, MS_PER_STEP=380;
