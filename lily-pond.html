@@ -77,12 +77,90 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .spd-b:hover,.spd-b.on{border-color:var(--acc);color:var(--txt)}
 .hint{font-size:.68rem;color:var(--mut);line-height:1.5}
 .divider{border:none;border-top:1px solid var(--bdr);margin:2px 0}
+
+/* modal */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.mbg.show{display:flex}
+.modal{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:28px 28px 24px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;position:relative;scrollbar-width:thin;scrollbar-color:var(--bdr) transparent}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+.m-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--mut);font-size:1.1rem;cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1;transition:color .15s}
+.m-close:hover{color:var(--txt)}
+.m-title{font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700;margin-bottom:12px}
+.m-intro{font-size:.82rem;color:var(--sub);line-height:1.65;margin-bottom:20px}
+.m-sec{margin-bottom:18px}
+.m-sec h3{font-size:.67rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
+.m-row{display:grid;grid-template-columns:170px 1fr;gap:8px;margin-bottom:6px;align-items:baseline}
+.m-k{font-size:.79rem;font-weight:600;color:var(--txt)}
+.m-v{font-size:.78rem;color:var(--sub);line-height:1.5}
+.m-seasons{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
+.m-season{background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px}
+.m-season b{font-size:.75rem;font-weight:600;display:block;margin-bottom:2px}
+.m-season span{font-size:.73rem;color:var(--sub);line-height:1.4}
+.h-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px}
+.help-btn{background:none;border:1px solid var(--bdr);border-radius:8px;padding:5px 12px;font-size:.75rem;font-family:'Manrope',sans-serif;color:var(--mut);cursor:pointer;transition:all .15s}
+.help-btn:hover{border-color:var(--acc);color:var(--txt)}
 </style>
 </head>
 <body>
 <div class="page">
 <a class="back" href="index.html">← Назад</a>
-<h1>Кувшинки <b>в пруду</b></h1>
+<div class="h-row">
+  <h1>Кувшинки <b>в пруду</b></h1>
+  <button class="help-btn" onclick="document.getElementById('helpBg').classList.add('show')">? Справка</button>
+</div>
+
+<!-- Help modal -->
+<div class="mbg" id="helpBg" onclick="if(event.target===this)this.classList.remove('show')">
+<div class="modal">
+  <button class="m-close" onclick="document.getElementById('helpBg').classList.remove('show')">✕</button>
+  <div class="m-title">Кувшинки в пруду</div>
+  <p class="m-intro">Классическая задача о кувшинках: один лист начинает делиться в пруду. Каждый взрослый лист периодически создаёт новый рядом с собой — и так пока пруд не заполнится. Добавьте хищников и сезоны, чтобы получить живую экосистему с осцилляциями популяций.</p>
+
+  <div class="m-sec">
+    <h3>Жизненный цикл кувшинок</h3>
+    <div class="m-row"><span class="m-k">Возраст взросления</span><span class="m-v">Дней до первого деления. Молодые листы — светло-зелёные, взрослые — тёмно-зелёные.</span></div>
+    <div class="m-row"><span class="m-k">Интервал деления</span><span class="m-v">Каждые N дней взрослый лист создаёт новый рядом с собой.</span></div>
+    <div class="m-row"><span class="m-k">Репродуктивный период</span><span class="m-v">Через столько дней лист перестаёт делиться, желтеет и через 3 дня погибает.</span></div>
+  </div>
+
+  <div class="m-sec">
+    <h3>Пруд</h3>
+    <div class="m-row"><span class="m-k">Размер пруда</span><span class="m-v">Радиус пруда в условных единицах. Ёмкость растёт как (пруд÷лист)² — в два раза меньше листы = в четыре раза больше вмещается.</span></div>
+    <div class="m-row"><span class="m-k">Размер кувшинки</span><span class="m-v">Радиус каждого листа. Новые листы всегда растут рядом с родителем.</span></div>
+  </div>
+
+  <div class="m-sec">
+    <h3>Хищники (утки)</h3>
+    <div class="m-row"><span class="m-k">Поведение</span><span class="m-v">Голодная утка видит ближайший лист и плавно разворачивается к нему. Сытая — гуляет случайно.</span></div>
+    <div class="m-row"><span class="m-k">Начальное количество</span><span class="m-v">Уток в начале симуляции.</span></div>
+    <div class="m-row"><span class="m-k">Скорость</span><span class="m-v">Расстояние за день. Утка движется по пути и ест кувшинки, которые попадаются.</span></div>
+    <div class="m-row"><span class="m-k">Энергия от еды</span><span class="m-v">Прибавляется при поедании одного листа.</span></div>
+    <div class="m-row"><span class="m-k">Потеря энергии/день</span><span class="m-v">Ежедневный расход. Зимой — вдвое больше. При энергии ≤ 0 утка погибает.</span></div>
+    <div class="m-row"><span class="m-k">Порог насыщения</span><span class="m-v">При этой энергии утка перестаёт есть и переходит на случайную прогулку.</span></div>
+    <div class="m-row"><span class="m-k">Сытых дней для потомства</span><span class="m-v">Столько дней подряд с энергией выше 65% насыщения нужно, чтобы родить утёнка рядом. После рождения счётчик сбрасывается.</span></div>
+    <div class="m-row"><span class="m-k">Продолжительность жизни</span><span class="m-v">Утка умирает от старости ИЛИ от голода — что наступит раньше.</span></div>
+    <div class="m-row"><span class="m-k">Сезон размножения</span><span class="m-v">В каком сезоне утки могут давать потомство. При выключенных сезонах ограничение игнорируется.</span></div>
+  </div>
+
+  <div class="m-sec">
+    <h3>Сезоны (цикл из 4 × длина сезона)</h3>
+    <div class="m-seasons">
+      <div class="m-season"><b style="color:#74c69d">🌱 Весна</b><span>Рост в обычном темпе.</span></div>
+      <div class="m-season"><b style="color:#90e890">☀ Лето</b><span>Кувшинки делятся вдвое быстрее.</span></div>
+      <div class="m-season"><b style="color:#e8c060">🍂 Осень</b><span>Деление вдвое медленнее.</span></div>
+      <div class="m-season"><b style="color:#90b8f8">❄ Зима</b><span>Деление прекращается. Молодые листы гибнут (25%/день). Утки тратят энергию вдвое быстрее.</span></div>
+    </div>
+  </div>
+
+  <div class="m-sec">
+    <h3>Управление</h3>
+    <div class="m-row"><span class="m-k">Клик по пруду</span><span class="m-v">Шаг на 1 день вперёд (только на паузе).</span></div>
+    <div class="m-row"><span class="m-k">Скорость ×1…×100</span><span class="m-v">Ускорение симуляции.</span></div>
+    <div class="m-row"><span class="m-k">Сброс</span><span class="m-v">Начать заново с текущими настройками.</span></div>
+  </div>
+</div>
+</div>
 
 <div class="lay">
   <!-- LEFT -->
@@ -568,6 +646,9 @@ function toggleFeature(key,val,groupId){
   document.getElementById(groupId).classList.toggle('disabled',!val);
   doReset();
 }
+
+// ── Help modal ────────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.getElementById('helpBg').classList.remove('show'); });
 
 // ── Init ──────────────────────────────────────────────────────────
 initState();
