@@ -176,6 +176,16 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
         <div class="ctrl-h"><span class="ctrl-nm">Продолжительность жизни</span><span class="ctrl-v" id="vPLife">40 дн.</span></div>
         <input type="range" min="5" max="120" value="40" oninput="setP('predLifespan',+this.value,'vPLife',v=>v+' дн.')">
       </div>
+      <div class="ctrl">
+        <div class="ctrl-h" style="margin-bottom:6px"><span class="ctrl-nm">Сезон размножения</span></div>
+        <div class="spd-btns">
+          <button class="spd-b on" id="bs-any"    onclick="setBreedSeason('any',this)">Любой</button>
+          <button class="spd-b"    id="bs-spring"  onclick="setBreedSeason('spring',this)">Весна</button>
+          <button class="spd-b"    id="bs-summer"  onclick="setBreedSeason('summer',this)">Лето</button>
+          <button class="spd-b"    id="bs-autumn"  onclick="setBreedSeason('autumn',this)">Осень</button>
+          <button class="spd-b"    id="bs-winter"  onclick="setBreedSeason('winter',this)">Зима</button>
+        </div>
+      </div>
     </div>
 
     <hr class="divider">
@@ -215,7 +225,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 const P = {
   pubAge:3, splitInt:1, reproLife:14, pondR:250, lilyR:10,
   predEnabled:true, predCount:3, predSpeed:15, predEatE:30, predLossE:4,
-  predSatiated:70, predReproDays:5, predLifespan:40,
+  predSatiated:70, predReproDays:5, predLifespan:40, predBreedSeason:'any',
   seasonEnabled:true, seasonLen:20,
 };
 const VISUAL_R=228, CX=240, CY=240, MS_PER_STEP=380;
@@ -375,7 +385,8 @@ function step(){
     const newPreds=[];
     for(const p of predators){
       stepPred(p, season);
-      if(p.fedDays>=P.predReproDays){ p.fedDays=0; newPreds.push(newPred(p.x+(Math.random()-.5)*20,p.y+(Math.random()-.5)*20)); }
+      const canBreed = P.predBreedSeason==='any' || !P.seasonEnabled || season===P.predBreedSeason;
+      if(canBreed && p.fedDays>=P.predReproDays){ p.fedDays=0; newPreds.push(newPred(p.x+(Math.random()-.5)*20,p.y+(Math.random()-.5)*20)); }
     }
     predators=predators.filter(p=>p.energy>0 && (day-p.born)<P.predLifespan);
     predators.push(...newPreds);
@@ -545,6 +556,13 @@ function doReset(){
 
 function setP(k,v,lid,fmt){ P[k]=v; document.getElementById(lid).textContent=fmt(v); doReset(); }
 function setSpd(s,btn){ speed=s; document.querySelectorAll('.spd-b').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+function setBreedSeason(s,btn){
+  P.predBreedSeason=s;
+  ['any','spring','summer','autumn','winter'].forEach(k=>{
+    const el=document.getElementById('bs-'+k); if(el) el.classList.remove('on');
+  });
+  btn.classList.add('on');
+}
 function toggleFeature(key,val,groupId){
   P[key]=val;
   document.getElementById(groupId).classList.toggle('disabled',!val);
