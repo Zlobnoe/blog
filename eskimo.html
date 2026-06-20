@@ -140,6 +140,15 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .help-table-upg .ht-row{grid-template-columns:1.4fr .7fr .7fr 1.1fr}
 .ht-head{font-size:.64rem;font-weight:600;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
 
+/* reset button */
+.reset-btn{
+  display:block;margin-top:20px;width:100%;padding:8px;
+  background:none;border:1px solid var(--border);border-radius:8px;
+  font-size:.72rem;font-family:'Manrope',sans-serif;color:var(--muted);
+  cursor:pointer;transition:all .15s;
+}
+.reset-btn:hover{border-color:#e05a5a;color:#e05a5a}
+
 /* buildings */
 .bld{
   display:flex;align-items:center;gap:10px;
@@ -193,6 +202,8 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 
     <div class="sec-label">Производители</div>
     <div id="bldList"></div>
+
+    <button class="reset-btn" onclick="resetGame()">Сбросить прогресс</button>
   </div>
 
 </div>
@@ -335,7 +346,7 @@ function buyBld(b){
   const cost=bldCost(b);
   if(S.eskimo<cost) return;
   S.eskimo-=cost; S.cnt[b.id]++;
-  render();
+  saveGame(); render();
 }
 
 function buyUpg(u){
@@ -344,7 +355,7 @@ function buyUpg(u){
   S.eskimo-=cost;
   S.upgLevels[u.id]=(upgLvl(u)+1);
   u.apply();
-  render();
+  saveGame(); render();
 }
 
 // ── Рендер ───────────────────────────────────────────────────────────────────
@@ -435,13 +446,49 @@ function syncCrawlers(){
   requestAnimationFrame(moveCrawlers);
 })();
 
+// ── Сохранение ───────────────────────────────────────────────────────────────
+const SAVE_KEY='eskimo-save';
+
+function saveGame(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify({
+    eskimo:S.eskimo, totalEskimo:S.totalEskimo,
+    clickMult:S.clickMult, cnt:S.cnt, mult:S.mult, upgLevels:S.upgLevels,
+  }));
+}
+
+function loadGame(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
+    if(!d) return;
+    S.eskimo=d.eskimo||0;
+    S.totalEskimo=d.totalEskimo||0;
+    S.clickMult=d.clickMult||1;
+    if(d.cnt)       Object.assign(S.cnt, d.cnt);
+    if(d.mult)      Object.assign(S.mult, d.mult);
+    if(d.upgLevels) S.upgLevels=d.upgLevels;
+  }catch(e){}
+}
+
+function resetGame(){
+  if(!confirm('Сбросить весь прогресс? Это нельзя отменить.')) return;
+  localStorage.removeItem(SAVE_KEY);
+  S.eskimo=0; S.totalEskimo=0; S.clickMult=1;
+  Object.keys(S.cnt).forEach(k=>S.cnt[k]=0);
+  Object.keys(S.mult).forEach(k=>S.mult[k]=1);
+  S.upgLevels={};
+  render();
+}
+
 // ── Игровой цикл ─────────────────────────────────────────────────────────────
+let _saveTick=0;
 setInterval(()=>{
   const gain=calcCps()/20;
   S.eskimo+=gain; S.totalEskimo+=gain;
+  if(++_saveTick>=200){ saveGame(); _saveTick=0; } // каждые 10 сек
   render();
 },50);
 
+loadGame();
 render();
 
 function openHelp(){ document.getElementById('helpBg').classList.add('show'); }
