@@ -129,7 +129,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 
 /* ── help button ── */
 .help-btn{
-  margin-left:auto;background:none;border:1px solid var(--border);border-radius:8px;
+  background:none;border:1px solid var(--border);border-radius:8px;
   padding:5px 12px;font-size:.78rem;font-family:'Manrope',sans-serif;
   color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s;
 }
@@ -186,6 +186,30 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .bld-r{text-align:right;flex-shrink:0}
 .bld-cost{font-size:.78rem;font-weight:600}
 .bld-count{font-size:.68rem;color:var(--muted);margin-top:2px}
+
+/* prestige */
+.nav-right{display:flex;gap:8px;margin-left:auto;align-items:center}
+.pshop-btn{background:none;border:1px solid rgba(245,216,64,.45);border-radius:8px;padding:5px 12px;font-size:.78rem;font-family:'Manrope',sans-serif;color:#f5d840;cursor:pointer;transition:all .15s}
+.pshop-btn:hover{border-color:#f5d840;background:rgba(245,216,64,.09)}
+.prestige-section{margin-top:18px;padding-top:14px;border-top:2px solid rgba(245,216,64,.3)}
+.prestige-title{font-size:.65rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#f5d840;margin-bottom:8px}
+.stars-balance{font-size:1rem;font-weight:700;color:#f5d840;letter-spacing:-.01em}
+.stars-pending{font-size:.71rem;color:var(--sub);margin:4px 0 10px;line-height:1.5}
+.rebirth-btn{width:100%;padding:9px;border-radius:9px;background:rgba(245,216,64,.08);border:1px solid rgba(245,216,64,.4);color:#f5d840;font-family:'Manrope',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .15s;margin-bottom:6px;display:block}
+.rebirth-btn:hover:not(:disabled){background:rgba(245,216,64,.18);border-color:#f5d840}
+.rebirth-btn:disabled{opacity:.32;cursor:default}
+.pshop-open-btn{width:100%;padding:7px;border-radius:9px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Manrope',sans-serif;font-size:.74rem;cursor:pointer;transition:all .15s}
+.pshop-open-btn:hover{border-color:rgba(245,216,64,.5);color:#f5d840}
+.pitem{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.pitem:hover:not(.cant):not(.maxed){border-color:#f5d840;background:rgba(245,216,64,.05)}
+.pitem.cant{opacity:.38;cursor:default}
+.pitem.maxed{opacity:.48;cursor:default;border-style:dashed}
+.pitem-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.pitem-name{font-weight:600;font-size:.82rem}
+.pitem-cost{color:#f5d840;font-size:.78rem;font-weight:700;flex-shrink:0}
+.pitem-desc{font-size:.67rem;color:var(--muted)}
+.pitem-badge{font-size:.62rem;color:#f5d840;opacity:.6;margin-left:5px}
+.pshop-bal{font-size:.78rem;color:#f5d840;margin-bottom:12px;padding:8px 10px;background:rgba(245,216,64,.07);border-radius:8px}
 </style>
 </head>
 <body>
@@ -193,7 +217,10 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 <nav class="nav">
   <a class="back" href="index.html">← Назад</a>
   <div class="nav-title">эскимо<em>кликер</em></div>
-  <button class="help-btn" onclick="openHelp()">Справка</button>
+  <div class="nav-right">
+    <button class="pshop-btn" onclick="openPrestige()">✦ Магазин</button>
+    <button class="help-btn" onclick="openHelp()">Справка</button>
+  </div>
 </nav>
 
 <div class="game">
@@ -232,6 +259,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
       <div class="st"><div class="st-val" id="stCps">0</div><div class="st-lbl">в секунду</div></div>
       <div class="st"><div class="st-val" id="stCpc">1</div><div class="st-lbl">за клик</div></div>
       <div class="st"><div class="st-val" id="stTotal">0</div><div class="st-lbl">за всё время</div></div>
+      <div class="st" id="stStarsWrap" style="display:none"><div class="st-val" id="stStars" style="color:#f5d840">0</div><div class="st-lbl">✦ звёздочки</div></div>
     </div>
   </div>
 
@@ -243,9 +271,26 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <div class="sec-label">Производители</div>
     <div id="bldList"></div>
 
+    <div class="prestige-section">
+      <div class="prestige-title">✦ Перерождение</div>
+      <div class="stars-balance" id="starsBalance">✦ 0</div>
+      <div class="stars-pending" id="starsPending"></div>
+      <button class="rebirth-btn" id="rebirthBtn" onclick="rebirthGame()" disabled>Переродиться</button>
+      <button class="pshop-open-btn" onclick="openPrestige()">Магазин звёздочек →</button>
+    </div>
+
     <button class="reset-btn" onclick="resetGame()">Сбросить прогресс</button>
   </div>
 
+</div>
+
+<div class="mbg" id="prestigeBg" onclick="if(event.target===this)closePrestige()">
+  <div class="modal">
+    <button class="modal-close" onclick="closePrestige()">✕</button>
+    <div class="help-title">✦ Магазин звёздочек</div>
+    <p class="help-p" style="font-size:.76rem">Трата звёздочки — это потеря 5% пассивного бонуса. Каждая непотраченная ✦ даёт +5% ко всему производству и кликам навсегда.</p>
+    <div id="pshopItems"></div>
+  </div>
 </div>
 
 <!-- МОДАЛЬНАЯ СПРАВКА -->
@@ -300,6 +345,15 @@ const I={
   galaxy:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><circle cx="7" cy="8" r="1" fill="#e8eaf0" opacity="0.6"/><circle cx="40" cy="11" r="1.2" fill="#e8eaf0" opacity="0.7"/><circle cx="6" cy="38" r="0.8" fill="#e8eaf0" opacity="0.5"/><circle cx="43" cy="36" r="1" fill="#e8eaf0" opacity="0.6"/><circle cx="11" cy="43" r="0.9" fill="#e8eaf0" opacity="0.5"/><circle cx="42" cy="5" r="0.8" fill="#e8eaf0" opacity="0.6"/><circle cx="18" cy="4" r="0.7" fill="#e8eaf0" opacity="0.5"/><circle cx="44" cy="22" r="0.9" fill="#e8eaf0" opacity="0.5"/><path d="M24 24 C28 20,34 16,38 12" stroke="#7c6ff7" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.85"/><path d="M24 24 C20 28,14 32,10 36" stroke="#7c6ff7" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.85"/><path d="M24 24 C20 14,18 8,18 8" stroke="#5a52d0" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.65"/><path d="M24 24 C28 34,30 40,30 40" stroke="#5a52d0" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.65"/><circle cx="24" cy="24" r="6" fill="#7c6ff7" opacity="0.25"/><circle cx="24" cy="24" r="4" fill="#7c6ff7" opacity="0.5"/><circle cx="24" cy="24" r="2" fill="#9a8ff7" opacity="0.9"/><circle cx="24" cy="24" r="1" fill="#e8eaf0"/></svg>`,
 };
 
+const PRESTIGE_ITEMS = [
+  {id:'sweetstart',  name:'Сладкий старт',   cost:2,  max:5,  desc:'Начинаешь забег с +500 эскимо (стакается)'},
+  {id:'crystalclick',name:'Кристальный клик', cost:3,  max:5,  desc:'Клики начинают с ×2 (стакается)'},
+  {id:'goldinstinct',name:'Золотое чутьё',    cost:4,  max:1,  desc:'Золотая мороженка через 20 с после старта'},
+  {id:'quicklaunch', name:'Быстрый запуск',   cost:5,  max:1,  desc:'Все производители -30% первые 2 минуты'},
+  {id:'permafrost',  name:'Вечная мерзлота',  cost:6,  max:10, desc:'+10% к МВС навсегда (стакается)'},
+  {id:'starrain',    name:'Звёздный дождь',   cost:15, max:5,  desc:'+50% звёздочек при перерождении (стакается)'},
+];
+
 const BLDS = [
   {id:'kid',     icon:I.kid,     name:'Ребёнок',          desc:'Тратит карманные на эскимо',            baseCost:2,         baseCps:.1,  scale:1.045},
   {id:'cart',    icon:I.cart,    name:'Тележка',           desc:'Мороженщик объезжает дворы',            baseCost:25,        baseCps:.5,  scale:1.09},
@@ -352,6 +406,9 @@ const S = {
   mult:{kid:1,cart:1,factory:1,truck:1,cafe:1,plant:1,chain:1,orbital:1,galaxy:1},
   upgLevels:{},
   goldMult:1, goldFreqMult:1, goldClicks:0,
+  stars:0, totalStars:0, rebirths:0,
+  prestigeShop:{},
+  quickLaunchActive:false,
 };
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
@@ -362,15 +419,88 @@ function fmt(n){
   return (n/1e9).toFixed(2).replace('.',',')+' млрд';
 }
 
-function bldCost(b){ return Math.ceil(b.baseCost*Math.pow(b.scale||1.18,S.cnt[b.id])); }
-function calcCps(){ return BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0); }
+function pendingStars(){ return Math.max(0,Math.floor(Math.sqrt(S.totalEskimo/100000))); }
+function prestigeMult(){ return 1+S.stars*0.05; }
+
+function bldCost(b){
+  let c=Math.ceil(b.baseCost*Math.pow(b.scale||1.18,S.cnt[b.id]));
+  if(S.quickLaunchActive) c=Math.ceil(c*0.7);
+  return c;
+}
+function calcCps(){
+  const raw=BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0);
+  const pf=1+(S.prestigeShop.permafrost||0)*0.10;
+  return raw*pf*prestigeMult();
+}
 function upgLvl(u){ return S.upgLevels[u.id]||0; }
 function upgCost(u){ return Math.ceil(u.baseCost*Math.pow(UPG_LEVEL_MULT, upgLvl(u))); }
 function upgAvail(u){ return upgLvl(u)>0 ? true : u.cond(S); }
 
 // ── Действия ─────────────────────────────────────────────────────────────────
+function applyPrestigeBonuses(){
+  const ss=S.prestigeShop.sweetstart||0;
+  if(ss>0){ S.eskimo+=ss*500; S.totalEskimo+=ss*500; }
+  const cc=S.prestigeShop.crystalclick||0;
+  if(cc>0) S.clickMult=Math.pow(2,cc);
+  if(S.prestigeShop.quicklaunch){
+    S.quickLaunchActive=true;
+    setTimeout(()=>{ S.quickLaunchActive=false; render(); },120000);
+  }
+}
+
+function rebirthGame(){
+  const stars=pendingStars();
+  if(stars<1) return;
+  const mult=1+(S.prestigeShop.starrain||0)*0.5;
+  const earned=Math.round(stars*mult);
+  if(!confirm('Переродиться и получить '+earned+' ✦? Весь прогресс этого забега сбросится.')) return;
+  S.stars+=earned; S.totalStars+=earned; S.rebirths++;
+  S.eskimo=0; S.totalEskimo=0; S.clickMult=1;
+  Object.keys(S.cnt).forEach(k=>S.cnt[k]=0);
+  Object.keys(S.mult).forEach(k=>S.mult[k]=1);
+  S.upgLevels={};
+  S.goldMult=1; S.goldFreqMult=1; S.goldClicks=0;
+  S.quickLaunchActive=false;
+  applyPrestigeBonuses();
+  saveGame(); render();
+  clearTimeout(goldTimer);
+  if(S.prestigeShop.goldinstinct) goldTimer=setTimeout(spawnGolden,20000);
+  else scheduleGolden();
+}
+
+function buyPrestigeItem(item){
+  const cnt=S.prestigeShop[item.id]||0;
+  if(cnt>=item.max||S.stars<item.cost) return;
+  S.stars-=item.cost;
+  S.prestigeShop[item.id]=cnt+1;
+  saveGame(); render(); renderPrestigeShop();
+}
+
+function renderPrestigeShop(){
+  const cont=document.getElementById('pshopItems');
+  if(!cont) return;
+  const freeStars=S.stars;
+  cont.innerHTML='<div class="pshop-bal">Баланс: ✦ '+freeStars+' (пассивный бонус: +'+Math.round((prestigeMult()-1)*100)+'%)</div>';
+  PRESTIGE_ITEMS.forEach(item=>{
+    const cnt=S.prestigeShop[item.id]||0;
+    const maxed=cnt>=item.max;
+    const cant=freeStars<item.cost;
+    const el=document.createElement('div');
+    el.className='pitem'+(maxed?' maxed':cant?' cant':'');
+    const badge=cnt>0?'<span class="pitem-badge">×'+cnt+(item.max>1?'/'+item.max:'')+'</span>':'';
+    el.innerHTML=
+      '<div class="pitem-top"><span class="pitem-name">'+item.name+badge+'</span><span class="pitem-cost">✦ '+item.cost+'</span></div>'+
+      '<div class="pitem-desc">'+item.desc+'</div>';
+    if(!maxed&&!cant) el.onclick=()=>buyPrestigeItem(item);
+    cont.appendChild(el);
+  });
+}
+
+function openPrestige(){ renderPrestigeShop(); document.getElementById('prestigeBg').classList.add('show'); }
+function closePrestige(){ document.getElementById('prestigeBg').classList.remove('show'); }
+
 function onClickBtn(e){
-  const gain=S.clickMult;
+  const gain=S.clickMult*prestigeMult();
   S.eskimo+=gain; S.totalEskimo+=gain;
 
   const rect=document.getElementById('leftPanel').getBoundingClientRect();
@@ -426,8 +556,22 @@ function render(){
   const cps=calcCps();
   document.getElementById('scoreNum').textContent=fmt(S.eskimo);
   document.getElementById('stCps').textContent=fmt(cps);
-  document.getElementById('stCpc').textContent=fmt(S.clickMult);
   document.getElementById('stTotal').textContent=fmt(S.totalEskimo);
+  // prestige stats
+  const starsWrap=document.getElementById('stStarsWrap');
+  if(S.stars>0||S.rebirths>0){ starsWrap.style.display=''; document.getElementById('stStars').textContent=S.stars; }
+  // prestige section
+  const pending=pendingStars();
+  const mult=1+(S.prestigeShop.starrain||0)*0.5;
+  const earned=Math.round(pending*mult);
+  document.getElementById('starsBalance').textContent='✦ '+S.stars+(S.rebirths>0?' (перерождений: '+S.rebirths+')':'');
+  document.getElementById('starsPending').textContent=pending>0
+    ? 'Переродиться → получишь ✦ '+earned+(mult>1?' (×'+mult.toFixed(1)+')':'')
+    : 'Нужно ~'+fmt(Math.max(0,100000-S.totalEskimo))+' эскимо до первой ✦';
+  const rb=document.getElementById('rebirthBtn');
+  rb.disabled=pending<1;
+  // also update stCpc to include prestige
+  document.getElementById('stCpc').textContent=fmt(S.clickMult*prestigeMult());
   syncCrawlers();
 
   // улучшения
@@ -576,6 +720,7 @@ function saveGame(){
     eskimo:S.eskimo, totalEskimo:S.totalEskimo,
     clickMult:S.clickMult, cnt:S.cnt, mult:S.mult, upgLevels:S.upgLevels,
     goldMult:S.goldMult, goldFreqMult:S.goldFreqMult, goldClicks:S.goldClicks,
+    stars:S.stars, totalStars:S.totalStars, rebirths:S.rebirths, prestigeShop:S.prestigeShop,
   }));
 }
 
@@ -592,6 +737,10 @@ function loadGame(){
     if(d.goldMult)      S.goldMult=d.goldMult;
     if(d.goldFreqMult)  S.goldFreqMult=d.goldFreqMult;
     if(d.goldClicks)    S.goldClicks=d.goldClicks;
+    if(d.stars!==undefined) S.stars=d.stars;
+    if(d.totalStars!==undefined) S.totalStars=d.totalStars;
+    if(d.rebirths!==undefined) S.rebirths=d.rebirths;
+    if(d.prestigeShop) S.prestigeShop=d.prestigeShop;
   }catch(e){}
 }
 
@@ -602,7 +751,9 @@ function resetGame(){
   Object.keys(S.cnt).forEach(k=>S.cnt[k]=0);
   Object.keys(S.mult).forEach(k=>S.mult[k]=1);
   S.upgLevels={};
+  S.stars=0; S.totalStars=0; S.rebirths=0; S.prestigeShop={}; S.quickLaunchActive=false;
   S.goldMult=1; S.goldFreqMult=1; S.goldClicks=0;
+  closePrestige();
   render();
 }
 
@@ -617,11 +768,12 @@ setInterval(()=>{
 
 loadGame();
 render();
-scheduleGolden();
+if(S.prestigeShop.goldinstinct) goldTimer=setTimeout(spawnGolden,20000);
+else scheduleGolden();
 
 function openHelp(){ document.getElementById('helpBg').classList.add('show'); }
 function closeHelp(){ document.getElementById('helpBg').classList.remove('show'); }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeHelp(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeHelp(); closePrestige(); } });
 </script>
 </body>
 </html>
