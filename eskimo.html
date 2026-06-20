@@ -156,8 +156,8 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .help-p{font-size:.8rem;color:var(--sub);line-height:1.65}
 .help-note{font-size:.72rem;color:var(--muted);font-style:italic}
 .help-table{display:flex;flex-direction:column}
-.ht-row{display:grid;grid-template-columns:1.8fr .8fr .5fr;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.75rem;color:var(--sub)}
-.help-table-upg .ht-row{grid-template-columns:1.4fr .7fr .7fr 1.1fr}
+.ht-row{display:grid;grid-template-columns:1.8fr .8fr .5fr .7fr;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.75rem;color:var(--sub)}
+.help-table-upg .ht-row{grid-template-columns:1.4fr .8fr .7fr 1.1fr}
 .ht-head{font-size:.64rem;font-weight:600;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
 
 /* reset button */
@@ -356,35 +356,64 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <button class="modal-close" onclick="closeHelp()">✕</button>
 
     <div class="help-title">Как играть</div>
-    <p class="help-p">Нажимай на левую половину экрана — получаешь эскимо. На заработанные покупай производителей справа: они приносят эскимо автоматически. Открывай улучшения — они умножают доход от кликов и производителей. Улучшения бесконечны: каждый следующий уровень стоит ×10, но даёт тот же множитель снова.</p>
-    <div class="help-title">Золотая мороженка ✦</div>
-    <p class="help-p">Раз в 30–120 секунд на экране появляется золотая мороженка. Кликни на неё как можно быстрее — она принесёт 1–2 минуты текущего производства эскимо. Если не успеть, через 25 секунд она исчезнет сама. Улучшения «Золотая глазурь» и «Золотой сезон» увеличивают награду и частоту появления.</p>
+    <p class="help-p">Нажимай на левую половину экрана — получаешь эскимо. На заработанные покупай производителей справа: они приносят эскимо автоматически. Открывай улучшения — они умножают доход от кликов и производителей. Кнопки <b>×1 / ×10 / ×100</b> над списком позволяют покупать сразу несколько единиц одного производителя.</p>
+
+    <div class="help-title">Золотая мороженка</div>
+    <p class="help-p">Раз в 30–120 секунд на экране появляется золотая мороженка и медленно плывёт к центру. Кликни на неё — получишь 20–40 секунд текущего производства. Через 25 секунд она исчезает сама. Улучшение <b>Золотая глазурь</b> (циклическое, ×1,5 за уровень) увеличивает награду.</p>
 
     <div class="help-title">Производители</div>
     <div class="help-table">
-      <div class="ht-row ht-head"><span>Кто</span><span>Базовая цена</span><span>МВС</span></div>
-      <div class="ht-row"><span>🧒 Ребёнок</span><span>8</span><span>0,1</span></div>
-      <div class="ht-row"><span>🛒 Тележка</span><span>50</span><span>0,5</span></div>
-      <div class="ht-row"><span>🏪 Лоток с мороженым</span><span>550</span><span>5</span></div>
-      <div class="ht-row"><span>🚚 Рефрижератор</span><span>6 000</span><span>25</span></div>
-      <div class="ht-row"><span>🏢 Кафе «Эскимо»</span><span>55 000</span><span>150</span></div>
-      <div class="ht-row"><span>🏭 Хладокомбинат</span><span>500 000</span><span>1 000</span></div>
-      <div class="ht-row"><span>🌍 Торговая сеть</span><span>5 000 000</span><span>7 000</span></div>
-      <div class="ht-row"><span>🚀 Орбитальный завод</span><span>50 000 000</span><span>50 000</span></div>
-      <div class="ht-row"><span>🌌 Галактическая сеть</span><span>500 000 000</span><span>350 000</span></div>
+      <div class="ht-row ht-head"><span>Кто</span><span>Цена</span><span>МВС</span><span>Рост цены</span></div>
+      <div class="ht-row"><span>🧒 Ребёнок</span><span>2</span><span>0,1</span><span>×1,045</span></div>
+      <div class="ht-row"><span>🛒 Тележка</span><span>25</span><span>0,5</span><span>×1,09</span></div>
+      <div class="ht-row"><span>🏪 Лоток с мороженым</span><span>550</span><span>5</span><span>×1,18</span></div>
+      <div class="ht-row"><span>🚚 Рефрижератор</span><span>6 000</span><span>25</span><span>×1,18</span></div>
+      <div class="ht-row"><span>🏢 Кафе «Эскимо»</span><span>55 000</span><span>150</span><span>×1,18</span></div>
+      <div class="ht-row"><span>🏭 Хладокомбинат</span><span>500 000</span><span>1 000</span><span>×1,18</span></div>
+      <div class="ht-row"><span>🌍 Торговая сеть</span><span>5 000 000</span><span>7 000</span><span>×1,18</span></div>
+      <div class="ht-row"><span>🚀 Орбитальный завод</span><span>50 000 000</span><span>50 000</span><span>×1,18</span></div>
+      <div class="ht-row"><span>🌌 Галактическая сеть</span><span>500 000 000</span><span>350 000</span><span>×1,18</span></div>
     </div>
-    <p class="help-note">Цена каждой следующей единицы ×1,18. МВС — мороженых в секунду.</p>
+    <p class="help-note">МВС — мороженых в секунду. Каждая следующая единица дороже предыдущей на коэффициент из столбца «Рост цены».</p>
 
-    <div class="help-title">Улучшения</div>
+    <div class="help-title">Синергия между производителями</div>
+    <p class="help-p">Каждые <b>10 единиц</b> производителя уровня N дают +2% к МВС производителю уровня N+1. Например, 30 детей → тележки получают +6%. Бонус виден в карточке производителя зелёным текстом.</p>
+
+    <div class="help-title">Milestone-апгрейды ★</div>
+    <p class="help-p">При достижении <b>25, 50 и 100 единиц</b> любого производителя в списке улучшений появляется разовое (золотистое) улучшение — даёт ×2 к этому производителю. Куплено один раз и больше не повторяется.</p>
+
+    <div class="help-title">Улучшения (циклические)</div>
     <div class="help-table help-table-upg">
-      <div class="ht-row ht-head"><span>Название</span><span>Базовая цена</span><span>Эффект</span><span>Условие</span></div>
+      <div class="ht-row ht-head"><span>Название</span><span>Цена</span><span>Эффект</span><span>Условие</span></div>
       <div class="ht-row"><span>Шоколадная глазурь</span><span>50</span><span>Клики ×2</span><span>Первый клик</span></div>
       <div class="ht-row"><span>Сладкая вафля</span><span>250</span><span>Дети ×2</span><span>1 ребёнок</span></div>
       <div class="ht-row"><span>Новый маршрут</span><span>1 000</span><span>Тележки ×2</span><span>5 тележек</span></div>
-      <div class="ht-row"><span>Двойная порция</span><span>2 500</span><span>Клики ×2</span><span>«Глазурь» + 1 000 эскимо</span></div>
+      <div class="ht-row"><span>Двойная порция</span><span>2 500</span><span>Клики ×2</span><span>«Глазурь» куплена</span></div>
       <div class="ht-row"><span>Морозильный ларёк</span><span>5 000</span><span>Лотки ×3</span><span>10 лотков</span></div>
+      <div class="ht-row"><span>Золотая глазурь</span><span>8 000</span><span>Золот. ×1,5</span><span>500 эскимо набрано</span></div>
+      <div class="ht-row"><span>Холодная цепь</span><span>30 000</span><span>Рефриж. ×2</span><span>1 рефрижератор</span></div>
+      <div class="ht-row"><span>Летнее меню</span><span>220 000</span><span>Кафе ×2</span><span>1 кафе</span></div>
+      <div class="ht-row"><span>Конвейер 2.0</span><span>2 000 000</span><span>Комбин. ×2</span><span>1 хладокомбинат</span></div>
+      <div class="ht-row"><span>Франшиза</span><span>15 000 000</span><span>Сети ×2</span><span>1 торговая сеть</span></div>
+      <div class="ht-row"><span>Невесомость</span><span>150 000 000</span><span>Орбит. ×3</span><span>1 орб. завод</span></div>
+      <div class="ht-row"><span>Тёмная материя</span><span>1 500 000 000</span><span>Галакт. ×3</span><span>1 галакт. сеть</span></div>
     </div>
-    <p class="help-note">Каждое улучшение можно купить снова — следующий уровень ×10. Метка «Ур.N» — сколько раз куплено.</p>
+    <p class="help-note">Циклические улучшения можно покупать бесконечно — каждый следующий уровень стоит ×10, но даёт тот же множитель снова. Метка «Ур.N» показывает, сколько раз куплено.</p>
+
+    <div class="help-title">Менеджеры</div>
+    <p class="help-p">Четыре менеджера прокачиваются независимо, каждый уровень стоит ×8 дороже предыдущего:</p>
+    <div class="help-table">
+      <div class="ht-row ht-head"><span>Менеджер</span><span>Эффект за уровень</span></div>
+      <div class="ht-row"><span>🔬 Технолог</span><span>+20% к общему МВС</span></div>
+      <div class="ht-row"><span>💰 Финансист</span><span>−15% к ценам производителей</span></div>
+      <div class="ht-row"><span>📣 Маркетолог</span><span>−15% к ценам улучшений</span></div>
+      <div class="ht-row"><span>🚛 Логист</span><span>+30% к МВС рефриж., кафе, комбинатов и сетей</span></div>
+    </div>
+    <p class="help-note">Если куплено 3 менеджера — синергия +15% ко всему. При всех 4 — +30%.</p>
+
+    <div class="help-title">Перерождение ✦</div>
+    <p class="help-p">Когда наберёшь достаточно эскимо, загорится кнопка <b>Переродиться</b>. Весь прогресс забега сбрасывается, но ты получаешь <b>звёздочки ✦</b> — их количество зависит от суммарно набранных эскимо (√(итого / 100 000)). Каждая непотраченная ✦ навсегда даёт +5% ко всему производству и кликам.</p>
+    <p class="help-p">Звёздочки тратятся в <b>Магазине звёздочек</b> на постоянные бонусы для будущих забегов: ускоренный старт, кристальный клик, ускорение золотой мороженки, скидка на производителей и многое другое.</p>
   </div>
 </div>
 
