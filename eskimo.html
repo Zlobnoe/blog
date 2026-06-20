@@ -279,8 +279,8 @@ const I={
 };
 
 const BLDS = [
-  {id:'kid',     icon:I.kid,     name:'Ребёнок',          desc:'Тратит карманные на эскимо',            baseCost:8,         baseCps:.1},
-  {id:'cart',    icon:I.cart,    name:'Тележка',           desc:'Мороженщик объезжает дворы',            baseCost:50,        baseCps:.5},
+  {id:'kid',     icon:I.kid,     name:'Ребёнок',          desc:'Тратит карманные на эскимо',            baseCost:2,         baseCps:.1,  scale:1.045},
+  {id:'cart',    icon:I.cart,    name:'Тележка',           desc:'Мороженщик объезжает дворы',            baseCost:25,        baseCps:.5,  scale:1.09},
   {id:'factory', icon:I.factory, name:'Лоток с мороженым', desc:'Стоит в людном месте круглый день',     baseCost:550,       baseCps:5},
   {id:'truck',   icon:I.truck,   name:'Рефрижератор',      desc:'Развозит по всему городу',              baseCost:6000,      baseCps:25},
   {id:'cafe',    icon:I.cafe,    name:'Кафе «Эскимо»',     desc:'Уютное место с видом на лето',          baseCost:55000,     baseCps:150},
@@ -331,7 +331,7 @@ function fmt(n){
   return (n/1e9).toFixed(2).replace('.',',')+' млрд';
 }
 
-function bldCost(b){ return Math.ceil(b.baseCost*Math.pow(1.18,S.cnt[b.id])); }
+function bldCost(b){ return Math.ceil(b.baseCost*Math.pow(b.scale||1.18,S.cnt[b.id])); }
 function calcCps(){ return BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0); }
 function upgLvl(u){ return S.upgLevels[u.id]||0; }
 function upgCost(u){ return Math.ceil(u.baseCost*Math.pow(UPG_LEVEL_MULT, upgLvl(u))); }
