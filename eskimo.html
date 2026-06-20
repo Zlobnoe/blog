@@ -199,6 +199,9 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .bld-r{text-align:right;flex-shrink:0}
 .bld-cost{font-size:.78rem;font-weight:600}
 .bld-count{font-size:.68rem;color:var(--muted);margin-top:2px}
+.bld-synergy{font-size:.63rem;color:#4caf84;margin-top:2px}
+.upg.upg-milestone{border-color:rgba(245,200,66,.4);background:rgba(245,200,66,.05)}
+.upg.upg-milestone:hover:not(:disabled){border-color:#f5c842;background:rgba(245,200,66,.12)}
 
 /* buy amount toggle */
 .buy-amt-row{display:flex;gap:5px;margin-bottom:10px}
@@ -473,6 +476,22 @@ const UPGRS = [
 
 const UPG_LEVEL_MULT = 10; // каждый следующий уровень стоит в 10× дороже
 
+const MILESTONE_UPGRS = [];
+BLDS.forEach(b => {
+  [25, 50, 100].forEach(n => {
+    MILESTONE_UPGRS.push({
+      id: `ml_${b.id}_${n}`,
+      name: b.name + ': ' + n + ' шт.',
+      baseCost: Math.ceil(b.baseCost * n * n / 4),
+      desc: b.name + ' дают ×2',
+      oneShot: true,
+      cond: s => s.cnt[b.id] >= n,
+      apply: () => { S.mult[b.id] *= 2; },
+    });
+  });
+});
+const ALL_UPGRS = [...UPGRS, ...MILESTONE_UPGRS];
+
 const MANAGERS = [
   {id:'tech', name:'Технолог',   color:'#7c6ff7', letter:'Т',
    desc:'Ускоряет всё производство',
@@ -557,10 +576,15 @@ function bldCostN(b,n){
   }
   return total;
 }
+function synergyBoost(b){
+  const idx=BLDS.findIndex(x=>x.id===b.id);
+  if(idx<=0) return 1;
+  return 1+Math.floor(S.cnt[BLDS[idx-1].id]/10)*0.02;
+}
 function calcCps(){
   const logBlds=new Set(['truck','cafe','plant','chain','orbital','galaxy']);
   const raw=BLDS.reduce((s,b)=>{
-    let cps=b.baseCps*S.cnt[b.id]*S.mult[b.id];
+    let cps=b.baseCps*S.cnt[b.id]*S.mult[b.id]*synergyBoost(b);
     if(logBlds.has(b.id)) cps*=mgrLogMult();
     return s+cps;
   },0);
@@ -569,7 +593,10 @@ function calcCps(){
 }
 function upgLvl(u){ return S.upgLevels[u.id]||0; }
 function upgCost(u){ return Math.ceil(u.baseCost*Math.pow(UPG_LEVEL_MULT,upgLvl(u))*mgrMktMult()); }
-function upgAvail(u){ return upgLvl(u)>0 ? true : u.cond(S); }
+function upgAvail(u){
+  if(u.oneShot && upgLvl(u)>=1) return false;
+  return upgLvl(u)>0 ? true : u.cond(S);
+}
 
 // ── Действия ─────────────────────────────────────────────────────────────────
 function applyPrestigeBonuses(){
@@ -714,7 +741,7 @@ function render(){
   syncCrawlers();
 
   // улучшения
-  const avail=UPGRS.filter(u=>upgAvail(u));
+  const avail=ALL_UPGRS.filter(u=>upgAvail(u));
   const ul=document.getElementById('upgList');
   ul.innerHTML='';
   if(!avail.length){
@@ -723,9 +750,11 @@ function render(){
     avail.sort((a,b)=>upgCost(a)-upgCost(b)).forEach(u=>{
       const lvl=upgLvl(u), cost=upgCost(u);
       const btn=document.createElement('button');
-      btn.className='upg';
+      btn.className='upg'+(u.oneShot?' upg-milestone':'');
       btn.disabled=S.eskimo<cost;
-      const badge=lvl>0?` <small style="opacity:.55;font-size:.62rem">Ур.${lvl+1}</small>`:'';
+      const badge=u.oneShot
+        ?` <small style="opacity:.65;font-size:.62rem">★</small>`
+        :(lvl>0?` <small style="opacity:.55;font-size:.62rem">Ур.${lvl+1}</small>`:'');
       btn.innerHTML=u.name+badge+'<span>'+fmt(cost)+' 🍦 — '+u.desc+'</span>';
       btn.onclick=()=>buyUpg(u);
       ul.appendChild(btn);
@@ -740,14 +769,19 @@ function render(){
     const cant=S.eskimo<cost;
     const row=document.createElement('div');
     row.className='bld'+(cant?' cant':'');
-    const cpsTotal=b.baseCps*S.cnt[b.id]*S.mult[b.id];
+    const syn=synergyBoost(b);
+    const cpsTotal=b.baseCps*S.cnt[b.id]*S.mult[b.id]*syn;
     const amtLabel=buyAmt>1?'<span style="font-size:.6rem;color:var(--accent);margin-left:3px">+'+buyAmt+'</span>':'';
+    const idx=BLDS.findIndex(x=>x.id===b.id);
+    const prevBld=idx>0?BLDS[idx-1]:null;
+    const synergyPct=Math.floor((syn-1)*100);
     row.innerHTML=
       '<div class="bld-icon">'+b.icon+'</div>'+
       '<div class="bld-body">'+
         '<div class="bld-name">'+b.name+'</div>'+
         '<div class="bld-desc">'+b.desc+'</div>'+
         (S.cnt[b.id]>0?'<div class="bld-cps-total">'+fmt(cpsTotal)+' МВС суммарно</div>':'')+
+        (prevBld&&synergyPct>0?'<div class="bld-synergy">+'+synergyPct+'% от «'+prevBld.name+'»</div>':'')+
       '</div>'+
       '<div class="bld-r">'+
         '<div class="bld-cost">'+fmt(cost)+' 🍦</div>'+
