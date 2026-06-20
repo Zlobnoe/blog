@@ -187,6 +187,12 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .bld-cost{font-size:.78rem;font-weight:600}
 .bld-count{font-size:.68rem;color:var(--muted);margin-top:2px}
 
+/* buy amount toggle */
+.buy-amt-row{display:flex;gap:5px;margin-bottom:10px}
+.buy-amt{flex:1;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 0;font-size:.73rem;font-family:'Manrope',sans-serif;color:var(--muted);cursor:pointer;transition:all .15s}
+.buy-amt:hover{border-color:var(--accent);color:var(--text)}
+.buy-amt.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
 /* prestige */
 .nav-right{display:flex;gap:8px;margin-left:auto;align-items:center}
 .pshop-btn{background:none;border:1px solid rgba(245,216,64,.45);border-radius:8px;padding:5px 12px;font-size:.78rem;font-family:'Manrope',sans-serif;color:#f5d840;cursor:pointer;transition:all .15s}
@@ -269,6 +275,11 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <div class="upg-list" id="upgList"></div>
 
     <div class="sec-label">Производители</div>
+    <div class="buy-amt-row">
+      <button class="buy-amt on" id="ba1" onclick="setBuyAmt(1)">×1</button>
+      <button class="buy-amt"    id="ba10" onclick="setBuyAmt(10)">×10</button>
+      <button class="buy-amt"    id="ba100" onclick="setBuyAmt(100)">×100</button>
+    </div>
     <div id="bldList"></div>
 
     <div class="prestige-section">
@@ -422,10 +433,27 @@ function fmt(n){
 function pendingStars(){ return Math.max(0,Math.floor(Math.sqrt(S.totalEskimo/100000))); }
 function prestigeMult(){ return 1+S.stars*0.05; }
 
+let buyAmt=1;
+function setBuyAmt(n){
+  buyAmt=n;
+  [1,10,100].forEach(v=>document.getElementById('ba'+v).classList.toggle('on',v===n));
+  render();
+}
+
 function bldCost(b){
   let c=Math.ceil(b.baseCost*Math.pow(b.scale||1.18,S.cnt[b.id]));
   if(S.quickLaunchActive) c=Math.ceil(c*0.7);
   return c;
+}
+function bldCostN(b,n){
+  const scale=b.scale||1.18;
+  let total=0;
+  for(let i=0;i<n;i++){
+    let c=Math.ceil(b.baseCost*Math.pow(scale,S.cnt[b.id]+i));
+    if(S.quickLaunchActive) c=Math.ceil(c*0.7);
+    total+=c;
+  }
+  return total;
 }
 function calcCps(){
   const raw=BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0);
@@ -536,9 +564,9 @@ function onClickBtn(e){
 }
 
 function buyBld(b){
-  const cost=bldCost(b);
+  const cost=bldCostN(b,buyAmt);
   if(S.eskimo<cost) return;
-  S.eskimo-=cost; S.cnt[b.id]++;
+  S.eskimo-=cost; S.cnt[b.id]+=buyAmt;
   saveGame(); render();
 }
 
@@ -597,11 +625,12 @@ function render(){
   const bl=document.getElementById('bldList');
   bl.innerHTML='';
   BLDS.forEach(b=>{
-    const cost=bldCost(b);
+    const cost=bldCostN(b,buyAmt);
     const cant=S.eskimo<cost;
     const row=document.createElement('div');
     row.className='bld'+(cant?' cant':'');
     const cpsTotal=b.baseCps*S.cnt[b.id]*S.mult[b.id];
+    const amtLabel=buyAmt>1?'<span style="font-size:.6rem;color:var(--accent);margin-left:3px">+'+buyAmt+'</span>':'';
     row.innerHTML=
       '<div class="bld-icon">'+b.icon+'</div>'+
       '<div class="bld-body">'+
@@ -611,7 +640,7 @@ function render(){
       '</div>'+
       '<div class="bld-r">'+
         '<div class="bld-cost">'+fmt(cost)+' 🍦</div>'+
-        '<div class="bld-count">×'+S.cnt[b.id]+'</div>'+
+        '<div class="bld-count">×'+S.cnt[b.id]+amtLabel+'</div>'+
       '</div>';
     if(!cant) row.onclick=()=>buyBld(b);
     bl.appendChild(row);
