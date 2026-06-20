@@ -426,10 +426,6 @@ const UPGRS = [
    desc:'Золотая мороженка даёт ×2',
    cond:s=>s.totalEskimo>=200,
    apply:()=>{ S.goldMult*=2; }},
-  {id:'goldseason',name:'Золотой сезон',       baseCost:4000,
-   desc:'Золотая мороженка появляется вдвое чаще',
-   cond:s=>s.goldClicks>=1,
-   apply:()=>{ S.goldFreqMult*=2; }},
 ];
 
 const UPG_LEVEL_MULT = 10; // каждый следующий уровень стоит в 10× дороже
@@ -448,10 +444,13 @@ const S = {
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
 function fmt(n){
-  if(n<1000)  return Math.floor(n).toLocaleString('ru');
-  if(n<1e6)   return (n/1000).toFixed(1).replace('.',',')+' тыс';
-  if(n<1e9)   return (n/1e6).toFixed(2).replace('.',',')+' млн';
-  return (n/1e9).toFixed(2).replace('.',',')+' млрд';
+  if(n<1000)   return Math.floor(n).toLocaleString('ru');
+  if(n<1e6)    return (n/1000).toFixed(1).replace('.',',')+' тыс';
+  if(n<1e9)    return (n/1e6).toFixed(2).replace('.',',')+' млн';
+  if(n<1e12)   return (n/1e9).toFixed(2).replace('.',',')+' млрд';
+  if(n<1e15)   return (n/1e12).toFixed(2).replace('.',',')+' трлн';
+  if(n<1e18)   return (n/1e15).toFixed(2).replace('.',',')+' квдрлн';
+  return (n/1e18).toFixed(2).replace('.',',')+' квинтлн';
 }
 
 function pendingStars(){ return Math.max(0,Math.floor(Math.sqrt(S.totalEskimo/100000))); }
