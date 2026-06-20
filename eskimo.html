@@ -140,30 +140,30 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 <script>
 // ── Данные ───────────────────────────────────────────────────────────────────
 const BLDS = [
-  {id:'kid',     emoji:'🧒', name:'Ребёнок',     desc:'Тратит карманные на эскимо',      baseCost:15,    baseCps:.1},
-  {id:'cart',    emoji:'🛒', name:'Тележка',      desc:'Мороженщик объезжает дворы',      baseCost:100,   baseCps:.5},
-  {id:'factory', emoji:'🏪', name:'Лоток с мороженым', desc:'Стоит в людном месте круглый день', baseCost:1100,  baseCps:5},
-  {id:'truck',   emoji:'🚚', name:'Рефрижератор', desc:'Развозит по всему городу',        baseCost:12000, baseCps:25},
+  {id:'kid',     emoji:'🧒', name:'Ребёнок',     desc:'Тратит карманные на эскимо',      baseCost:8,     baseCps:.1},
+  {id:'cart',    emoji:'🛒', name:'Тележка',      desc:'Мороженщик объезжает дворы',      baseCost:50,    baseCps:.5},
+  {id:'factory', emoji:'🏪', name:'Лоток с мороженым', desc:'Стоит в людном месте круглый день', baseCost:550,   baseCps:5},
+  {id:'truck',   emoji:'🚚', name:'Рефрижератор', desc:'Развозит по всему городу',        baseCost:6000,  baseCps:25},
 ];
 
 const UPGRS = [
-  {id:'choco',    name:'Шоколадная глазурь', cost:100,
+  {id:'choco',    name:'Шоколадная глазурь', cost:50,
    desc:'Клики ×2',
    cond:s=>s.totalEskimo>=1,
    apply:()=>{ S.clickMult*=2; }},
-  {id:'waffle',   name:'Сладкая вафля',      cost:500,
+  {id:'waffle',   name:'Сладкая вафля',      cost:250,
    desc:'Дети дают ×2',
    cond:s=>s.cnt.kid>=1,
    apply:()=>{ S.mult.kid*=2; }},
-  {id:'dblclick', name:'Двойная порция',      cost:5000,
+  {id:'dblclick', name:'Двойная порция',      cost:2500,
    desc:'Клики снова ×2',
    cond:s=>s.upgBought.has('choco')&&s.totalEskimo>=500,
    apply:()=>{ S.clickMult*=2; }},
-  {id:'route',    name:'Новый маршрут',       cost:2000,
+  {id:'route',    name:'Новый маршрут',       cost:1000,
    desc:'Тележки ×2',
    cond:s=>s.cnt.cart>=5,
    apply:()=>{ S.mult.cart*=2; }},
-  {id:'freeze',   name:'Морозильный ларёк',   cost:10000,
+  {id:'freeze',   name:'Морозильный ларёк',   cost:5000,
    desc:'Лотки дают ×3',
    cond:s=>s.cnt.factory>=10,
    apply:()=>{ S.mult.factory*=3; }},
@@ -185,7 +185,7 @@ function fmt(n){
   return (n/1e9).toFixed(2).replace('.',',')+' млрд';
 }
 
-function bldCost(b){ return Math.ceil(b.baseCost*Math.pow(1.15,S.cnt[b.id])); }
+function bldCost(b){ return Math.ceil(b.baseCost*Math.pow(1.18,S.cnt[b.id])); }
 function calcCps(){ return BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0); }
 
 // ── Действия ─────────────────────────────────────────────────────────────────
