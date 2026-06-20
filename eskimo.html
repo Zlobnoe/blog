@@ -107,6 +107,19 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .upg:disabled{opacity:.35;cursor:default}
 .upg-empty{font-size:.73rem;color:var(--muted);font-style:italic}
 
+/* ── help ── */
+.help-wrap{border-top:1px solid var(--border);background:var(--surface)}
+.help-inner{max-width:860px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px}
+@media(max-width:760px){.help-inner{grid-template-columns:1fr;gap:20px}}
+.help-section{display:flex;flex-direction:column;gap:10px}
+.help-title{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border)}
+.help-section p{font-size:.78rem;color:var(--sub);line-height:1.65}
+.help-note{font-size:.72rem!important;color:var(--muted)!important;font-style:italic}
+.help-table{display:flex;flex-direction:column;gap:1px}
+.ht-row{display:grid;grid-template-columns:1.6fr .7fr .5fr;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.75rem;color:var(--sub)}
+.help-section:last-child .ht-row{grid-template-columns:1.5fr .7fr .7fr 1fr}
+.ht-head{font-size:.65rem;font-weight:600;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+
 /* buildings */
 .bld{
   display:flex;align-items:center;gap:10px;
@@ -161,6 +174,65 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <div id="bldList"></div>
   </div>
 
+</div>
+
+<!-- СПРАВКА -->
+<div class="help-wrap">
+  <div class="help-inner">
+
+    <div class="help-section">
+      <div class="help-title">Как играть</div>
+      <p>Нажимай на левую половину экрана — получаешь эскимо. На заработанные мороженые покупай производителей в правой панели: они приносят эскимо автоматически, пока ты не смотришь. Открывай улучшения — они умножают доход от кликов и производителей. Улучшения можно покупать бесконечно: каждый следующий уровень стоит в 10 раз дороже, но даёт тот же множитель снова.</p>
+    </div>
+
+    <div class="help-section">
+      <div class="help-title">Производители</div>
+      <div class="help-table">
+        <div class="ht-row ht-head">
+          <span>Кто</span><span>Базовая цена</span><span>МВС</span>
+        </div>
+        <div class="ht-row">
+          <span>🧒 Ребёнок</span><span>8</span><span>0,1</span>
+        </div>
+        <div class="ht-row">
+          <span>🛒 Тележка</span><span>50</span><span>0,5</span>
+        </div>
+        <div class="ht-row">
+          <span>🏪 Лоток с мороженым</span><span>550</span><span>5</span>
+        </div>
+        <div class="ht-row">
+          <span>🚚 Рефрижератор</span><span>6 000</span><span>25</span>
+        </div>
+      </div>
+      <p class="help-note">Цена каждой следующей единицы ×1,18 от предыдущей. МВС — мороженых в секунду.</p>
+    </div>
+
+    <div class="help-section">
+      <div class="help-title">Улучшения</div>
+      <div class="help-table">
+        <div class="ht-row ht-head">
+          <span>Название</span><span>Базовая цена</span><span>Эффект</span><span>Условие</span>
+        </div>
+        <div class="ht-row">
+          <span>Шоколадная глазурь</span><span>50</span><span>Клики ×2</span><span>Сделай первый клик</span>
+        </div>
+        <div class="ht-row">
+          <span>Сладкая вафля</span><span>250</span><span>Дети ×2</span><span>Купи хоть 1 ребёнка</span>
+        </div>
+        <div class="ht-row">
+          <span>Новый маршрут</span><span>1 000</span><span>Тележки ×2</span><span>Купи 5 тележек</span>
+        </div>
+        <div class="ht-row">
+          <span>Двойная порция</span><span>2 500</span><span>Клики ×2</span><span>Купи «Глазурь» и набери 1 000 эскимо</span>
+        </div>
+        <div class="ht-row">
+          <span>Морозильный ларёк</span><span>5 000</span><span>Лотки ×3</span><span>Купи 10 лотков</span>
+        </div>
+      </div>
+      <p class="help-note">Каждое улучшение можно купить снова — следующий уровень стоит ×10. Метка «Ур.N» означает, сколько раз оно уже куплено.</p>
+    </div>
+
+  </div>
 </div>
 
 <script>
