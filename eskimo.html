@@ -229,6 +229,21 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .pitem-desc{font-size:.67rem;color:var(--muted)}
 .pitem-badge{font-size:.62rem;color:#f5d840;opacity:.6;margin-left:5px}
 .pshop-bal{font-size:.78rem;color:#f5d840;margin-bottom:12px;padding:8px 10px;background:rgba(245,216,64,.07);border-radius:8px}
+
+/* managers */
+.mgr-card{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.mgr-card:hover:not(.cant){border-color:var(--accent);background:var(--surface2)}
+.mgr-card.cant{opacity:.38;cursor:default}
+.mgr-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0}
+.mgr-body{flex:1;min-width:0}
+.mgr-name{font-weight:600;font-size:.83rem}
+.mgr-lvl{font-size:.63rem;color:var(--accent);margin-left:4px;font-weight:600}
+.mgr-desc{font-size:.68rem;color:var(--muted);margin-top:1px}
+.mgr-effect{font-size:.68rem;color:var(--sub);margin-top:2px}
+.mgr-r{text-align:right;flex-shrink:0}
+.mgr-cost{font-size:.78rem;font-weight:600}
+.mgr-action{font-size:.65rem;color:var(--muted);margin-top:2px}
+.mgr-synergy{font-size:.72rem;color:#4caf84;text-align:center;padding:7px;margin-bottom:4px;background:rgba(76,175,132,.08);border-radius:8px;border:1px solid rgba(76,175,132,.25)}
 </style>
 </head>
 <body>
@@ -294,6 +309,10 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
       <button class="buy-amt"    id="ba100" onclick="setBuyAmt(100)">×100</button>
     </div>
     <div id="bldList"></div>
+
+    <div class="sec-label" style="margin-top:16px">Менеджеры</div>
+    <div id="mgrList"></div>
+    <div id="mgrSynergy" class="mgr-synergy" style="display:none"></div>
 
     <div class="prestige-section">
       <div class="prestige-title">✦ Перерождение</div>
@@ -454,6 +473,25 @@ const UPGRS = [
 
 const UPG_LEVEL_MULT = 10; // каждый следующий уровень стоит в 10× дороже
 
+const MANAGERS = [
+  {id:'tech', name:'Технолог',   color:'#7c6ff7', letter:'Т',
+   desc:'Ускоряет всё производство',
+   baseCost:10000,  scaleMult:8,
+   effectDesc: lvl => '+'+Math.round((Math.pow(1.2,lvl)-1)*100)+'% к МВС'},
+  {id:'fin',  name:'Финансист',  color:'#f5c842', letter:'Ф',
+   desc:'Снижает стоимость производителей',
+   baseCost:15000,  scaleMult:8,
+   effectDesc: lvl => '-'+Math.round((1-Math.pow(0.85,lvl))*100)+'% к ценам произв.'},
+  {id:'mkt',  name:'Маркетолог', color:'#e8805a', letter:'М',
+   desc:'Снижает стоимость улучшений',
+   baseCost:8000,   scaleMult:8,
+   effectDesc: lvl => '-'+Math.round((1-Math.pow(0.85,lvl))*100)+'% к ценам улучш.'},
+  {id:'log',  name:'Логист',     color:'#4caf84', letter:'Л',
+   desc:'Усиляет рефрижераторы, кафе, заводы и сети',
+   baseCost:20000,  scaleMult:8,
+   effectDesc: lvl => '+'+Math.round((Math.pow(1.3,lvl)-1)*100)+'% к транспорту и сетям'},
+];
+
 // ── Состояние ────────────────────────────────────────────────────────────────
 const S = {
   eskimo:0, totalEskimo:0, clickMult:1,
@@ -464,6 +502,7 @@ const S = {
   stars:0, totalStars:0, rebirths:0,
   prestigeShop:{},
   quickLaunchActive:false,
+  mgr:{tech:0,fin:0,mkt:0,log:0},
 };
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
@@ -487,10 +526,26 @@ function setBuyAmt(n){
   render();
 }
 
+function mgrCost(m){ return Math.ceil(m.baseCost*Math.pow(m.scaleMult,S.mgr[m.id]||0)); }
+function mgrTechMult(){ return Math.pow(1.2,  S.mgr.tech||0); }
+function mgrFinMult(){  return Math.pow(0.85, S.mgr.fin ||0); }
+function mgrMktMult(){  return Math.pow(0.85, S.mgr.mkt ||0); }
+function mgrLogMult(){  return Math.pow(1.3,  S.mgr.log ||0); }
+function mgrSynergyMult(){
+  const n=['tech','fin','mkt','log'].filter(k=>(S.mgr[k]||0)>=1).length;
+  return 1+[0,0,0.05,0.15,0.30][n];
+}
+function buyManager(m){
+  const cost=mgrCost(m);
+  if(S.eskimo<cost) return;
+  S.eskimo-=cost; S.mgr[m.id]=(S.mgr[m.id]||0)+1;
+  saveGame(); render();
+}
+
 function bldCost(b){
   let c=Math.ceil(b.baseCost*Math.pow(b.scale||1.18,S.cnt[b.id]));
   if(S.quickLaunchActive) c=Math.ceil(c*0.7);
-  return c;
+  return Math.ceil(c*mgrFinMult());
 }
 function bldCostN(b,n){
   const scale=b.scale||1.18;
@@ -498,17 +553,22 @@ function bldCostN(b,n){
   for(let i=0;i<n;i++){
     let c=Math.ceil(b.baseCost*Math.pow(scale,S.cnt[b.id]+i));
     if(S.quickLaunchActive) c=Math.ceil(c*0.7);
-    total+=c;
+    total+=Math.ceil(c*mgrFinMult());
   }
   return total;
 }
 function calcCps(){
-  const raw=BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0);
+  const logBlds=new Set(['truck','cafe','plant','chain','orbital','galaxy']);
+  const raw=BLDS.reduce((s,b)=>{
+    let cps=b.baseCps*S.cnt[b.id]*S.mult[b.id];
+    if(logBlds.has(b.id)) cps*=mgrLogMult();
+    return s+cps;
+  },0);
   const pf=1+(S.prestigeShop.permafrost||0)*0.10;
-  return raw*pf*prestigeMult();
+  return raw*pf*prestigeMult()*mgrTechMult()*mgrSynergyMult();
 }
 function upgLvl(u){ return S.upgLevels[u.id]||0; }
-function upgCost(u){ return Math.ceil(u.baseCost*Math.pow(UPG_LEVEL_MULT, upgLvl(u))); }
+function upgCost(u){ return Math.ceil(u.baseCost*Math.pow(UPG_LEVEL_MULT,upgLvl(u))*mgrMktMult()); }
 function upgAvail(u){ return upgLvl(u)>0 ? true : u.cond(S); }
 
 // ── Действия ─────────────────────────────────────────────────────────────────
@@ -536,6 +596,7 @@ function rebirthGame(){
   S.upgLevels={};
   S.goldMult=1; S.goldFreqMult=1; S.goldClicks=0;
   S.quickLaunchActive=false;
+  Object.keys(S.mgr).forEach(k=>S.mgr[k]=0);
   applyPrestigeBonuses();
   saveGame(); render();
   clearTimeout(goldTimer);
@@ -695,6 +756,41 @@ function render(){
     if(!cant) row.onclick=()=>buyBld(b);
     bl.appendChild(row);
   });
+  renderManagers();
+}
+
+function renderManagers(){
+  const ml=document.getElementById('mgrList');
+  if(!ml) return;
+  ml.innerHTML='';
+  MANAGERS.forEach(m=>{
+    const lvl=S.mgr[m.id]||0;
+    const cost=mgrCost(m);
+    const cant=S.eskimo<cost;
+    const div=document.createElement('div');
+    div.className='mgr-card'+(cant?' cant':'');
+    div.innerHTML=
+      '<div class="mgr-avatar" style="background:'+m.color+'">'+m.letter+'</div>'+
+      '<div class="mgr-body">'+
+        '<div class="mgr-name">'+m.name+(lvl>0?' <span class="mgr-lvl">Ур.'+lvl+'</span>':'')+'</div>'+
+        '<div class="mgr-desc">'+m.desc+'</div>'+
+        (lvl>0?'<div class="mgr-effect">'+m.effectDesc(lvl)+'</div>':'')+
+      '</div>'+
+      '<div class="mgr-r">'+
+        '<div class="mgr-cost">'+fmt(cost)+' 🍦</div>'+
+        '<div class="mgr-action">'+(lvl===0?'Нанять':'→ Ур.'+(lvl+1))+'</div>'+
+      '</div>';
+    if(!cant) div.onclick=()=>buyManager(m);
+    ml.appendChild(div);
+  });
+  // synergy
+  const syn=document.getElementById('mgrSynergy');
+  if(syn){
+    const n=['tech','fin','mkt','log'].filter(k=>(S.mgr[k]||0)>=1).length;
+    const bonuses=['','','＋5% ко всему','＋15% ко всему','＋30% ко всему — максимальная синергия!'];
+    syn.textContent=n>=2?'🤝 Синергия: '+bonuses[n]:'';
+    syn.style.display=n>=2?'':'none';
+  }
 }
 
 // ── Ползунки ─────────────────────────────────────────────────────────────────
@@ -807,6 +903,7 @@ function getSaveData(){
     clickMult:S.clickMult, cnt:S.cnt, mult:S.mult, upgLevels:S.upgLevels,
     goldMult:S.goldMult, goldFreqMult:S.goldFreqMult, goldClicks:S.goldClicks,
     stars:S.stars, totalStars:S.totalStars, rebirths:S.rebirths, prestigeShop:S.prestigeShop,
+    mgr:S.mgr,
   };
 }
 
@@ -824,6 +921,7 @@ function applyData(d){
   if(d.totalStars!==undefined) S.totalStars=d.totalStars;
   if(d.rebirths!==undefined)   S.rebirths=d.rebirths;
   if(d.prestigeShop)           S.prestigeShop=d.prestigeShop;
+  if(d.mgr) Object.assign(S.mgr, d.mgr);
 }
 
 function openSaveModal(mode){
@@ -897,6 +995,7 @@ function loadGame(){
     if(d.totalStars!==undefined) S.totalStars=d.totalStars;
     if(d.rebirths!==undefined) S.rebirths=d.rebirths;
     if(d.prestigeShop) S.prestigeShop=d.prestigeShop;
+    if(d.mgr) Object.assign(S.mgr, d.mgr);
   }catch(e){}
 }
 
@@ -909,6 +1008,7 @@ function resetGame(){
   S.upgLevels={};
   S.stars=0; S.totalStars=0; S.rebirths=0; S.prestigeShop={}; S.quickLaunchActive=false;
   S.goldMult=1; S.goldFreqMult=1; S.goldClicks=0;
+  Object.keys(S.mgr).forEach(k=>S.mgr[k]=0);
   closePrestige();
   render();
 }
