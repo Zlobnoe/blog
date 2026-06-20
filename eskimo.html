@@ -723,15 +723,24 @@ function spawnGolden(){
   if(goldEl) return;
   const panel=document.getElementById('leftPanel');
   const W=panel.clientWidth||400, H=panel.clientHeight||500;
+  const iconW=54, iconH=90, margin=20;
   const el=document.createElement('div');
   el.className='gold-eskimo';
   el.innerHTML=GOLD_SVG;
-  const margin=20, iconW=54, iconH=90;
+  // случайная стартовая позиция, без перехода
+  el.style.transition='none';
   el.style.left=(margin+Math.random()*Math.max(0,W-iconW-margin*2))+'px';
   el.style.top=(margin+Math.random()*Math.max(0,H-iconH-margin*2))+'px';
   el.addEventListener('click', e=>{ e.stopPropagation(); collectGolden(); });
   panel.appendChild(el);
   goldEl=el;
+  // через два кадра запускаем плавное движение к центру
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(!goldEl) return;
+    el.style.transition='left 23s ease-in-out, top 23s ease-in-out';
+    el.style.left=(W/2-iconW/2)+'px';
+    el.style.top=(H/2-iconH/2)+'px';
+  }));
   goldTimeout=setTimeout(removeGolden, 25000);
 }
 
