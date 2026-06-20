@@ -56,11 +56,34 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .float{
   position:absolute;pointer-events:none;
   font-size:.85rem;font-weight:700;color:var(--accent);
-  animation:floatup .85s ease-out forwards;
+  animation:floatup .85s ease-out forwards;z-index:10;
 }
 @keyframes floatup{
   from{opacity:1;transform:translateY(0)}
   to{opacity:0;transform:translateY(-65px) scale(.8)}
+}
+
+/* click particles */
+.cp{
+  position:absolute;pointer-events:none;font-size:1.25rem;z-index:10;
+  animation:flyout .65s ease-out forwards;
+}
+@keyframes flyout{
+  0%{opacity:1;transform:translate(0,0) scale(1.1)}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.25)}
+}
+
+/* crawlers */
+.crawler-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.left>*:not(.crawler-layer){position:relative;z-index:1}
+.crawler{
+  position:absolute;pointer-events:none;
+  font-size:1rem;opacity:.45;
+  animation:bob .75s ease-in-out infinite alternate;
+}
+@keyframes bob{
+  from{transform:translateY(0) rotate(-10deg) scaleX(1)}
+  to{transform:translateY(-5px) rotate(7deg) scaleX(.92)}
 }
 
 /* ── right ── */
@@ -112,6 +135,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 
   <!-- LEFT -->
   <div class="left" id="leftPanel">
+    <div class="crawler-layer" id="crawlerLayer"></div>
     <div class="score-wrap">
       <div class="score-num" id="scoreNum">0</div>
       <div class="score-label">🍦 эскимо</div>
@@ -200,13 +224,32 @@ function onClickBtn(e){
 
   const panel=document.getElementById('leftPanel');
   const rect=panel.getBoundingClientRect();
-  const el=document.createElement('div');
-  el.className='float';
-  el.textContent='+'+fmt(gain);
-  el.style.left=(e.clientX-rect.left-16)+'px';
-  el.style.top=(e.clientY-rect.top-10)+'px';
-  panel.appendChild(el);
-  el.addEventListener('animationend',()=>el.remove());
+  const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
+
+  // частицы-эскимошки
+  const n=Math.min(8, 4+Math.floor(Math.log2(S.clickMult+1)));
+  for(let i=0;i<n;i++){
+    const angle=Math.PI*2*i/n+(Math.random()-.5)*.7;
+    const dist=42+Math.random()*36;
+    const p=document.createElement('div');
+    p.className='cp';
+    p.textContent='🍦';
+    p.style.left=(cx-10)+'px';
+    p.style.top=(cy-10)+'px';
+    p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
+    p.style.setProperty('--dy',Math.sin(angle)*dist+'px');
+    panel.appendChild(p);
+    p.addEventListener('animationend',()=>p.remove());
+  }
+
+  // число
+  const num=document.createElement('div');
+  num.className='float';
+  num.textContent='+'+fmt(gain);
+  num.style.left=(cx-16)+'px';
+  num.style.top=(cy-20)+'px';
+  panel.appendChild(num);
+  num.addEventListener('animationend',()=>num.remove());
 
   render();
 }
@@ -234,6 +277,7 @@ function render(){
   document.getElementById('stCps').textContent=fmt(cps);
   document.getElementById('stCpc').textContent=fmt(S.clickMult);
   document.getElementById('stTotal').textContent=fmt(S.totalEskimo);
+  syncCrawlers();
 
   // улучшения
   const avail=UPGRS.filter(u=>upgAvail(u));
@@ -278,6 +322,41 @@ function render(){
     bl.appendChild(row);
   });
 }
+
+// ── Ползунки ─────────────────────────────────────────────────────────────────
+const crawlers=[];
+
+function syncCrawlers(){
+  const layer=document.getElementById('crawlerLayer');
+  const cps=calcCps();
+  const target=Math.min(20, Math.floor(Math.log10(cps+1)*7));
+  const H=layer.clientHeight||300, W=layer.clientWidth||400;
+
+  while(crawlers.length<target){
+    const el=document.createElement('div');
+    el.className='crawler';
+    el.textContent='🍦';
+    el.style.animationDelay=(-Math.random()*.75)+'s';
+    const c={el, x:Math.random()*W, y:20+Math.random()*(H-40), spd:.35+Math.random()*.65};
+    el.style.top=c.y+'px';
+    layer.appendChild(el);
+    crawlers.push(c);
+  }
+  while(crawlers.length>target){
+    crawlers.pop().el.remove();
+  }
+}
+
+(function moveCrawlers(){
+  const layer=document.getElementById('crawlerLayer');
+  const W=layer.clientWidth||400;
+  for(const c of crawlers){
+    c.x+=c.spd;
+    if(c.x>W+24) c.x=-24;
+    c.el.style.left=c.x+'px';
+  }
+  requestAnimationFrame(moveCrawlers);
+})();
 
 // ── Игровой цикл ─────────────────────────────────────────────────────────────
 setInterval(()=>{
