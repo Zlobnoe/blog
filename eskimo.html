@@ -790,7 +790,7 @@ function buyBld(b){
   saveGame(); render();
 }
 
-function effMult(u){ return u.baseMult*Math.pow(0.9,upgLvl(u)); }
+function effMult(u){ return 1+(u.baseMult-1)*Math.pow(0.9,upgLvl(u)); }
 function fmtMult(m){ return parseFloat(m.toFixed(2)).toString().replace('.',','); }
 
 function buyUpg(u){
