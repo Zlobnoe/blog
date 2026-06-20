@@ -169,6 +169,19 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 }
 .reset-btn:hover{border-color:#e05a5a;color:#e05a5a}
 
+/* save/load buttons */
+.save-row{display:flex;gap:6px;margin-top:10px}
+.save-btn{flex:1;padding:7px;border-radius:8px;background:none;border:1px solid var(--border);font-size:.72rem;font-family:'Manrope',sans-serif;color:var(--muted);cursor:pointer;transition:all .15s}
+.save-btn:hover{border-color:var(--accent);color:var(--text)}
+/* save modal textarea */
+.save-area{width:100%;height:90px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.72rem;font-family:monospace;color:var(--sub);resize:none;outline:none;margin-top:6px}
+.save-area:focus{border-color:var(--accent)}
+.save-copy-btn{width:100%;margin-top:6px;padding:7px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'Manrope',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.save-copy-btn:hover{opacity:.85}
+.save-load-btn{width:100%;margin-top:6px;padding:7px;border-radius:8px;background:none;border:1px solid var(--accent);color:var(--accent);font-family:'Manrope',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
+.save-load-btn:hover{background:var(--accent);color:#fff}
+.save-hint{font-size:.68rem;color:var(--muted);margin-top:4px}
+
 /* buildings */
 .bld{
   display:flex;align-items:center;gap:10px;
@@ -290,9 +303,20 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
       <button class="pshop-open-btn" onclick="openPrestige()">Магазин звёздочек →</button>
     </div>
 
+    <div class="save-row">
+      <button class="save-btn" onclick="openSaveModal('export')">Экспорт сохранения</button>
+      <button class="save-btn" onclick="openSaveModal('import')">Импорт сохранения</button>
+    </div>
     <button class="reset-btn" onclick="resetGame()">Сбросить прогресс</button>
   </div>
 
+</div>
+
+<div class="mbg" id="saveBg" onclick="if(event.target===this)closeSaveModal()">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeSaveModal()">✕</button>
+    <div id="saveModalContent"></div>
+  </div>
 </div>
 
 <div class="mbg" id="prestigeBg" onclick="if(event.target===this)closePrestige()">
@@ -744,16 +768,84 @@ function removeGolden(){
   setTimeout(()=>{ if(goldEl){ goldEl.remove(); goldEl=null; } scheduleGolden(); },350);
 }
 
-// ── Сохранение ───────────────────────────────────────────────────────────────
-const SAVE_KEY='eskimo-save';
-
-function saveGame(){
-  localStorage.setItem(SAVE_KEY, JSON.stringify({
+// ── Экспорт / Импорт ─────────────────────────────────────────────────────────
+function getSaveData(){
+  return {
     eskimo:S.eskimo, totalEskimo:S.totalEskimo,
     clickMult:S.clickMult, cnt:S.cnt, mult:S.mult, upgLevels:S.upgLevels,
     goldMult:S.goldMult, goldFreqMult:S.goldFreqMult, goldClicks:S.goldClicks,
     stars:S.stars, totalStars:S.totalStars, rebirths:S.rebirths, prestigeShop:S.prestigeShop,
-  }));
+  };
+}
+
+function exportCode(){ return btoa(JSON.stringify(getSaveData())); }
+
+function applyData(d){
+  S.eskimo=d.eskimo||0; S.totalEskimo=d.totalEskimo||0; S.clickMult=d.clickMult||1;
+  if(d.cnt)          Object.assign(S.cnt, d.cnt);
+  if(d.mult)         Object.assign(S.mult, d.mult);
+  if(d.upgLevels)    S.upgLevels=d.upgLevels;
+  if(d.goldMult)     S.goldMult=d.goldMult;
+  if(d.goldFreqMult) S.goldFreqMult=d.goldFreqMult;
+  if(d.goldClicks)   S.goldClicks=d.goldClicks;
+  if(d.stars!==undefined)      S.stars=d.stars;
+  if(d.totalStars!==undefined) S.totalStars=d.totalStars;
+  if(d.rebirths!==undefined)   S.rebirths=d.rebirths;
+  if(d.prestigeShop)           S.prestigeShop=d.prestigeShop;
+}
+
+function openSaveModal(mode){
+  const cont=document.getElementById('saveModalContent');
+  if(mode==='export'){
+    const code=exportCode();
+    cont.innerHTML=
+      '<div class="help-title">Экспорт сохранения</div>'+
+      '<p class="save-hint">Скопируй строку ниже и сохрани в любом месте. Для переноса на другое устройство — вставь в «Импорт».</p>'+
+      '<textarea class="save-area" id="exportArea" readonly>'+code+'</textarea>'+
+      '<button class="save-copy-btn" onclick="copySave()">Скопировать</button>'+
+      '<p class="save-hint" id="copyHint" style="text-align:center;margin-top:6px"></p>';
+    setTimeout(()=>{ const a=document.getElementById('exportArea'); a.select(); },50);
+  } else {
+    cont.innerHTML=
+      '<div class="help-title">Импорт сохранения</div>'+
+      '<p class="save-hint">Вставь строку сохранения и нажми «Загрузить». Текущий прогресс будет заменён.</p>'+
+      '<textarea class="save-area" id="importArea" placeholder="Вставь код сохранения сюда..."></textarea>'+
+      '<button class="save-load-btn" onclick="importSave()">Загрузить</button>'+
+      '<p class="save-hint" id="importHint" style="text-align:center;margin-top:6px"></p>';
+  }
+  document.getElementById('saveBg').classList.add('show');
+}
+
+function closeSaveModal(){ document.getElementById('saveBg').classList.remove('show'); }
+
+function copySave(){
+  const a=document.getElementById('exportArea');
+  a.select();
+  try{
+    navigator.clipboard.writeText(a.value).then(()=>{ showHint('copyHint','Скопировано!'); }).catch(()=>{ showHint('copyHint','Выдели текст и нажми Ctrl+C'); });
+  }catch(e){ showHint('copyHint','Выдели текст и нажми Ctrl+C'); }
+}
+
+function importSave(){
+  const str=(document.getElementById('importArea').value||'').trim();
+  if(!str){ showHint('importHint','Вставь код сохранения'); return; }
+  try{
+    const d=JSON.parse(atob(str));
+    if(typeof d.eskimo==='undefined') throw new Error();
+    applyData(d);
+    localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveData()));
+    render();
+    closeSaveModal();
+  }catch(e){ showHint('importHint','Неверный код — проверь и попробуй снова'); }
+}
+
+function showHint(id, msg){ const el=document.getElementById(id); if(el) el.textContent=msg; }
+
+// ── Сохранение ───────────────────────────────────────────────────────────────
+const SAVE_KEY='eskimo-save';
+
+function saveGame(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveData()));
 }
 
 function loadGame(){
@@ -805,7 +897,7 @@ else scheduleGolden();
 
 function openHelp(){ document.getElementById('helpBg').classList.add('show'); }
 function closeHelp(){ document.getElementById('helpBg').classList.remove('show'); }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeHelp(); closePrestige(); } });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeHelp(); closePrestige(); closeSaveModal(); } });
 </script>
 </body>
 </html>
