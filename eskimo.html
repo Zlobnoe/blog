@@ -75,7 +75,8 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 
 /* crawlers */
 .crawler-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
-.left>*:not(.crawler-layer){position:relative;z-index:1}
+.effect-layer{position:absolute;inset:0;pointer-events:none;z-index:3}
+.left>*:not(.crawler-layer):not(.effect-layer){position:relative;z-index:1}
 .crawler{
   position:absolute;pointer-events:none;
   font-size:1rem;opacity:.45;
@@ -136,6 +137,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
   <!-- LEFT -->
   <div class="left" id="leftPanel">
     <div class="crawler-layer" id="crawlerLayer"></div>
+    <div class="effect-layer" id="effectLayer"></div>
     <div class="score-wrap">
       <div class="score-num" id="scoreNum">0</div>
       <div class="score-label">🍦 эскимо</div>
@@ -222,8 +224,8 @@ function onClickBtn(e){
   const gain=S.clickMult;
   S.eskimo+=gain; S.totalEskimo+=gain;
 
-  const panel=document.getElementById('leftPanel');
-  const rect=panel.getBoundingClientRect();
+  const rect=document.getElementById('leftPanel').getBoundingClientRect();
+  const layer=document.getElementById('effectLayer');
   const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
 
   // частицы-эскимошки
@@ -238,7 +240,7 @@ function onClickBtn(e){
     p.style.top=(cy-10)+'px';
     p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
     p.style.setProperty('--dy',Math.sin(angle)*dist+'px');
-    panel.appendChild(p);
+    layer.appendChild(p);
     p.addEventListener('animationend',()=>p.remove());
   }
 
@@ -248,7 +250,7 @@ function onClickBtn(e){
   num.textContent='+'+fmt(gain);
   num.style.left=(cx-16)+'px';
   num.style.top=(cy-20)+'px';
-  panel.appendChild(num);
+  layer.appendChild(num);
   num.addEventListener('animationend',()=>num.remove());
 
   render();
