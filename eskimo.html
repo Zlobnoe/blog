@@ -472,54 +472,54 @@ const BLDS = [
 ];
 
 const UPGRS = [
-  {id:'choco',    name:'Шоколадная глазурь', baseCost:50,
-   desc:'Клики ×2',
+  {id:'choco',    name:'Шоколадная глазурь', baseCost:50,     baseMult:2,
+   desc:m=>'Клики ×'+m,
    cond:s=>s.totalEskimo>=1,
-   apply:()=>{ S.clickMult*=2; }},
-  {id:'waffle',   name:'Сладкая вафля',      baseCost:250,
-   desc:'Дети дают ×2',
+   apply:m=>{ S.clickMult*=m; }},
+  {id:'waffle',   name:'Сладкая вафля',      baseCost:250,    baseMult:2,
+   desc:m=>'Дети дают ×'+m,
    cond:s=>s.cnt.kid>=1,
-   apply:()=>{ S.mult.kid*=2; }},
-  {id:'route',    name:'Новый маршрут',       baseCost:1000,
-   desc:'Тележки ×2',
+   apply:m=>{ S.mult.kid*=m; }},
+  {id:'route',    name:'Новый маршрут',       baseCost:1000,   baseMult:2,
+   desc:m=>'Тележки ×'+m,
    cond:s=>s.cnt.cart>=5,
-   apply:()=>{ S.mult.cart*=2; }},
-  {id:'dblclick', name:'Двойная порция',      baseCost:2500,
-   desc:'Клики снова ×2',
+   apply:m=>{ S.mult.cart*=m; }},
+  {id:'dblclick', name:'Двойная порция',      baseCost:2500,   baseMult:2,
+   desc:m=>'Клики ×'+m,
    cond:s=>(s.upgLevels.choco||0)>=1,
-   apply:()=>{ S.clickMult*=2; }},
-  {id:'freeze',   name:'Морозильный ларёк',   baseCost:5000,
-   desc:'Лотки дают ×3',
+   apply:m=>{ S.clickMult*=m; }},
+  {id:'freeze',   name:'Морозильный ларёк',   baseCost:5000,   baseMult:3,
+   desc:m=>'Лотки дают ×'+m,
    cond:s=>s.cnt.factory>=10,
-   apply:()=>{ S.mult.factory*=3; }},
-  {id:'goldglaze', name:'Золотая глазурь',    baseCost:8000,
-   desc:'Золотая мороженка даёт ×1,5',
+   apply:m=>{ S.mult.factory*=m; }},
+  {id:'goldglaze', name:'Золотая глазурь',    baseCost:8000,   baseMult:1.5,
+   desc:m=>'Золотая мороженка ×'+m,
    cond:s=>s.totalEskimo>=500,
-   apply:()=>{ S.goldMult*=1.5; }},
-  {id:'coldchain', name:'Холодная цепь',      baseCost:30000,
-   desc:'Рефрижераторы ×2',
+   apply:m=>{ S.goldMult*=m; }},
+  {id:'coldchain', name:'Холодная цепь',      baseCost:30000,  baseMult:2,
+   desc:m=>'Рефрижераторы ×'+m,
    cond:s=>s.cnt.truck>=1,
-   apply:()=>{ S.mult.truck*=2; }},
-  {id:'summermenu',name:'Летнее меню',        baseCost:220000,
-   desc:'Кафе дают ×2',
+   apply:m=>{ S.mult.truck*=m; }},
+  {id:'summermenu',name:'Летнее меню',        baseCost:220000, baseMult:2,
+   desc:m=>'Кафе дают ×'+m,
    cond:s=>s.cnt.cafe>=1,
-   apply:()=>{ S.mult.cafe*=2; }},
-  {id:'conveyor2', name:'Конвейер 2.0',       baseCost:2000000,
-   desc:'Хладокомбинаты ×2',
+   apply:m=>{ S.mult.cafe*=m; }},
+  {id:'conveyor2', name:'Конвейер 2.0',       baseCost:2000000,baseMult:2,
+   desc:m=>'Хладокомбинаты ×'+m,
    cond:s=>s.cnt.plant>=1,
-   apply:()=>{ S.mult.plant*=2; }},
-  {id:'franchise', name:'Франшиза',           baseCost:15000000,
-   desc:'Торговые сети ×2',
+   apply:m=>{ S.mult.plant*=m; }},
+  {id:'franchise', name:'Франшиза',           baseCost:15000000,baseMult:2,
+   desc:m=>'Торговые сети ×'+m,
    cond:s=>s.cnt.chain>=1,
-   apply:()=>{ S.mult.chain*=2; }},
-  {id:'zerograv',  name:'Невесомость',        baseCost:150000000,
-   desc:'Орбитальные заводы ×3',
+   apply:m=>{ S.mult.chain*=m; }},
+  {id:'zerograv',  name:'Невесомость',        baseCost:150000000,baseMult:3,
+   desc:m=>'Орбитальные заводы ×'+m,
    cond:s=>s.cnt.orbital>=1,
-   apply:()=>{ S.mult.orbital*=3; }},
-  {id:'darkmatter',name:'Тёмная материя',     baseCost:1500000000,
-   desc:'Галактические сети ×3',
+   apply:m=>{ S.mult.orbital*=m; }},
+  {id:'darkmatter',name:'Тёмная материя',     baseCost:1500000000,baseMult:3,
+   desc:m=>'Галактические сети ×'+m,
    cond:s=>s.cnt.galaxy>=1,
-   apply:()=>{ S.mult.galaxy*=3; }},
+   apply:m=>{ S.mult.galaxy*=m; }},
 ];
 
 const UPG_LEVEL_MULT = 10; // каждый следующий уровень стоит в 10× дороже
@@ -790,12 +790,16 @@ function buyBld(b){
   saveGame(); render();
 }
 
+function effMult(u){ return u.baseMult*Math.pow(0.9,upgLvl(u)); }
+function fmtMult(m){ return parseFloat(m.toFixed(2)).toString().replace('.',','); }
+
 function buyUpg(u){
   const cost=upgCost(u);
   if(S.eskimo<cost) return;
   S.eskimo-=cost;
+  const m=u.baseMult&&!u.oneShot ? effMult(u) : null;
   S.upgLevels[u.id]=(upgLvl(u)+1);
-  u.apply();
+  m!==null ? u.apply(m) : u.apply();
   saveGame(); render();
 }
 
@@ -840,7 +844,10 @@ function render(){
       const badge=u.oneShot
         ?` <small style="opacity:.65;font-size:.62rem">★</small>`
         :(lvl>0?` <small style="opacity:.55;font-size:.62rem">Ур.${lvl+1}</small>`:'');
-      btn.innerHTML=u.name+badge+'<span>'+fmt(cost)+' 🍦 — '+u.desc+'</span>';
+      const descStr=typeof u.desc==='function'
+        ? u.desc(fmtMult(u.baseMult&&!u.oneShot?effMult(u):u.baseMult||1))
+        : u.desc;
+      btn.innerHTML=u.name+badge+'<span>'+fmt(cost)+' 🍦 — '+descStr+'</span>';
       btn.onclick=()=>buyUpg(u);
       ul.appendChild(btn);
     });
