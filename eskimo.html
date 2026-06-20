@@ -444,10 +444,10 @@ const UPGRS = [
    desc:'Лотки дают ×3',
    cond:s=>s.cnt.factory>=10,
    apply:()=>{ S.mult.factory*=3; }},
-  {id:'goldglaze', name:'Золотая глазурь',    baseCost:800,
-   desc:'Золотая мороженка даёт ×2',
-   cond:s=>s.totalEskimo>=200,
-   apply:()=>{ S.goldMult*=2; }},
+  {id:'goldglaze', name:'Золотая глазурь',    baseCost:8000,
+   desc:'Золотая мороженка даёт ×1,5',
+   cond:s=>s.totalEskimo>=500,
+   apply:()=>{ S.goldMult*=1.5; }},
   {id:'coldchain', name:'Холодная цепь',      baseCost:30000,
    desc:'Рефрижераторы ×2',
    cond:s=>s.cnt.truck>=1,
@@ -902,7 +902,7 @@ function collectGolden(){
   clearTimeout(goldTimeout);
   const cps=calcCps();
   const base=cps>=1
-    ? Math.round(cps*(60+Math.random()*60))
+    ? Math.round(cps*(20+Math.random()*20))
     : Math.max(100, Math.round(S.totalEskimo*0.1+50));
   const reward=Math.round(base*S.goldMult);
   S.eskimo+=reward; S.totalEskimo+=reward;
