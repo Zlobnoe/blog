@@ -748,7 +748,7 @@ function scheduleMaxMode(){
 
 function onClickBtn(e){
   const maxMode=isMaxMode();
-  const gain=S.clickMult*prestigeMult()*(maxMode?50:1);
+  const gain=S.clickMult*prestigeMult()*(maxMode?200:1);
   S.eskimo+=gain; S.totalEskimo+=gain;
 
   const rect=document.getElementById('leftPanel').getBoundingClientRect();
