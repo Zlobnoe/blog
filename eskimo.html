@@ -256,7 +256,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <div class="help-title">Как играть</div>
     <p class="help-p">Нажимай на левую половину экрана — получаешь эскимо. На заработанные покупай производителей справа: они приносят эскимо автоматически. Открывай улучшения — они умножают доход от кликов и производителей. Улучшения бесконечны: каждый следующий уровень стоит ×10, но даёт тот же множитель снова.</p>
     <div class="help-title">Золотая мороженка ✦</div>
-    <p class="help-p">Раз в 30–120 секунд на экране появляется золотая мороженка. Кликни на неё как можно быстрее — она принесёт 1–2 минуты текущего производства эскимо. Если не успеть, через 25 секунд она исчезнет сама.</p>
+    <p class="help-p">Раз в 30–120 секунд на экране появляется золотая мороженка. Кликни на неё как можно быстрее — она принесёт 1–2 минуты текущего производства эскимо. Если не успеть, через 25 секунд она исчезнет сама. Улучшения «Золотая глазурь» и «Золотой сезон» увеличивают награду и частоту появления.</p>
 
     <div class="help-title">Производители</div>
     <div class="help-table">
@@ -333,6 +333,14 @@ const UPGRS = [
    desc:'Лотки дают ×3',
    cond:s=>s.cnt.factory>=10,
    apply:()=>{ S.mult.factory*=3; }},
+  {id:'goldglaze', name:'Золотая глазурь',    baseCost:800,
+   desc:'Золотая мороженка даёт ×2',
+   cond:s=>s.totalEskimo>=200,
+   apply:()=>{ S.goldMult*=2; }},
+  {id:'goldseason',name:'Золотой сезон',       baseCost:4000,
+   desc:'Золотая мороженка появляется вдвое чаще',
+   cond:s=>s.goldClicks>=1,
+   apply:()=>{ S.goldFreqMult*=2; }},
 ];
 
 const UPG_LEVEL_MULT = 10; // каждый следующий уровень стоит в 10× дороже
@@ -342,7 +350,8 @@ const S = {
   eskimo:0, totalEskimo:0, clickMult:1,
   cnt:{kid:0,cart:0,factory:0,truck:0,cafe:0,plant:0,chain:0,orbital:0,galaxy:0},
   mult:{kid:1,cart:1,factory:1,truck:1,cafe:1,plant:1,chain:1,orbital:1,galaxy:1},
-  upgLevels:{}, // id → количество покупок
+  upgLevels:{},
+  goldMult:1, goldFreqMult:1, goldClicks:0,
 };
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
@@ -507,7 +516,7 @@ let goldEl=null, goldTimer=null, goldTimeout=null;
 
 function scheduleGolden(){
   clearTimeout(goldTimer);
-  goldTimer=setTimeout(spawnGolden, 30000+Math.random()*90000);
+  goldTimer=setTimeout(spawnGolden, (30000+Math.random()*90000)/S.goldFreqMult);
 }
 
 function spawnGolden(){
@@ -530,10 +539,12 @@ function collectGolden(){
   if(!goldEl) return;
   clearTimeout(goldTimeout);
   const cps=calcCps();
-  const reward=cps>=1
+  const base=cps>=1
     ? Math.round(cps*(60+Math.random()*60))
     : Math.max(100, Math.round(S.totalEskimo*0.1+50));
+  const reward=Math.round(base*S.goldMult);
   S.eskimo+=reward; S.totalEskimo+=reward;
+  S.goldClicks++;
 
   const panel=document.getElementById('leftPanel');
   const pr=panel.getBoundingClientRect();
@@ -564,6 +575,7 @@ function saveGame(){
   localStorage.setItem(SAVE_KEY, JSON.stringify({
     eskimo:S.eskimo, totalEskimo:S.totalEskimo,
     clickMult:S.clickMult, cnt:S.cnt, mult:S.mult, upgLevels:S.upgLevels,
+    goldMult:S.goldMult, goldFreqMult:S.goldFreqMult, goldClicks:S.goldClicks,
   }));
 }
 
@@ -577,6 +589,9 @@ function loadGame(){
     if(d.cnt)       Object.assign(S.cnt, d.cnt);
     if(d.mult)      Object.assign(S.mult, d.mult);
     if(d.upgLevels) S.upgLevels=d.upgLevels;
+    if(d.goldMult)      S.goldMult=d.goldMult;
+    if(d.goldFreqMult)  S.goldFreqMult=d.goldFreqMult;
+    if(d.goldClicks)    S.goldClicks=d.goldClicks;
   }catch(e){}
 }
 
@@ -587,6 +602,7 @@ function resetGame(){
   Object.keys(S.cnt).forEach(k=>S.cnt[k]=0);
   Object.keys(S.mult).forEach(k=>S.mult[k]=1);
   S.upgLevels={};
+  S.goldMult=1; S.goldFreqMult=1; S.goldClicks=0;
   render();
 }
 
