@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Эскимо-кликер — zlobnoe</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0c12;--border:#1e2433;
+  --text:#e8eaf0;--sub:#8890a8;--muted:#5a6278;
+  --accent:#7c6ff7;--surface:#12151f;--surface2:#1a1e2e;
+}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;font-size:15px;min-height:100vh}
+
+/* ── nav ── */
+.nav{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.back{font-size:.8rem;color:var(--muted);text-decoration:none;transition:color .15s}
+.back:hover{color:var(--accent)}
+.nav-title{font-family:'Unbounded',sans-serif;font-size:.92rem;font-weight:700;letter-spacing:-.02em}
+.nav-title em{color:var(--accent);font-style:normal}
+
+/* ── layout ── */
+.game{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 49px)}
+@media(max-width:680px){
+  .game{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .right{border-top:1px solid var(--border);border-left:none!important;max-height:none}
+}
+
+/* ── left ── */
+.left{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 20px;gap:28px;border-right:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.score-wrap{text-align:center}
+.score-num{font-family:'Unbounded',sans-serif;font-size:2.4rem;font-weight:700;line-height:1;letter-spacing:-.03em}
+.score-label{font-size:.75rem;color:var(--muted);margin-top:5px;letter-spacing:.03em}
+
+.clicker-btn{
+  background:none;border:none;cursor:pointer;
+  font-size:5.5rem;line-height:1;
+  filter:drop-shadow(0 0 18px rgba(124,111,247,.35));
+  transition:transform .07s,filter .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.clicker-btn:hover{filter:drop-shadow(0 0 28px rgba(124,111,247,.6))}
+.clicker-btn:active{transform:scale(.88)}
+
+.stats{display:flex;gap:28px}
+.st{text-align:center}
+.st-val{font-size:.95rem;font-weight:600}
+.st-lbl{font-size:.68rem;color:var(--muted);margin-top:2px}
+
+.float{
+  position:absolute;pointer-events:none;
+  font-size:.85rem;font-weight:700;color:var(--accent);
+  animation:floatup .85s ease-out forwards;
+}
+@keyframes floatup{
+  from{opacity:1;transform:translateY(0)}
+  to{opacity:0;transform:translateY(-65px) scale(.8)}
+}
+
+/* ── right ── */
+.right{padding:14px;overflow-y:auto;max-height:calc(100vh - 49px)}
+
+.sec-label{
+  font-size:.65rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);padding-bottom:8px;margin-bottom:10px;border-bottom:1px solid var(--border);
+}
+
+/* upgrades */
+.upg-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;min-height:28px}
+.upg{
+  background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  padding:5px 12px;font-size:.73rem;font-family:'Manrope',sans-serif;font-weight:500;
+  color:var(--text);cursor:pointer;transition:all .15s;text-align:left;
+}
+.upg span{display:block;font-size:.64rem;color:var(--muted);margin-top:1px}
+.upg:hover:not(:disabled){border-color:var(--accent);background:var(--surface2);color:var(--text)}
+.upg:disabled{opacity:.35;cursor:default}
+.upg-empty{font-size:.73rem;color:var(--muted);font-style:italic}
+
+/* buildings */
+.bld{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .15s;
+}
+.bld:hover:not(.cant){border-color:var(--accent);background:var(--surface2)}
+.bld.cant{opacity:.38;cursor:default}
+.bld-icon{font-size:1.55rem;flex-shrink:0}
+.bld-body{flex:1;min-width:0}
+.bld-name{font-weight:600;font-size:.83rem}
+.bld-desc{font-size:.68rem;color:var(--muted);margin-top:1px}
+.bld-cps-total{font-size:.65rem;color:var(--sub);margin-top:2px}
+.bld-r{text-align:right;flex-shrink:0}
+.bld-cost{font-size:.78rem;font-weight:600}
+.bld-count{font-size:.68rem;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="back" href="index.html">← Назад</a>
+  <div class="nav-title">эскимо<em>кликер</em></div>
+</nav>
+
+<div class="game">
+
+  <!-- LEFT -->
+  <div class="left" id="leftPanel">
+    <div class="score-wrap">
+      <div class="score-num" id="scoreNum">0</div>
+      <div class="score-label">🍦 эскимо</div>
+    </div>
+
+    <button class="clicker-btn" id="clickBtn" onclick="onClickBtn(event)">🍦</button>
+
+    <div class="stats">
+      <div class="st"><div class="st-val" id="stCps">0</div><div class="st-lbl">в секунду</div></div>
+      <div class="st"><div class="st-val" id="stCpc">1</div><div class="st-lbl">за клик</div></div>
+      <div class="st"><div class="st-val" id="stTotal">0</div><div class="st-lbl">за всё время</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="sec-label">Улучшения</div>
+    <div class="upg-list" id="upgList"></div>
+
+    <div class="sec-label">Производители</div>
+    <div id="bldList"></div>
+  </div>
+
+</div>
+
+<script>
+// ── Данные ───────────────────────────────────────────────────────────────────
+const BLDS = [
+  {id:'kid',     emoji:'🧒', name:'Ребёнок',     desc:'Тратит карманные на эскимо',      baseCost:15,    baseCps:.1},
+  {id:'cart',    emoji:'🛒', name:'Тележка',      desc:'Мороженщик объезжает дворы',      baseCost:100,   baseCps:.5},
+  {id:'factory', emoji:'🏭', name:'Мини-завод',   desc:'Небольшой, но шустрый',           baseCost:1100,  baseCps:5},
+  {id:'truck',   emoji:'🚚', name:'Рефрижератор', desc:'Развозит по всему городу',        baseCost:12000, baseCps:25},
+];
+
+const UPGRS = [
+  {id:'choco',    name:'Шоколадная глазурь', cost:100,
+   desc:'Клики ×2',
+   cond:s=>s.totalEskimo>=1,
+   apply:()=>{ S.clickMult*=2; }},
+  {id:'waffle',   name:'Сладкая вафля',      cost:500,
+   desc:'Дети дают ×2',
+   cond:s=>s.cnt.kid>=1,
+   apply:()=>{ S.mult.kid*=2; }},
+  {id:'dblclick', name:'Двойная порция',      cost:5000,
+   desc:'Клики снова ×2',
+   cond:s=>s.upgBought.has('choco')&&s.totalEskimo>=500,
+   apply:()=>{ S.clickMult*=2; }},
+  {id:'route',    name:'Новый маршрут',       cost:2000,
+   desc:'Тележки ×2',
+   cond:s=>s.cnt.cart>=5,
+   apply:()=>{ S.mult.cart*=2; }},
+  {id:'freeze',   name:'Морозильный цех',     cost:10000,
+   desc:'Завод ×3',
+   cond:s=>s.cnt.factory>=10,
+   apply:()=>{ S.mult.factory*=3; }},
+];
+
+// ── Состояние ────────────────────────────────────────────────────────────────
+const S = {
+  eskimo:0, totalEskimo:0, clickMult:1,
+  cnt:{kid:0,cart:0,factory:0,truck:0},
+  mult:{kid:1,cart:1,factory:1,truck:1},
+  upgBought:new Set(),
+};
+
+// ── Утилиты ──────────────────────────────────────────────────────────────────
+function fmt(n){
+  if(n<1000)  return Math.floor(n).toLocaleString('ru');
+  if(n<1e6)   return (n/1000).toFixed(1).replace('.',',')+' тыс';
+  if(n<1e9)   return (n/1e6).toFixed(2).replace('.',',')+' млн';
+  return (n/1e9).toFixed(2).replace('.',',')+' млрд';
+}
+
+function bldCost(b){ return Math.ceil(b.baseCost*Math.pow(1.15,S.cnt[b.id])); }
+function calcCps(){ return BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0); }
+
+// ── Действия ─────────────────────────────────────────────────────────────────
+function onClickBtn(e){
+  const gain=S.clickMult;
+  S.eskimo+=gain; S.totalEskimo+=gain;
+
+  const panel=document.getElementById('leftPanel');
+  const rect=panel.getBoundingClientRect();
+  const el=document.createElement('div');
+  el.className='float';
+  el.textContent='+'+fmt(gain);
+  el.style.left=(e.clientX-rect.left-16)+'px';
+  el.style.top=(e.clientY-rect.top-10)+'px';
+  panel.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+
+  render();
+}
+
+function buyBld(b){
+  const cost=bldCost(b);
+  if(S.eskimo<cost) return;
+  S.eskimo-=cost; S.cnt[b.id]++;
+  render();
+}
+
+function buyUpg(u){
+  if(S.eskimo<u.cost||S.upgBought.has(u.id)) return;
+  S.eskimo-=u.cost; S.upgBought.add(u.id); u.apply();
+  render();
+}
+
+// ── Рендер ───────────────────────────────────────────────────────────────────
+function render(){
+  const cps=calcCps();
+  document.getElementById('scoreNum').textContent=fmt(S.eskimo);
+  document.getElementById('stCps').textContent=fmt(cps);
+  document.getElementById('stCpc').textContent=fmt(S.clickMult);
+  document.getElementById('stTotal').textContent=fmt(S.totalEskimo);
+
+  // улучшения
+  const avail=UPGRS.filter(u=>!S.upgBought.has(u.id)&&u.cond(S));
+  const ul=document.getElementById('upgList');
+  ul.innerHTML='';
+  if(!avail.length){
+    ul.innerHTML='<span class="upg-empty">пока нет доступных улучшений</span>';
+  } else {
+    avail.forEach(u=>{
+      const btn=document.createElement('button');
+      btn.className='upg';
+      btn.disabled=S.eskimo<u.cost;
+      btn.innerHTML=u.name+'<span>'+fmt(u.cost)+' 🍦 — '+u.desc+'</span>';
+      btn.onclick=()=>buyUpg(u);
+      ul.appendChild(btn);
+    });
+  }
+
+  // производители
+  const bl=document.getElementById('bldList');
+  bl.innerHTML='';
+  BLDS.forEach(b=>{
+    const cost=bldCost(b);
+    const cant=S.eskimo<cost;
+    const row=document.createElement('div');
+    row.className='bld'+(cant?' cant':'');
+    const cpsTotal=b.baseCps*S.cnt[b.id]*S.mult[b.id];
+    row.innerHTML=
+      '<div class="bld-icon">'+b.emoji+'</div>'+
+      '<div class="bld-body">'+
+        '<div class="bld-name">'+b.name+'</div>'+
+        '<div class="bld-desc">'+b.desc+'</div>'+
+        (S.cnt[b.id]>0?'<div class="bld-cps-total">'+fmt(cpsTotal)+' МВС суммарно</div>':'')+
+      '</div>'+
+      '<div class="bld-r">'+
+        '<div class="bld-cost">'+fmt(cost)+' 🍦</div>'+
+        '<div class="bld-count">×'+S.cnt[b.id]+'</div>'+
+      '</div>';
+    if(!cant) row.onclick=()=>buyBld(b);
+    bl.appendChild(row);
+  });
+}
+
+// ── Игровой цикл ─────────────────────────────────────────────────────────────
+setInterval(()=>{
+  const gain=calcCps()/20;
+  S.eskimo+=gain; S.totalEskimo+=gain;
+  render();
+},50);
+
+render();
+</script>
+</body>
+</html>
