@@ -147,34 +147,36 @@ const BLDS = [
 ];
 
 const UPGRS = [
-  {id:'choco',    name:'Шоколадная глазурь', cost:50,
+  {id:'choco',    name:'Шоколадная глазурь', baseCost:50,
    desc:'Клики ×2',
    cond:s=>s.totalEskimo>=1,
    apply:()=>{ S.clickMult*=2; }},
-  {id:'waffle',   name:'Сладкая вафля',      cost:250,
+  {id:'waffle',   name:'Сладкая вафля',      baseCost:250,
    desc:'Дети дают ×2',
    cond:s=>s.cnt.kid>=1,
    apply:()=>{ S.mult.kid*=2; }},
-  {id:'dblclick', name:'Двойная порция',      cost:2500,
-   desc:'Клики снова ×2',
-   cond:s=>s.upgBought.has('choco')&&s.totalEskimo>=500,
-   apply:()=>{ S.clickMult*=2; }},
-  {id:'route',    name:'Новый маршрут',       cost:1000,
+  {id:'route',    name:'Новый маршрут',       baseCost:1000,
    desc:'Тележки ×2',
    cond:s=>s.cnt.cart>=5,
    apply:()=>{ S.mult.cart*=2; }},
-  {id:'freeze',   name:'Морозильный ларёк',   cost:5000,
+  {id:'dblclick', name:'Двойная порция',      baseCost:2500,
+   desc:'Клики снова ×2',
+   cond:s=>(s.upgLevels.choco||0)>=1,
+   apply:()=>{ S.clickMult*=2; }},
+  {id:'freeze',   name:'Морозильный ларёк',   baseCost:5000,
    desc:'Лотки дают ×3',
    cond:s=>s.cnt.factory>=10,
    apply:()=>{ S.mult.factory*=3; }},
 ];
+
+const UPG_LEVEL_MULT = 10; // каждый следующий уровень стоит в 10× дороже
 
 // ── Состояние ────────────────────────────────────────────────────────────────
 const S = {
   eskimo:0, totalEskimo:0, clickMult:1,
   cnt:{kid:0,cart:0,factory:0,truck:0},
   mult:{kid:1,cart:1,factory:1,truck:1},
-  upgBought:new Set(),
+  upgLevels:{}, // id → количество покупок
 };
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
@@ -187,6 +189,9 @@ function fmt(n){
 
 function bldCost(b){ return Math.ceil(b.baseCost*Math.pow(1.18,S.cnt[b.id])); }
 function calcCps(){ return BLDS.reduce((s,b)=>s+b.baseCps*S.cnt[b.id]*S.mult[b.id],0); }
+function upgLvl(u){ return S.upgLevels[u.id]||0; }
+function upgCost(u){ return Math.ceil(u.baseCost*Math.pow(UPG_LEVEL_MULT, upgLvl(u))); }
+function upgAvail(u){ return upgLvl(u)>0 ? true : u.cond(S); }
 
 // ── Действия ─────────────────────────────────────────────────────────────────
 function onClickBtn(e){
@@ -214,8 +219,11 @@ function buyBld(b){
 }
 
 function buyUpg(u){
-  if(S.eskimo<u.cost||S.upgBought.has(u.id)) return;
-  S.eskimo-=u.cost; S.upgBought.add(u.id); u.apply();
+  const cost=upgCost(u);
+  if(S.eskimo<cost) return;
+  S.eskimo-=cost;
+  S.upgLevels[u.id]=(upgLvl(u)+1);
+  u.apply();
   render();
 }
 
@@ -228,17 +236,19 @@ function render(){
   document.getElementById('stTotal').textContent=fmt(S.totalEskimo);
 
   // улучшения
-  const avail=UPGRS.filter(u=>!S.upgBought.has(u.id)&&u.cond(S));
+  const avail=UPGRS.filter(u=>upgAvail(u));
   const ul=document.getElementById('upgList');
   ul.innerHTML='';
   if(!avail.length){
     ul.innerHTML='<span class="upg-empty">пока нет доступных улучшений</span>';
   } else {
-    avail.forEach(u=>{
+    avail.sort((a,b)=>upgCost(a)-upgCost(b)).forEach(u=>{
+      const lvl=upgLvl(u), cost=upgCost(u);
       const btn=document.createElement('button');
       btn.className='upg';
-      btn.disabled=S.eskimo<u.cost;
-      btn.innerHTML=u.name+'<span>'+fmt(u.cost)+' 🍦 — '+u.desc+'</span>';
+      btn.disabled=S.eskimo<cost;
+      const badge=lvl>0?` <small style="opacity:.55;font-size:.62rem">Ур.${lvl+1}</small>`:'';
+      btn.innerHTML=u.name+badge+'<span>'+fmt(cost)+' 🍦 — '+u.desc+'</span>';
       btn.onclick=()=>buyUpg(u);
       ul.appendChild(btn);
     });
