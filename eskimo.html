@@ -592,9 +592,12 @@ function render(){
   const pending=pendingStars();
   const mult=1+(S.prestigeShop.starrain||0)*0.5;
   const earned=Math.round(pending*mult);
+  const nextThreshold=(pending+1)*(pending+1)*100000;
+  const toNext=nextThreshold-S.totalEskimo;
   document.getElementById('starsBalance').textContent='✦ '+S.stars+(S.rebirths>0?' (перерождений: '+S.rebirths+')':'');
-  document.getElementById('starsPending').textContent=pending>0
+  document.getElementById('starsPending').innerHTML=pending>0
     ? 'Переродиться → получишь ✦ '+earned+(mult>1?' (×'+mult.toFixed(1)+')':'')
+      +'<br><span style="opacity:.65">До ✦ '+(pending+1)+': ещё ~'+fmt(toNext)+' эскимо</span>'
     : 'Нужно ~'+fmt(Math.max(0,100000-S.totalEskimo))+' эскимо до первой ✦';
   const rb=document.getElementById('rebirthBtn');
   rb.disabled=pending<1;
