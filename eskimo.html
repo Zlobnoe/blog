@@ -699,9 +699,9 @@ function spawnGolden(){
   const el=document.createElement('div');
   el.className='gold-eskimo';
   el.innerHTML=GOLD_SVG;
-  const margin=40;
-  el.style.left=(margin+Math.random()*(W-54-margin*2))+'px';
-  el.style.top=(margin+Math.random()*(H-100-margin*2))+'px';
+  const margin=20, iconW=54, iconH=90;
+  el.style.left=(margin+Math.random()*Math.max(0,W-iconW-margin*2))+'px';
+  el.style.top=(margin+Math.random()*Math.max(0,H-iconH-margin*2))+'px';
   el.addEventListener('click', e=>{ e.stopPropagation(); collectGolden(); });
   panel.appendChild(el);
   goldEl=el;
