@@ -142,7 +142,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 const BLDS = [
   {id:'kid',     emoji:'🧒', name:'Ребёнок',     desc:'Тратит карманные на эскимо',      baseCost:15,    baseCps:.1},
   {id:'cart',    emoji:'🛒', name:'Тележка',      desc:'Мороженщик объезжает дворы',      baseCost:100,   baseCps:.5},
-  {id:'factory', emoji:'🏭', name:'Мини-завод',   desc:'Небольшой, но шустрый',           baseCost:1100,  baseCps:5},
+  {id:'factory', emoji:'🏪', name:'Лоток с мороженым', desc:'Стоит в людном месте круглый день', baseCost:1100,  baseCps:5},
   {id:'truck',   emoji:'🚚', name:'Рефрижератор', desc:'Развозит по всему городу',        baseCost:12000, baseCps:25},
 ];
 
@@ -163,8 +163,8 @@ const UPGRS = [
    desc:'Тележки ×2',
    cond:s=>s.cnt.cart>=5,
    apply:()=>{ S.mult.cart*=2; }},
-  {id:'freeze',   name:'Морозильный цех',     cost:10000,
-   desc:'Завод ×3',
+  {id:'freeze',   name:'Морозильный ларёк',   cost:10000,
+   desc:'Лотки дают ×3',
    cond:s=>s.cnt.factory>=10,
    apply:()=>{ S.mult.factory*=3; }},
 ];
