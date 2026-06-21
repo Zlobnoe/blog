@@ -510,7 +510,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <p class="help-note">Куплено 3 менеджера — синергия +15%. Все 4 — +30%. Карамельная палочка снижает стоимость менеджеров на 20%.</p>
 
     <div class="help-title">🥢 Съедобная палочка</div>
-    <p class="help-p">Вторичная валюта: <b>1 палочка за каждые 100 000 эскимо</b> за текущий забег. Палочки <b>не сбрасываются</b> при перерождении — это мета-прогрессия. Каждая купленная палочка делает все следующие на <b>×1,5 дороже</b> — выбирай, что важнее.</p>
+    <p class="help-p">Вторичная валюта. Палочки <b>не сбрасываются</b> при перерождении — это мета-прогрессия. Зарабатывать палочки становится всё сложнее: <b>первая</b> — за 100 тыс. эскимо, <b>вторая</b> — за 300 тыс. (итого), <b>третья</b> — за 600 тыс., N-я — за N×(N+1)/2 × 100 тыс. А каждая купленная палочка делает следующие на <b>×1,5 дороже</b> — выбирай мудро.</p>
     <div class="help-table help-table-upg">
       <div class="ht-row ht-head"><span>Палочка</span><span>Цена 🥢</span><span>Эффект</span><span>Макс.</span></div>
       <div class="ht-row"><span>Вкусная</span><span>1</span><span>МВС +15%</span><span>5</span></div>
@@ -1374,7 +1374,7 @@ let _saveTick=0;
 setInterval(()=>{
   const gain=calcCps()/20;
   S.eskimo+=gain; S.totalEskimo+=gain;
-  const shouldEarn=Math.floor(S.totalEskimo/100000);
+  const shouldEarn=sticksShouldEarn(S.totalEskimo);
   if(shouldEarn>(S.sticksEarnedThisRun||0)){
     S.sticks+=shouldEarn-(S.sticksEarnedThisRun||0);
     S.sticksEarnedThisRun=shouldEarn;
@@ -1415,6 +1415,12 @@ else scheduleGolden();
 scheduleMaxMode();
 
 // ── Магазин палочек ───────────────────────────────────────────────────────────
+// Nth палочка стоит N×100k эскимо (треугольные числа)
+// Для N палочек нужно N*(N+1)/2 × 100k эскимо
+// Обратная формула: N = floor((-1 + sqrt(1 + 8*total/100k)) / 2)
+function sticksShouldEarn(totalEsk){
+  return Math.max(0,Math.floor((-1+Math.sqrt(1+8*totalEsk/100000))/2));
+}
 function stickTotalBought(){
   return Object.values(S.stickShop).reduce((a,b)=>a+b,0);
 }
@@ -1454,7 +1460,10 @@ function renderStickShop(){
       '</button>';
     list.appendChild(div);
   });
-  document.getElementById('stickBalance').textContent='🥢 '+S.sticks+' палочек (всего за забег: '+S.sticksEarnedThisRun+')';
+  const _se=S.sticksEarnedThisRun||0;
+  const _nextStickCost=(_se+1)*(_se+2)/2*100000;
+  const _toNext=Math.max(0,_nextStickCost-S.totalEskimo);
+  document.getElementById('stickBalance').textContent='🥢 '+S.sticks+' палочек — до следующей: ~'+fmt(_toNext)+' эскимо';
 }
 
 const ESK_TRIGGERS=['Старт','1 000 эскимо','100 тыс. эскимо','10 млн эскимо','1 млрд эскимо','1 трлн эскимо','10 квдрлн эскимо','1 000 🚀 заводов'];
