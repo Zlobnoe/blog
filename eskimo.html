@@ -848,7 +848,7 @@ function render(){
         ? u.desc(fmtMult(u.baseMult&&!u.oneShot?effMult(u):u.baseMult||1))
         : u.desc;
       btn.innerHTML=u.name+badge+'<span>'+fmt(cost)+' 🍦 — '+descStr+'</span>';
-      btn.onclick=()=>buyUpg(u);
+      btn.dataset.upgId=u.id;
       ul.appendChild(btn);
     });
   }
@@ -879,7 +879,7 @@ function render(){
         '<div class="bld-cost">'+fmt(cost)+' 🍦</div>'+
         '<div class="bld-count">×'+S.cnt[b.id]+amtLabel+'</div>'+
       '</div>';
-    if(!cant) row.onclick=()=>buyBld(b);
+    row.dataset.bldId=b.id;
     bl.appendChild(row);
   });
   renderManagers();
@@ -1149,6 +1149,20 @@ setInterval(()=>{
   if(++_saveTick>=200){ saveGame(); _saveTick=0; } // каждые 10 сек
   render();
 },50);
+
+// ── Event delegation для правой панели (избегаем потери кликов из-за render loop) ──
+document.getElementById('upgList').addEventListener('mousedown', e=>{
+  const btn=e.target.closest('[data-upg-id]');
+  if(!btn||btn.disabled) return;
+  const u=ALL_UPGRS.find(u=>u.id===btn.dataset.upgId);
+  if(u) buyUpg(u);
+});
+document.getElementById('bldList').addEventListener('mousedown', e=>{
+  const row=e.target.closest('[data-bld-id]');
+  if(!row||row.classList.contains('cant')) return;
+  const b=BLDS.find(b=>b.id===row.dataset.bldId);
+  if(b) buyBld(b);
+});
 
 loadGame();
 render();
