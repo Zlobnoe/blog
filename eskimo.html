@@ -870,7 +870,7 @@ function rebirthGame(){
   if(stars<1) return;
   const mult=1+(S.prestigeShop.starrain||0)*0.5+(S.stickShop.diamond?1:0);
   const earned=Math.round(stars*mult);
-  if(!confirm('Переродиться и получить '+earned+' ✦? Весь прогресс этого забега сбросится.')) return;
+  if(!confirm('Переродиться и получить '+fmt(earned)+' ✦? Весь прогресс этого забега сбросится.')) return;
   S.stars+=earned; S.totalStars+=earned; S.rebirths++;
   S.eskimo=0; S.totalEskimo=0; S.clickMult=1;
   Object.keys(S.cnt).forEach(k=>S.cnt[k]=0);
@@ -899,7 +899,7 @@ function renderPrestigeShop(){
   const cont=document.getElementById('pshopItems');
   if(!cont) return;
   const freeStars=S.stars;
-  cont.innerHTML='<div class="pshop-bal">Баланс: ✦ '+freeStars+' (пассивный бонус: +'+Math.round((prestigeMult()-1)*100)+'%)</div>';
+  cont.innerHTML='<div class="pshop-bal">Баланс: ✦ '+fmt(freeStars)+' (пассивный бонус: +'+Math.round((prestigeMult()-1)*100)+'%)</div>';
   PRESTIGE_ITEMS.forEach(item=>{
     const cnt=S.prestigeShop[item.id]||0;
     const maxed=cnt>=item.max;
@@ -1025,8 +1025,8 @@ function render(){
   const toNext=nextThreshold-S.totalEskimo;
   document.getElementById('starsBalance').textContent='✦ '+fmt(S.stars)+(S.rebirths>0?' (перерождений: '+S.rebirths+')':'');
   document.getElementById('starsPending').innerHTML=pending>0
-    ? 'Переродиться → получишь ✦ '+earned+(mult>1?' (×'+mult.toFixed(1)+')':'')
-      +'<br><span style="opacity:.65">До ✦ '+(pending+1)+': ещё ~'+fmt(toNext)+' эскимо</span>'
+    ? 'Переродиться → получишь ✦ '+fmt(earned)+(mult>1?' (×'+mult.toFixed(1)+')':'')
+      +'<br><span style="opacity:.65">До ✦ '+fmt(pending+1)+': ещё ~'+fmt(toNext)+' эскимо</span>'
     : 'Нужно ~'+fmt(Math.max(0,100000-S.totalEskimo))+' эскимо до первой ✦';
   const rb=document.getElementById('rebirthBtn');
   rb.disabled=pending<1;
@@ -1105,7 +1105,7 @@ function render(){
       '</div>'+
       '<div class="bld-r">'+
         '<div class="bld-cost">'+fmt(cost)+' 🍦</div>'+
-        '<div class="bld-count">×'+S.cnt[b.id]+amtLabel+'</div>'+
+        '<div class="bld-count">×'+fmt(S.cnt[b.id])+amtLabel+'</div>'+
       '</div>';
     row.dataset.bldId=b.id;
     bl.appendChild(row);
