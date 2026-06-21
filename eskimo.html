@@ -510,7 +510,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <p class="help-note">Куплено 3 менеджера — синергия +15%. Все 4 — +30%. Карамельная палочка снижает стоимость менеджеров на 20%.</p>
 
     <div class="help-title">🥢 Съедобная палочка</div>
-    <p class="help-p">Вторичная валюта: <b>1 палочка за каждые 100 000 эскимо</b> за текущий забег. Палочки <b>не сбрасываются</b> при перерождении — это мета-прогрессия.</p>
+    <p class="help-p">Вторичная валюта: <b>1 палочка за каждые 100 000 эскимо</b> за текущий забег. Палочки <b>не сбрасываются</b> при перерождении — это мета-прогрессия. Каждая купленная палочка делает все следующие на <b>×1,5 дороже</b> — выбирай, что важнее.</p>
     <div class="help-table help-table-upg">
       <div class="ht-row ht-head"><span>Палочка</span><span>Цена 🥢</span><span>Эффект</span><span>Макс.</span></div>
       <div class="ht-row"><span>Вкусная</span><span>1</span><span>МВС +15%</span><span>5</span></div>
@@ -527,7 +527,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     </div>
 
     <div class="help-title">Перерождение ✦</div>
-    <p class="help-p">Когда наберёшь достаточно эскимо, загорится кнопка <b>Переродиться</b>. Прогресс забега сбрасывается, но ты получаешь <b>звёздочки ✦</b>: количество = √(итого / 100 000). Каждая непотраченная ✦ даёт +5% к производству и кликам навсегда (+7% с Ванильной палочкой).</p>
+    <p class="help-p">Когда наберёшь достаточно эскимо, загорится кнопка <b>Переродиться</b>. Прогресс забега сбрасывается, но ты получаешь <b>звёздочки ✦</b>: количество = ∛(итого / 100 000). Каждая следующая звёздочка требует значительно больше эскимо — первая в 100 тыс., третья уже в 2,7 млрд. Каждая непотраченная ✦ даёт +5% к производству и кликам навсегда (+7% с Ванильной палочкой).</p>
     <p class="help-p">Звёздочки тратятся в <b>Магазине звёздочек</b> на постоянные бонусы: ускоренный старт, кристальный клик, скидка на производителей, перманентный бонус МВС и другое.</p>
   </div>
 </div>
@@ -772,7 +772,7 @@ function fmt(n){
   return (n/1e36).toFixed(2).replace('.',',')+' ундецлн';
 }
 
-function pendingStars(){ return Math.max(0,Math.floor(Math.sqrt(S.totalEskimo/100000))); }
+function pendingStars(){ return Math.max(0,Math.floor(Math.cbrt(S.totalEskimo/100000))); }
 function prestigeMult(){ return 1+S.stars*(S.stickShop.vanilla?0.07:0.05); }
 
 let buyAmt=1;
@@ -1012,7 +1012,7 @@ function render(){
   const pending=pendingStars();
   const mult=1+(S.prestigeShop.starrain||0)*0.5;
   const earned=Math.round(pending*mult);
-  const nextThreshold=(pending+1)*(pending+1)*100000;
+  const nextThreshold=Math.pow(pending+1,3)*100000;
   const toNext=nextThreshold-S.totalEskimo;
   document.getElementById('starsBalance').textContent='✦ '+S.stars+(S.rebirths>0?' (перерождений: '+S.rebirths+')':'');
   document.getElementById('starsPending').innerHTML=pending>0
@@ -1415,12 +1415,19 @@ else scheduleGolden();
 scheduleMaxMode();
 
 // ── Магазин палочек ───────────────────────────────────────────────────────────
+function stickTotalBought(){
+  return Object.values(S.stickShop).reduce((a,b)=>a+b,0);
+}
+function stickActualCost(item){
+  return Math.ceil(item.cost*Math.pow(1.5,stickTotalBought()));
+}
 function buyStickItem(id){
   const item=STICK_ITEMS.find(i=>i.id===id);
   if(!item) return;
   const bought=S.stickShop[item.id]||0;
-  if(bought>=item.max||S.sticks<item.cost) return;
-  S.sticks-=item.cost;
+  const cost=stickActualCost(item);
+  if(bought>=item.max||S.sticks<cost) return;
+  S.sticks-=cost;
   S.stickShop[item.id]=(bought+1);
   saveGame(); render();
 }
@@ -1432,7 +1439,8 @@ function renderStickShop(){
   STICK_ITEMS.forEach(item=>{
     const bought=S.stickShop[item.id]||0;
     const maxed=bought>=item.max;
-    const can=!maxed&&S.sticks>=item.cost;
+    const cost=stickActualCost(item);
+    const can=!maxed&&S.sticks>=cost;
     const div=document.createElement('div');
     div.className='stick-item'+(maxed?' maxed':'');
     const countStr=item.max>1?' ('+bought+'/'+item.max+')':'';
@@ -1442,7 +1450,7 @@ function renderStickShop(){
         '<div class="stick-item-desc">'+item.desc+'</div>'+
       '</div>'+
       '<button class="stick-buy-btn" data-stick-id="'+item.id+'"'+(can?'':' disabled')+'>'+
-        (maxed?'✓':item.cost+' 🥢')+
+        (maxed?'✓':cost+' 🥢')+
       '</button>';
     list.appendChild(div);
   });
