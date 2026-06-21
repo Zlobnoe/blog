@@ -266,6 +266,19 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .mgr-cost{font-size:.78rem;font-weight:600}
 .mgr-action{font-size:.65rem;color:var(--muted);margin-top:2px}
 .mgr-synergy{font-size:.72rem;color:#4caf84;text-align:center;padding:7px;margin-bottom:4px;background:rgba(76,175,132,.08);border-radius:8px;border:1px solid rgba(76,175,132,.25)}
+
+/* stick shop */
+.stick-section{margin-top:18px;padding-top:14px;border-top:2px solid rgba(180,140,60,.3)}
+.stick-title{font-size:.65rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#c9a050;margin-bottom:6px}
+.stick-balance{font-size:.82rem;font-weight:600;color:#c9a050;margin-bottom:10px}
+.stick-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid rgba(180,140,60,.2);border-radius:10px;padding:8px 10px;margin-bottom:5px}
+.stick-item.maxed{opacity:.45}
+.stick-item-info{flex:1;min-width:0}
+.stick-item-name{font-weight:600;font-size:.76rem;color:var(--text)}
+.stick-item-desc{font-size:.63rem;color:var(--muted);margin-top:1px}
+.stick-buy-btn{flex-shrink:0;background:rgba(180,140,60,.12);border:1px solid rgba(180,140,60,.4);border-radius:7px;padding:4px 9px;font-size:.71rem;font-family:'Manrope',sans-serif;color:#c9a050;cursor:pointer;transition:all .15s;white-space:nowrap}
+.stick-buy-btn:hover:not(:disabled){background:rgba(180,140,60,.28);border-color:#c9a050}
+.stick-buy-btn:disabled{opacity:.35;cursor:default}
 </style>
 </head>
 <body>
@@ -342,6 +355,12 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
       <div class="stars-pending" id="starsPending"></div>
       <button class="rebirth-btn" id="rebirthBtn" onclick="rebirthGame()" disabled>Переродиться</button>
       <button class="pshop-open-btn" onclick="openPrestige()">Магазин звёздочек →</button>
+    </div>
+
+    <div class="stick-section">
+      <div class="stick-title">🥢 Съедобная палочка</div>
+      <div class="stick-balance" id="stickBalance">🥢 0 палочек</div>
+      <div id="stickList"></div>
     </div>
 
     <div class="save-row">
@@ -460,15 +479,15 @@ const PRESTIGE_ITEMS = [
 ];
 
 const BLDS = [
-  {id:'kid',     icon:I.kid,     name:'Ребёнок',          desc:'Тратит карманные на эскимо',            baseCost:2,         baseCps:.1,  scale:1.045},
-  {id:'cart',    icon:I.cart,    name:'Тележка',           desc:'Мороженщик объезжает дворы',            baseCost:25,        baseCps:.5,  scale:1.09},
-  {id:'factory', icon:I.factory, name:'Лоток с мороженым', desc:'Стоит в людном месте круглый день',     baseCost:550,       baseCps:5},
-  {id:'truck',   icon:I.truck,   name:'Рефрижератор',      desc:'Развозит по всему городу',              baseCost:6000,      baseCps:25},
-  {id:'cafe',    icon:I.cafe,    name:'Кафе «Эскимо»',     desc:'Уютное место с видом на лето',          baseCost:55000,     baseCps:150},
-  {id:'plant',   icon:I.plant,   name:'Хладокомбинат',     desc:'Конвейер не останавливается',           baseCost:500000,    baseCps:1000},
-  {id:'chain',   icon:I.chain,   name:'Торговая сеть',      desc:'Эскимо в каждом городе страны',        baseCost:5000000,   baseCps:7000},
-  {id:'orbital', icon:I.orbital, name:'Орбитальный завод',  desc:'В невесомости мороженое не тает',      baseCost:50000000,  baseCps:50000},
-  {id:'galaxy',  icon:I.galaxy,  name:'Галактическая сеть', desc:'Экспортируем эскимо на другие планеты',baseCost:500000000, baseCps:350000},
+  {id:'kid',     icon:I.kid,     name:'Ребёнок',          desc:'Тратит карманные на эскимо',            baseCost:4,          baseCps:.07, scale:1.045},
+  {id:'cart',    icon:I.cart,    name:'Тележка',           desc:'Мороженщик объезжает дворы',            baseCost:50,         baseCps:.35, scale:1.09},
+  {id:'factory', icon:I.factory, name:'Лоток с мороженым', desc:'Стоит в людном месте круглый день',     baseCost:1100,       baseCps:3.5},
+  {id:'truck',   icon:I.truck,   name:'Рефрижератор',      desc:'Развозит по всему городу',              baseCost:12000,      baseCps:18},
+  {id:'cafe',    icon:I.cafe,    name:'Кафе «Эскимо»',     desc:'Уютное место с видом на лето',          baseCost:110000,     baseCps:105},
+  {id:'plant',   icon:I.plant,   name:'Хладокомбинат',     desc:'Конвейер не останавливается',           baseCost:1000000,    baseCps:700},
+  {id:'chain',   icon:I.chain,   name:'Торговая сеть',      desc:'Эскимо в каждом городе страны',        baseCost:10000000,   baseCps:5000},
+  {id:'orbital', icon:I.orbital, name:'Орбитальный завод',  desc:'В невесомости мороженое не тает',      baseCost:100000000,  baseCps:35000},
+  {id:'galaxy',  icon:I.galaxy,  name:'Галактическая сеть', desc:'Экспортируем эскимо на другие планеты',baseCost:1000000000, baseCps:250000},
 ];
 
 const UPGRS = [
@@ -559,6 +578,20 @@ const MANAGERS = [
    effectDesc: lvl => '+'+Math.round((Math.pow(1.3,lvl)-1)*100)+'% к транспорту и сетям'},
 ];
 
+const STICK_ITEMS = [
+  {id:'tasty',   name:'Вкусная палочка',       cost:1,  max:5,  desc:'МВС +15% (стакается до 5 раз)'},
+  {id:'birch',   name:'Берёзовая палочка',      cost:2,  max:1,  desc:'Синергия: +3% за 10 единиц вместо +2%'},
+  {id:'caramel', name:'Карамельная палочка',    cost:2,  max:1,  desc:'Менеджеры −20% к стоимости'},
+  {id:'long',    name:'Длинная палочка',         cost:3,  max:1,  desc:'МАКСимагеддон длится 25 с вместо 15'},
+  {id:'double',  name:'Двойная палочка',         cost:5,  max:1,  desc:'×1,5 к МВС навсегда'},
+  {id:'vanilla', name:'Ванильная палочка',       cost:5,  max:1,  desc:'Каждая ✦ даёт +7% вместо +5%'},
+  {id:'glazed',  name:'Глазированная палочка',   cost:8,  max:1,  desc:'МАКСимагеддон раз в 1–4 мин вместо 3–8'},
+  {id:'golden',  name:'Золотая палочка',          cost:8,  max:3,  desc:'+50% к МВС (стакается до 3 раз)'},
+  {id:'crystal', name:'Кристальная палочка',     cost:12, max:1,  desc:'Синергия каждые 5 единиц вместо 10'},
+  {id:'cosmic',  name:'Космическая палочка',     cost:15, max:1,  desc:'МАКСимагеддон ×500 за клик вместо ×100'},
+  {id:'diamond', name:'Алмазная палочка',        cost:25, max:1,  desc:'+100% звёздочек при перерождении'},
+];
+
 // ── Состояние ────────────────────────────────────────────────────────────────
 const S = {
   eskimo:0, totalEskimo:0, clickMult:1,
@@ -570,6 +603,7 @@ const S = {
   prestigeShop:{},
   quickLaunchActive:false,
   mgr:{tech:0,fin:0,mkt:0,log:0},
+  sticks:0, sticksEarnedThisRun:0, stickShop:{},
 };
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
@@ -590,7 +624,7 @@ function fmt(n){
 }
 
 function pendingStars(){ return Math.max(0,Math.floor(Math.sqrt(S.totalEskimo/100000))); }
-function prestigeMult(){ return 1+S.stars*0.05; }
+function prestigeMult(){ return 1+S.stars*(S.stickShop.vanilla?0.07:0.05); }
 
 let buyAmt=1;
 function setBuyAmt(n){
@@ -599,7 +633,10 @@ function setBuyAmt(n){
   render();
 }
 
-function mgrCost(m){ return Math.ceil(m.baseCost*Math.pow(m.scaleMult,S.mgr[m.id]||0)); }
+function mgrCost(m){
+  const base=Math.ceil(m.baseCost*Math.pow(m.scaleMult,S.mgr[m.id]||0));
+  return S.stickShop.caramel?Math.ceil(base*0.8):base;
+}
 function mgrTechMult(){ return Math.pow(1.2,  S.mgr.tech||0); }
 function mgrFinMult(){  return Math.pow(0.85, S.mgr.fin ||0); }
 function mgrMktMult(){  return Math.pow(0.85, S.mgr.mkt ||0); }
@@ -633,7 +670,9 @@ function bldCostN(b,n){
 function synergyBoost(b){
   const idx=BLDS.findIndex(x=>x.id===b.id);
   if(idx<=0) return 1;
-  return 1+Math.floor(S.cnt[BLDS[idx-1].id]/10)*0.02;
+  const step=S.stickShop.crystal?5:10;
+  const rate=S.stickShop.birch?0.03:0.02;
+  return 1+Math.floor(S.cnt[BLDS[idx-1].id]/step)*rate;
 }
 function calcCps(){
   const logBlds=new Set(['truck','cafe','plant','chain','orbital','galaxy']);
@@ -643,7 +682,11 @@ function calcCps(){
     return s+cps;
   },0);
   const pf=1+(S.prestigeShop.permafrost||0)*0.10;
-  return raw*pf*prestigeMult()*mgrTechMult()*mgrSynergyMult();
+  const stickMult=
+    Math.pow(1.15,S.stickShop.tasty||0)*
+    Math.pow(1.5, S.stickShop.golden||0)*
+    (S.stickShop.double?1.5:1);
+  return raw*pf*prestigeMult()*mgrTechMult()*mgrSynergyMult()*stickMult;
 }
 function upgLvl(u){ return S.upgLevels[u.id]||0; }
 function upgCost(u){ return Math.ceil(u.baseCost*Math.pow(UPG_LEVEL_MULT,upgLvl(u))*mgrMktMult()); }
@@ -667,7 +710,7 @@ function applyPrestigeBonuses(){
 function rebirthGame(){
   const stars=pendingStars();
   if(stars<1) return;
-  const mult=1+(S.prestigeShop.starrain||0)*0.5;
+  const mult=1+(S.prestigeShop.starrain||0)*0.5+(S.stickShop.diamond?1:0);
   const earned=Math.round(stars*mult);
   if(!confirm('Переродиться и получить '+earned+' ✦? Весь прогресс этого забега сбросится.')) return;
   S.stars+=earned; S.totalStars+=earned; S.rebirths++;
@@ -678,6 +721,7 @@ function rebirthGame(){
   S.goldMult=1; S.goldFreqMult=1; S.goldClicks=0;
   S.quickLaunchActive=false;
   Object.keys(S.mgr).forEach(k=>S.mgr[k]=0);
+  S.sticksEarnedThisRun=0;
   applyPrestigeBonuses();
   saveGame(); render();
   clearTimeout(goldTimer);
@@ -721,7 +765,7 @@ let maxModeEnd=0, maxBannerTimer=null;
 function isMaxMode(){ return Date.now()<maxModeEnd; }
 
 function startMaxMode(){
-  maxModeEnd=Date.now()+15000;
+  maxModeEnd=Date.now()+(S.stickShop.long?25000:15000);
   const panel=document.getElementById('leftPanel');
   let banner=document.getElementById('maxBanner');
   if(!banner){
@@ -743,12 +787,15 @@ function startMaxMode(){
   scheduleMaxMode();
 }
 function scheduleMaxMode(){
-  setTimeout(startMaxMode,(180+Math.random()*300)*1000);
+  const min=S.stickShop.glazed?60:180;
+  const range=S.stickShop.glazed?180:300;
+  setTimeout(startMaxMode,(min+Math.random()*range)*1000);
 }
 
 function onClickBtn(e){
   const maxMode=isMaxMode();
-  const gain=S.clickMult*prestigeMult()*(maxMode?200:1);
+  const maxMult=isMaxMode()?(S.stickShop.cosmic?500:100):1;
+  const gain=S.clickMult*prestigeMult()*maxMult;
   S.eskimo+=gain; S.totalEskimo+=gain;
 
   const rect=document.getElementById('leftPanel').getBoundingClientRect();
@@ -883,6 +930,7 @@ function render(){
     bl.appendChild(row);
   });
   renderManagers();
+  renderStickShop();
 }
 
 function renderManagers(){
@@ -1032,6 +1080,7 @@ function getSaveData(){
     goldMult:S.goldMult, goldFreqMult:S.goldFreqMult, goldClicks:S.goldClicks,
     stars:S.stars, totalStars:S.totalStars, rebirths:S.rebirths, prestigeShop:S.prestigeShop,
     mgr:S.mgr,
+    sticks:S.sticks, sticksEarnedThisRun:S.sticksEarnedThisRun, stickShop:S.stickShop,
   };
 }
 
@@ -1050,6 +1099,9 @@ function applyData(d){
   if(d.rebirths!==undefined)   S.rebirths=d.rebirths;
   if(d.prestigeShop)           S.prestigeShop=d.prestigeShop;
   if(d.mgr) Object.assign(S.mgr, d.mgr);
+  if(d.sticks!==undefined)           S.sticks=d.sticks;
+  if(d.sticksEarnedThisRun!==undefined) S.sticksEarnedThisRun=d.sticksEarnedThisRun;
+  if(d.stickShop)              S.stickShop=d.stickShop;
 }
 
 function openSaveModal(mode){
@@ -1124,6 +1176,9 @@ function loadGame(){
     if(d.rebirths!==undefined) S.rebirths=d.rebirths;
     if(d.prestigeShop) S.prestigeShop=d.prestigeShop;
     if(d.mgr) Object.assign(S.mgr, d.mgr);
+    if(d.sticks!==undefined)              S.sticks=d.sticks;
+    if(d.sticksEarnedThisRun!==undefined) S.sticksEarnedThisRun=d.sticksEarnedThisRun;
+    if(d.stickShop) S.stickShop=d.stickShop;
   }catch(e){}
 }
 
@@ -1137,6 +1192,7 @@ function resetGame(){
   S.stars=0; S.totalStars=0; S.rebirths=0; S.prestigeShop={}; S.quickLaunchActive=false;
   S.goldMult=1; S.goldFreqMult=1; S.goldClicks=0;
   Object.keys(S.mgr).forEach(k=>S.mgr[k]=0);
+  S.sticks=0; S.sticksEarnedThisRun=0; S.stickShop={};
   closePrestige();
   render();
 }
@@ -1146,7 +1202,12 @@ let _saveTick=0;
 setInterval(()=>{
   const gain=calcCps()/20;
   S.eskimo+=gain; S.totalEskimo+=gain;
-  if(++_saveTick>=200){ saveGame(); _saveTick=0; } // каждые 10 сек
+  const shouldEarn=Math.floor(S.totalEskimo/100000);
+  if(shouldEarn>(S.sticksEarnedThisRun||0)){
+    S.sticks+=shouldEarn-(S.sticksEarnedThisRun||0);
+    S.sticksEarnedThisRun=shouldEarn;
+  }
+  if(++_saveTick>=200){ saveGame(); _saveTick=0; }
   render();
 },50);
 
@@ -1163,12 +1224,52 @@ document.getElementById('bldList').addEventListener('mousedown', e=>{
   const b=BLDS.find(b=>b.id===row.dataset.bldId);
   if(b) buyBld(b);
 });
+document.getElementById('stickList').addEventListener('mousedown', e=>{
+  const btn=e.target.closest('[data-stick-id]');
+  if(!btn||btn.disabled) return;
+  buyStickItem(btn.dataset.stickId);
+});
 
 loadGame();
 render();
 if(S.prestigeShop.goldinstinct) goldTimer=setTimeout(spawnGolden,20000);
 else scheduleGolden();
 scheduleMaxMode();
+
+// ── Магазин палочек ───────────────────────────────────────────────────────────
+function buyStickItem(id){
+  const item=STICK_ITEMS.find(i=>i.id===id);
+  if(!item) return;
+  const bought=S.stickShop[item.id]||0;
+  if(bought>=item.max||S.sticks<item.cost) return;
+  S.sticks-=item.cost;
+  S.stickShop[item.id]=(bought+1);
+  saveGame(); render();
+}
+
+function renderStickShop(){
+  const list=document.getElementById('stickList');
+  if(!list) return;
+  list.innerHTML='';
+  STICK_ITEMS.forEach(item=>{
+    const bought=S.stickShop[item.id]||0;
+    const maxed=bought>=item.max;
+    const can=!maxed&&S.sticks>=item.cost;
+    const div=document.createElement('div');
+    div.className='stick-item'+(maxed?' maxed':'');
+    const countStr=item.max>1?' ('+bought+'/'+item.max+')':'';
+    div.innerHTML=
+      '<div class="stick-item-info">'+
+        '<div class="stick-item-name">'+item.name+countStr+'</div>'+
+        '<div class="stick-item-desc">'+item.desc+'</div>'+
+      '</div>'+
+      '<button class="stick-buy-btn" data-stick-id="'+item.id+'"'+(can?'':' disabled')+'>'+
+        (maxed?'✓':item.cost+' 🥢')+
+      '</button>';
+    list.appendChild(div);
+  });
+  document.getElementById('stickBalance').textContent='🥢 '+S.sticks+' палочек (всего за забег: '+S.sticksEarnedThisRun+')';
+}
 
 function openHelp(){ document.getElementById('helpBg').classList.add('show'); }
 function closeHelp(){ document.getElementById('helpBg').classList.remove('show'); }
