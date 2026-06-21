@@ -457,7 +457,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
     <p class="help-p">Раз в 1,5–6 минут на экране появляется золотая мороженка и плывёт к центру. Кликни — получишь 20–40 секунд текущего МВС в виде бонуса. Через 25 с она исчезает. Улучшение <b>Золотая глазурь</b> (циклическое) увеличивает награду — каждый уровень ×1,5, но с убывающей отдачей.</p>
 
     <div class="help-title">МАКСимагеддон</div>
-    <p class="help-p">Случайное событие раз в 15–40 минут, длится 15 секунд. Каждый клик даёт <b>×100</b> к обычному доходу — вместо мороженок вылетает надпись MAX. Фоновые мороженки несутся сотнями. С <b>Космической палочкой</b> — ×500.</p>
+    <p class="help-p">Случайное событие раз в 5–15 минут, длится 15 секунд. Каждый клик даёт <b>×100</b> к обычному доходу — вместо мороженок вылетает надпись MAX. Фоновые мороженки несутся сотнями. С <b>Космической палочкой</b> — ×500.</p>
 
     <div class="help-title">Производители</div>
     <div class="help-table">
@@ -519,7 +519,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
       <div class="ht-row"><span>Длинная</span><span>3</span><span>МАКСимагеддон 25 с</span><span>1</span></div>
       <div class="ht-row"><span>Двойная</span><span>5</span><span>МВС ×1,5 навсегда</span><span>1</span></div>
       <div class="ht-row"><span>Ванильная</span><span>5</span><span>✦ даёт +7% вместо +5%</span><span>1</span></div>
-      <div class="ht-row"><span>Глазированная</span><span>8</span><span>МАКСимагеддон 5–20 мин</span><span>1</span></div>
+      <div class="ht-row"><span>Глазированная</span><span>8</span><span>МАКСимагеддон 3–7 мин</span><span>1</span></div>
       <div class="ht-row"><span>Золотая</span><span>8</span><span>МВС +50%</span><span>3</span></div>
       <div class="ht-row"><span>Кристальная</span><span>12</span><span>Синергия каждые 5 ед.</span><span>1</span></div>
       <div class="ht-row"><span>Космическая</span><span>15</span><span>МАКСимагеддон ×500</span><span>1</span></div>
@@ -734,7 +734,7 @@ const STICK_ITEMS = [
   {id:'long',    name:'Длинная палочка',         cost:3,  max:1,  desc:'МАКСимагеддон длится 25 с вместо 15'},
   {id:'double',  name:'Двойная палочка',         cost:5,  max:1,  desc:'×1,5 к МВС навсегда'},
   {id:'vanilla', name:'Ванильная палочка',       cost:5,  max:1,  desc:'Каждая ✦ даёт +7% вместо +5%'},
-  {id:'glazed',  name:'Глазированная палочка',   cost:8,  max:1,  desc:'МАКСимагеддон раз в 5–20 мин вместо 15–40'},
+  {id:'glazed',  name:'Глазированная палочка',   cost:8,  max:1,  desc:'МАКСимагеддон раз в 3–7 мин вместо 5–15'},
   {id:'golden',  name:'Золотая палочка',          cost:8,  max:3,  desc:'+50% к МВС (стакается до 3 раз)'},
   {id:'crystal', name:'Кристальная палочка',     cost:12, max:1,  desc:'Синергия каждые 5 единиц вместо 10'},
   {id:'cosmic',  name:'Космическая палочка',     cost:15, max:1,  desc:'МАКСимагеддон ×500 за клик вместо ×100'},
@@ -936,8 +936,8 @@ function startMaxMode(){
   scheduleMaxMode();
 }
 function scheduleMaxMode(){
-  const min=S.stickShop.glazed?300:900;
-  const range=S.stickShop.glazed?900:1500;
+  const min=S.stickShop.glazed?180:300;
+  const range=S.stickShop.glazed?240:600;
   setTimeout(startMaxMode,(min+Math.random()*range)*1000);
 }
 
