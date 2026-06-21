@@ -1129,7 +1129,7 @@ function render(){
   BLDS.forEach(b=>{
     const dispAmt=buyAmt==='max'?maxBuyable(b):buyAmt;
     const cost=bldCostN(b,buyAmt==='max'?Math.max(1,dispAmt):buyAmt);
-    const cant=S.eskimo<bldCostN(b,1);
+    const cant=S.eskimo<(buyAmt==='max'?bldCostN(b,1):bldCostN(b,buyAmt));
     const row=document.createElement('div');
     row.className='bld'+(cant?' cant':'');
     const syn=synergyBoost(b);
