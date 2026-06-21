@@ -216,6 +216,21 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .help-table-upg .ht-row{grid-template-columns:1.4fr .8fr .7fr 1.1fr}
 .ht-head{font-size:.64rem;font-weight:600;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
 
+/* eskimo evolution help grid */
+.esk-evo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+.esk-evo-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 4px 6px;background:rgba(255,255,255,0.03);
+  border-radius:8px;border:1px solid rgba(255,255,255,0.07);
+}
+.esk-evo-item.esk-evo-maxi{
+  border-color:rgba(255,200,60,.35);background:rgba(255,200,0,.05);
+}
+.esk-evo-img{width:52px;line-height:0}
+.esk-evo-img svg{width:52px;height:auto;display:block}
+.esk-evo-name{font-size:.63rem;font-weight:700;color:var(--text);text-align:center;line-height:1.2}
+.esk-evo-cond{font-size:.57rem;color:var(--muted);text-align:center;line-height:1.3}
+
 /* reset button */
 .reset-btn{
   display:block;margin-top:20px;width:100%;padding:8px;
@@ -433,6 +448,10 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 
     <div class="help-title">Как играть</div>
     <p class="help-p">Нажимай на левую половину экрана — получаешь эскимо. На заработанные покупай производителей справа: они приносят эскимо автоматически. Открывай улучшения — они умножают доход. Кнопки <b>×1 / ×10 / ×100</b> над списком позволяют покупать сразу несколько производителей одного вида.</p>
+
+    <div class="help-title">Эволюция эскимо</div>
+    <p class="help-p">По мере прогресса эскимо меняет внешний вид — всего <b>8 стадий</b>. Финальная открывается после постройки 1 000 орбитальных заводов.</p>
+    <div id="eskEvoGrid" class="esk-evo-grid"></div>
 
     <div class="help-title">Золотая мороженка</div>
     <p class="help-p">Раз в 30–120 с на экране появляется золотая мороженка и плывёт к центру. Кликни — получишь 20–40 секунд текущего МВС в виде бонуса. Через 25 с она исчезает. Улучшение <b>Золотая глазурь</b> (циклическое) увеличивает награду — каждый уровень ×1,5, но с убывающей отдачей.</p>
@@ -1424,7 +1443,22 @@ function renderStickShop(){
   document.getElementById('stickBalance').textContent='🥢 '+S.sticks+' палочек (всего за забег: '+S.sticksEarnedThisRun+')';
 }
 
-function openHelp(){ document.getElementById('helpBg').classList.add('show'); }
+const ESK_TRIGGERS=['Старт','1 000 эскимо','100 тыс. эскимо','10 млн эскимо','1 млрд эскимо','1 трлн эскимо','10 квдрлн эскимо','1 000 🚀 заводов'];
+function openHelp(){
+  const grid=document.getElementById('eskEvoGrid');
+  if(grid&&!grid.dataset.built){
+    grid.innerHTML=ESKIMO_VISUAL.map((v,i)=>{
+      const name=i===0?'Ванильное':v.name;
+      return '<div class="esk-evo-item'+(i===7?' esk-evo-maxi':'')+'">'+
+        '<div class="esk-evo-img">'+buildEskimoSVG(i)+'</div>'+
+        '<div class="esk-evo-name">'+name+'</div>'+
+        '<div class="esk-evo-cond">'+ESK_TRIGGERS[i]+'</div>'+
+        '</div>';
+    }).join('');
+    grid.dataset.built='1';
+  }
+  document.getElementById('helpBg').classList.add('show');
+}
 function closeHelp(){ document.getElementById('helpBg').classList.remove('show'); }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeHelp(); closePrestige(); closeSaveModal(); } });
 </script>
