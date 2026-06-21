@@ -126,6 +126,43 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
   font-family:'Manrope',sans-serif;
 }
 
+/* ── eskimo stages ── */
+.esk-stage-lbl{
+  font-size:.67rem;font-weight:600;letter-spacing:.04em;text-align:center;
+  min-height:.9em;color:var(--muted);transition:color .5s;
+}
+.esk-s1{filter:drop-shadow(0 0 8px rgba(107,58,31,.8))}
+.esk-s2{filter:drop-shadow(0 0 10px rgba(233,30,99,.7))}
+.esk-s3{animation:esk-caramel 2s ease-in-out infinite alternate}
+.esk-s4{filter:drop-shadow(0 0 12px rgba(0,200,83,.75))}
+.esk-s5{filter:drop-shadow(0 0 14px rgba(124,77,255,.85))}
+.esk-s6{animation:esk-cosmic 1.8s ease-in-out infinite alternate}
+.esk-s7{animation:esk-maxi 1.1s ease-in-out infinite alternate}
+@keyframes esk-caramel{
+  from{filter:drop-shadow(0 0 10px rgba(255,160,0,.65))}
+  to{filter:drop-shadow(0 0 24px rgba(255,210,0,.95))}
+}
+@keyframes esk-cosmic{
+  from{filter:drop-shadow(0 0 14px rgba(224,64,251,.7))}
+  to{filter:drop-shadow(0 0 30px rgba(0,229,255,.95))}
+}
+@keyframes esk-maxi{
+  from{filter:drop-shadow(0 0 22px rgba(255,215,0,.9)) drop-shadow(0 0 8px rgba(255,100,0,.7))}
+  to{filter:drop-shadow(0 0 44px rgba(255,180,0,1)) drop-shadow(0 0 16px rgba(255,60,0,.9))}
+}
+.esk-evolve-toast{
+  position:absolute;left:10px;right:10px;bottom:72px;z-index:9;pointer-events:none;
+  text-align:center;font-size:.76rem;font-weight:700;letter-spacing:.05em;
+  padding:5px 12px;border-radius:8px;color:#fff;
+  animation:esk-evolve-pop 2.8s ease-out forwards;
+}
+@keyframes esk-evolve-pop{
+  0%{opacity:0;transform:translateY(10px) scale(.9)}
+  12%{opacity:1;transform:translateY(0) scale(1)}
+  75%{opacity:1}
+  100%{opacity:0;transform:translateY(-6px) scale(.96)}
+}
+
 /* ── right ── */
 .right{padding:14px;overflow-y:auto;max-height:calc(100vh - 49px)}
 
@@ -323,6 +360,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
   <path d="M83 111 Q82 120 84 123 Q86 120 85 111 Z" fill="#7c4f2a"/>
   <ellipse cx="84" cy="123" rx="2.5" ry="2" fill="#7c4f2a"/>
 </svg></button>
+    <div id="eskStageLabel" class="esk-stage-lbl"></div>
 
     <div class="stats">
       <div class="st"><div class="st-val" id="stCps">0</div><div class="st-lbl">в секунду</div></div>
@@ -597,6 +635,78 @@ const MANAGERS = [
    baseCost:20000,  scaleMult:8,
    effectDesc: lvl => '+'+Math.round((Math.pow(1.3,lvl)-1)*100)+'% к транспорту и сетям'},
 ];
+
+// ── Эволюция эскимо ──────────────────────────────────────────────────────────
+const ESKIMO_VISUAL=[
+  {name:'',              cls:'',      bO:'#7c4f2a',bodyIn:'#f0deb4',stk:'#c9aa74',dr:'#7c4f2a',
+   s:['#7c6ff7','#e8805a','#4caf84','#f5c842','#5b8dee','#7c6ff7'],ex:''},
+  {name:'Шоколадное',    cls:'esk-s1',bO:'#2a1508',bodyIn:'#7c3b10',stk:'#c9aa74',dr:'#2a1508',
+   s:['#c17f3e','#d4a04a','#f0b855','#e8a040','#c17f3e','#d4a04a'],ex:''},
+  {name:'Клубничное',    cls:'esk-s2',bO:'#b71c56',bodyIn:'#f9aec0',stk:'#c9aa74',dr:'#b71c56',
+   s:['#e91e63','#f06292','#c2185b','#f48fb1','#ad1457','#e91e63'],ex:''},
+  {name:'Карамельное',   cls:'esk-s3',bO:'#b85c00',bodyIn:'#ffe082',stk:'#c9aa74',dr:'#b85c00',
+   s:['#ff6f00','#ffa000','#ff8f00','#ffca28','#e65100','#ff8c00'],ex:''},
+  {name:'Мятное',        cls:'esk-s4',bO:'#1b5e20',bodyIn:'#b5e8c8',stk:'#c9aa74',dr:'#1b5e20',
+   s:['#00c853','#69f0ae','#00e676','#b9f6ca','#1b5e20','#00c853'],ex:''},
+  {name:'Черничное',     cls:'esk-s5',bO:'#311b92',bodyIn:'#d1c4e9',stk:'#c9aa74',dr:'#311b92',
+   s:['#7c4dff','#651fff','#b388ff','#d500f9','#aa00ff','#7c4dff'],ex:''},
+  {name:'Космическое',   cls:'esk-s6',bO:'#4a148c',bodyIn:'#1a0836',stk:'#9b59b6',dr:'#4a148c',
+   s:['#e040fb','#00e5ff','#f5c842','#ff1744','#76ff03','#e040fb'],
+   ex:`<circle cx="35" cy="30" r="1.5" fill="white" opacity=".7"/>
+  <circle cx="85" cy="25" r="1.2" fill="white" opacity=".6"/>
+  <circle cx="95" cy="55" r="1.5" fill="#e040fb" opacity=".8"/>
+  <circle cx="28" cy="72" r="1" fill="white" opacity=".5"/>
+  <circle cx="80" cy="86" r="1.5" fill="#00e5ff" opacity=".7"/>
+  <circle cx="45" cy="95" r="1.2" fill="white" opacity=".6"/>
+  <circle cx="68" cy="40" r="1" fill="#f5c842" opacity=".7"/>`},
+  {name:'✦ МАКСИЭСКИМО ✦',cls:'esk-s7',bO:'#b85c00',bodyIn:'#ffd700',stk:'#c9aa74',dr:'#b85c00',
+   s:['#ffffff','#ffd700','#ff4500','#ffffff','#ffd700','#ff4500'],
+   ex:`<path d="M60 2 L62.5 9 L70 9 L64 13.5 L66.5 21 L60 16.5 L53.5 21 L56 13.5 L50 9 L57.5 9 Z" fill="#ffd700" opacity=".95"/>
+  <circle cx="14" cy="55" r="2.5" fill="#ffd700" opacity=".7"/>
+  <circle cx="106" cy="38" r="2" fill="white" opacity=".9"/>
+  <circle cx="111" cy="82" r="2.5" fill="#ffd700" opacity=".8"/>
+  <circle cx="11" cy="88" r="2" fill="white" opacity=".7"/>
+  <path d="M107 58 L108.2 62 L112 62 L109 64 L110 68 L107 66 L104 68 L105 64 L102 62 L105.8 62 Z" fill="#ffd700" opacity=".85"/>`},
+];
+
+function getEskimoStage(){
+  if(S.cnt.orbital>=1000) return 7;
+  if(S.totalEskimo>=1e16) return 6;
+  if(S.totalEskimo>=1e12) return 5;
+  if(S.totalEskimo>=1e9)  return 4;
+  if(S.totalEskimo>=1e7)  return 3;
+  if(S.totalEskimo>=1e5)  return 2;
+  if(S.totalEskimo>=1000) return 1;
+  return 0;
+}
+
+function buildEskimoSVG(stage){
+  const v=ESKIMO_VISUAL[stage];
+  const [s0,s1,s2,s3,s4,s5]=v.s;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170">
+  <ellipse cx="60" cy="165" rx="22" ry="5" fill="rgba(0,0,0,0.3)"/>
+  <rect x="51" y="108" width="18" height="56" rx="7" fill="${v.stk}"/>
+  <rect x="53" y="110" width="5" height="52" rx="2.5" fill="rgba(255,255,255,0.2)"/>
+  <rect x="15" y="10" width="90" height="106" rx="20" fill="${v.bO}"/>
+  <rect x="25" y="20" width="70" height="88" rx="13" fill="${v.bodyIn}"/>
+  <rect x="20" y="18" width="10" height="65" rx="5" fill="rgba(255,255,255,0.12)"/>
+  ${v.ex}
+  <rect x="38" y="32" width="20" height="4" rx="2" fill="${s0}" transform="rotate(-18,48,34)"/>
+  <rect x="52" y="50" width="18" height="4" rx="2" fill="${s1}" transform="rotate(12,61,52)"/>
+  <rect x="36" y="62" width="16" height="4" rx="2" fill="${s2}" transform="rotate(-8,44,64)"/>
+  <rect x="54" y="74" width="19" height="4" rx="2" fill="${s3}" transform="rotate(22,63,76)"/>
+  <rect x="35" y="84" width="15" height="4" rx="2" fill="${s4}" transform="rotate(-5,42,86)"/>
+  <rect x="55" y="94" width="14" height="4" rx="2" fill="${s5}" transform="rotate(16,62,96)"/>
+  <path d="M37 114 Q35 126 38 130 Q41 126 39 114 Z" fill="${v.dr}"/>
+  <ellipse cx="38" cy="130" rx="4" ry="3" fill="${v.dr}"/>
+  <path d="M69 113 Q67 123 70 127 Q73 123 71 113 Z" fill="${v.dr}"/>
+  <ellipse cx="70" cy="127" rx="3.5" ry="2.5" fill="${v.dr}"/>
+  <path d="M83 111 Q82 120 84 123 Q86 120 85 111 Z" fill="${v.dr}"/>
+  <ellipse cx="84" cy="123" rx="2.5" ry="2" fill="${v.dr}"/>
+</svg>`;
+}
+
+let _eskimoStage=-1;
 
 const STICK_ITEMS = [
   {id:'tasty',   name:'Вкусная палочка',       cost:1,  max:5,  desc:'МВС +15% (стакается до 5 раз)'},
@@ -895,6 +1005,29 @@ function render(){
   // also update stCpc to include prestige
   document.getElementById('stCpc').textContent=fmt(S.clickMult*prestigeMult());
   syncCrawlers();
+
+  // эскимо — визуальная стадия
+  const estage=getEskimoStage();
+  if(estage!==_eskimoStage){
+    const prevStage=_eskimoStage;
+    _eskimoStage=estage;
+    const v=ESKIMO_VISUAL[estage];
+    const btn=document.getElementById('clickBtn');
+    btn.innerHTML=buildEskimoSVG(estage);
+    btn.className='clicker-btn'+(v.cls?' '+v.cls:'');
+    const lbl=document.getElementById('eskStageLabel');
+    if(lbl) lbl.textContent=v.name;
+    if(prevStage>=0&&v.name){
+      const toast=document.createElement('div');
+      toast.className='esk-evolve-toast';
+      toast.style.background=estage===7
+        ?'linear-gradient(90deg,rgba(200,100,0,.9),rgba(220,170,0,.9))'
+        :'rgba(20,16,36,.88)';
+      toast.textContent='Эскимо эволюционировало: '+v.name+'!';
+      document.getElementById('leftPanel').appendChild(toast);
+      setTimeout(()=>toast.remove(),2900);
+    }
+  }
 
   // улучшения
   const avail=ALL_UPGRS.filter(u=>upgAvail(u));
