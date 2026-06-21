@@ -279,6 +279,12 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 .buy-amt{flex:1;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 0;font-size:.73rem;font-family:'Manrope',sans-serif;color:var(--muted);cursor:pointer;transition:all .15s}
 .buy-amt:hover{border-color:var(--accent);color:var(--text)}
 .buy-amt.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.buy-amt-max.on{background:#c9a050;border-color:#c9a050;color:#fff}
+.buy-all-btn{font-size:.65rem;font-family:'Manrope',sans-serif;font-weight:600;background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--muted);cursor:pointer;float:right;margin-top:-2px;transition:all .15s}
+.buy-all-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mgr-actions{display:flex;gap:5px;align-items:center;justify-content:flex-end;margin-top:2px}
+.mgr-action-max{font-size:.6rem;color:#c9a050;border:1px solid rgba(201,160,80,.4);border-radius:4px;padding:1px 5px;cursor:pointer;transition:all .15s}
+.mgr-action-max:hover{background:rgba(201,160,80,.15);border-color:#c9a050}
 
 /* prestige */
 .nav-right{display:flex;gap:8px;margin-left:auto;align-items:center}
@@ -387,7 +393,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
 
   <!-- RIGHT -->
   <div class="right">
-    <div class="sec-label">Улучшения</div>
+    <div class="sec-label">Улучшения <button class="buy-all-btn" onclick="buyAllUpgrades()">Купить все</button></div>
     <div class="upg-list" id="upgList"></div>
 
     <div class="sec-label">Производители</div>
@@ -395,6 +401,7 @@ body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;fon
       <button class="buy-amt on" id="ba1" onclick="setBuyAmt(1)">×1</button>
       <button class="buy-amt"    id="ba10" onclick="setBuyAmt(10)">×10</button>
       <button class="buy-amt"    id="ba100" onclick="setBuyAmt(100)">×100</button>
+      <button class="buy-amt buy-amt-max" id="bamax" onclick="setBuyAmt('max')">×МАХ</button>
     </div>
     <div id="bldList"></div>
 
@@ -788,7 +795,39 @@ let buyAmt=1;
 function setBuyAmt(n){
   buyAmt=n;
   [1,10,100].forEach(v=>document.getElementById('ba'+v).classList.toggle('on',v===n));
+  document.getElementById('bamax').classList.toggle('on',n==='max');
   render();
+}
+function maxBuyable(b){
+  if(bldCostN(b,1)>S.eskimo) return 0;
+  let lo=1,hi=100000;
+  while(lo<hi){
+    const mid=Math.ceil((lo+hi)/2);
+    if(bldCostN(b,mid)<=S.eskimo) lo=mid; else hi=mid-1;
+  }
+  return lo;
+}
+function buyManagerMax(m){
+  let bought=false;
+  while(S.eskimo>=mgrCost(m)){ S.eskimo-=mgrCost(m); S.mgr[m.id]=(S.mgr[m.id]||0)+1; bought=true; }
+  if(bought){ saveGame(); render(); }
+}
+function buyAllUpgrades(){
+  let any=true;
+  while(any){
+    any=false;
+    for(const u of ALL_UPGRS.filter(u=>upgAvail(u))){
+      const cost=upgCost(u);
+      if(S.eskimo>=cost){
+        S.eskimo-=cost;
+        const m=u.baseMult&&!u.oneShot?effMult(u):null;
+        S.upgLevels[u.id]=(upgLvl(u)+1);
+        m!==null?u.apply(m):u.apply();
+        any=true; break;
+      }
+    }
+  }
+  saveGame(); render();
 }
 
 function mgrCost(m){
@@ -989,9 +1028,11 @@ function onClickBtn(e){
 }
 
 function buyBld(b){
-  const cost=bldCostN(b,buyAmt);
+  const amt=buyAmt==='max'?maxBuyable(b):buyAmt;
+  if(amt<1) return;
+  const cost=bldCostN(b,amt);
   if(S.eskimo<cost) return;
-  S.eskimo-=cost; S.cnt[b.id]+=buyAmt;
+  S.eskimo-=cost; S.cnt[b.id]+=amt;
   saveGame(); render();
 }
 
@@ -1085,13 +1126,14 @@ function render(){
   const bl=document.getElementById('bldList');
   bl.innerHTML='';
   BLDS.forEach(b=>{
-    const cost=bldCostN(b,buyAmt);
-    const cant=S.eskimo<cost;
+    const dispAmt=buyAmt==='max'?maxBuyable(b):buyAmt;
+    const cost=bldCostN(b,buyAmt==='max'?Math.max(1,dispAmt):buyAmt);
+    const cant=S.eskimo<bldCostN(b,1);
     const row=document.createElement('div');
     row.className='bld'+(cant?' cant':'');
     const syn=synergyBoost(b);
     const cpsTotal=b.baseCps*S.cnt[b.id]*S.mult[b.id]*syn;
-    const amtLabel=buyAmt>1?'<span style="font-size:.6rem;color:var(--accent);margin-left:3px">+'+buyAmt+'</span>':'';
+    const amtLabel=dispAmt>1?'<span style="font-size:.6rem;color:var(--accent);margin-left:3px">+'+fmt(dispAmt)+'</span>':'';
     const idx=BLDS.findIndex(x=>x.id===b.id);
     const prevBld=idx>0?BLDS[idx-1]:null;
     const synergyPct=Math.floor((syn-1)*100);
@@ -1134,7 +1176,10 @@ function renderManagers(){
       '</div>'+
       '<div class="mgr-r">'+
         '<div class="mgr-cost">'+fmt(cost)+' 🍦</div>'+
-        '<div class="mgr-action">'+(lvl===0?'Нанять':'→ Ур.'+(lvl+1))+'</div>'+
+        '<div class="mgr-actions">'+
+          '<div class="mgr-action">'+(lvl===0?'Нанять':'→ Ур.'+(lvl+1))+'</div>'+
+          (!cant?'<div class="mgr-action-max" data-mgr-max="'+m.id+'">МАХ</div>':'')+
+        '</div>'+
       '</div>';
     ml.appendChild(div);
   });
@@ -1411,6 +1456,8 @@ document.getElementById('stickList').addEventListener('mousedown', e=>{
   buyStickItem(btn.dataset.stickId);
 });
 document.getElementById('mgrList').addEventListener('mousedown', e=>{
+  const maxBtn=e.target.closest('[data-mgr-max]');
+  if(maxBtn){ const m=MANAGERS.find(m=>m.id===maxBtn.dataset.mgrMax); if(m) buyManagerMax(m); return; }
   const card=e.target.closest('[data-mgr-id]');
   if(!card||card.classList.contains('cant')) return;
   const m=MANAGERS.find(m=>m.id===card.dataset.mgrId);
