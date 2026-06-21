@@ -674,7 +674,7 @@ BLDS.forEach(b => {
     MILESTONE_UPGRS.push({
       id: `ml_${b.id}_${n}`,
       name: b.name + ': ' + n + ' шт.',
-      baseCost: Math.ceil(b.baseCost * n * n / 4),
+      baseCost: Math.ceil(b.baseCost * n),
       desc: b.name + ' дают ×2',
       oneShot: true,
       cond: s => s.cnt[b.id] >= n,
