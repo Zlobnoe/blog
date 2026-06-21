@@ -757,6 +757,7 @@ const S = {
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
 function fmt(n){
+  if(!isFinite(n)||n<0) return '0';
   if(n<1000)   return Math.floor(n).toLocaleString('ru');
   if(n<1e6)    return (n/1000).toFixed(1).replace('.',',')+' тыс';
   if(n<1e9)    return (n/1e6).toFixed(2).replace('.',',')+' млн';
@@ -769,7 +770,15 @@ function fmt(n){
   if(n<1e30)   return (n/1e27).toFixed(2).replace('.',',')+' октлн';
   if(n<1e33)   return (n/1e30).toFixed(2).replace('.',',')+' нонлн';
   if(n<1e36)   return (n/1e33).toFixed(2).replace('.',',')+' децлн';
-  return (n/1e36).toFixed(2).replace('.',',')+' ундецлн';
+  if(n<1e39)   return (n/1e36).toFixed(2).replace('.',',')+' ундецлн';
+  if(n<1e42)   return (n/1e39).toFixed(2).replace('.',',')+' дуодецлн';
+  if(n<1e45)   return (n/1e42).toFixed(2).replace('.',',')+' тредецлн';
+  if(n<1e48)   return (n/1e45).toFixed(2).replace('.',',')+' кватдецлн';
+  if(n<1e51)   return (n/1e48).toFixed(2).replace('.',',')+' квиндецлн';
+  if(n<1e54)   return (n/1e51).toFixed(2).replace('.',',')+' сексдецлн';
+  if(n<1e57)   return (n/1e54).toFixed(2).replace('.',',')+' септдецлн';
+  const exp=Math.floor(Math.log10(n));
+  return (n/Math.pow(10,exp)).toFixed(2).replace('.',',')+' e+'+exp;
 }
 
 function pendingStars(){ return Math.max(0,Math.floor(Math.cbrt(S.totalEskimo/100000))); }
@@ -1007,14 +1016,14 @@ function render(){
   document.getElementById('stTotal').textContent=fmt(S.totalEskimo);
   // prestige stats
   const starsWrap=document.getElementById('stStarsWrap');
-  if(S.stars>0||S.rebirths>0){ starsWrap.style.display=''; document.getElementById('stStars').textContent=S.stars; }
+  if(S.stars>0||S.rebirths>0){ starsWrap.style.display=''; document.getElementById('stStars').textContent=fmt(S.stars); }
   // prestige section
   const pending=pendingStars();
   const mult=1+(S.prestigeShop.starrain||0)*0.5;
   const earned=Math.round(pending*mult);
   const nextThreshold=Math.pow(pending+1,3)*100000;
   const toNext=nextThreshold-S.totalEskimo;
-  document.getElementById('starsBalance').textContent='✦ '+S.stars+(S.rebirths>0?' (перерождений: '+S.rebirths+')':'');
+  document.getElementById('starsBalance').textContent='✦ '+fmt(S.stars)+(S.rebirths>0?' (перерождений: '+S.rebirths+')':'');
   document.getElementById('starsPending').innerHTML=pending>0
     ? 'Переродиться → получишь ✦ '+earned+(mult>1?' (×'+mult.toFixed(1)+')':'')
       +'<br><span style="opacity:.65">До ✦ '+(pending+1)+': ещё ~'+fmt(toNext)+' эскимо</span>'
@@ -1463,7 +1472,7 @@ function renderStickShop(){
   const _se=S.sticksEarnedThisRun||0;
   const _nextStickCost=(_se+1)*(_se+2)/2*100000;
   const _toNext=Math.max(0,_nextStickCost-S.totalEskimo);
-  document.getElementById('stickBalance').textContent='🥢 '+S.sticks+' палочек — до следующей: ~'+fmt(_toNext)+' эскимо';
+  document.getElementById('stickBalance').textContent='🥢 '+fmt(S.sticks)+' палочек — до следующей: ~'+fmt(_toNext)+' эскимо';
 }
 
 const ESK_TRIGGERS=['Старт','1 000 эскимо','100 тыс. эскимо','10 млн эскимо','1 млрд эскимо','1 трлн эскимо','10 квдрлн эскимо','1 000 🚀 заводов'];
