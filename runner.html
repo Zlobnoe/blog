@@ -96,6 +96,10 @@ const hero = { x:90, y:GROUND, vy:0, onGround:true, jumps:2, legPhase:0, squash:
 
 // ── Препятствия ────────────────────────────────────────────────
 let obstacles = [], spawnTimer = 0, spawnInterval = 90;
+let birdTimer = 0, birdInterval = 200;
+
+// высоты полёта птиц (y верхнего края): низко / средне / высоко
+const BIRD_HEIGHTS = [128, 100, 72];
 
 // ── Облака ─────────────────────────────────────────────────────
 const clouds = Array.from({length:5}, (_,i) => ({
@@ -302,10 +306,17 @@ function drawOverlay(emoji, line1, line2) {
 // ═══════════════════════════════════════════════════════════════
 // ЛОГИКА
 // ═══════════════════════════════════════════════════════════════
+function spawnBird() {
+  const y = BIRD_HEIGHTS[Math.floor(Math.random() * BIRD_HEIGHTS.length)];
+  obstacles.push({ isBird: true, x: W + 8, y, w: 40, h: 24, wing: 0 });
+  birdInterval = 150 + Math.random() * 110;
+}
+
 function resetGame() {
   hero.x = 90; hero.y = GROUND - 62; hero.vy = 0;
   hero.onGround = true; hero.jumps = 2; hero.legPhase = 0; hero.squash = 1;
   obstacles = []; spawnTimer = 0; spawnInterval = 140;
+  birdTimer = 0; birdInterval = 200;
   score = 0; speed = 3.0; gframe = 0; groundX = 0;
   gs = 'run';
 }
@@ -361,12 +372,19 @@ function update() {
   // облака
   clouds.forEach(c => { c.x -= c.sp; if (c.x + c.r * 2 < 0) c.x = W + c.r; });
 
-  // препятствия
+  // наземные препятствия
   spawnTimer++;
   if (spawnTimer >= spawnInterval) { spawnTimer = 0; spawnObs(); }
 
+  // птицы (появляются после счёта 60)
+  if (score > 60) {
+    birdTimer++;
+    if (birdTimer >= birdInterval) { birdTimer = 0; spawnBird(); }
+  }
+
   obstacles = obstacles.filter(o => {
-    o.x -= speed;
+    o.x -= o.isBird ? speed * 1.2 : speed;
+    if (o.isBird) o.wing++;
     if (checkCollision(o)) {
       gs = 'dead';
       if (score > best) { best = score; localStorage.setItem('zb', Math.floor(best)); }
@@ -376,19 +394,69 @@ function update() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// РИСОВАНИЕ: птица-заглушка
+// ═══════════════════════════════════════════════════════════════
+function drawBirdPlaceholder(o) {
+  const bx = o.x + o.w / 2, by = o.y + o.h / 2;
+  const flap = Math.sin(o.wing * 0.18) * 8;
+
+  // крыло
+  ctx.fillStyle = '#FF6D00';
+  ctx.beginPath();
+  ctx.moveTo(bx - 4, by - 3);
+  ctx.quadraticCurveTo(bx + 4, by - 16 + flap, bx + 18, by - 10 + flap);
+  ctx.quadraticCurveTo(bx + 6, by - 3, bx - 4, by - 3);
+  ctx.fill();
+
+  // тело
+  ctx.fillStyle = '#E65100';
+  ctx.beginPath();
+  ctx.ellipse(bx, by, 14, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // хвост
+  ctx.fillStyle = '#BF360C';
+  ctx.beginPath();
+  ctx.moveTo(bx + 11, by);
+  ctx.lineTo(bx + 23, by - 5);
+  ctx.lineTo(bx + 23, by + 6);
+  ctx.closePath();
+  ctx.fill();
+
+  // клюв
+  ctx.fillStyle = '#FFD54F';
+  ctx.beginPath();
+  ctx.moveTo(bx - 13, by - 1);
+  ctx.lineTo(bx - 22, by - 3);
+  ctx.lineTo(bx - 13, by + 4);
+  ctx.closePath();
+  ctx.fill();
+
+  // глаз
+  ctx.fillStyle = '#212121';
+  ctx.beginPath(); ctx.arc(bx - 6, by - 1, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.arc(bx - 5.5, by - 1.5, 1, 0, Math.PI * 2); ctx.fill();
+}
+
+// ═══════════════════════════════════════════════════════════════
 // РЕНДЕР
 // ═══════════════════════════════════════════════════════════════
 function render() {
   ctx.clearRect(0, 0, W, H);
   drawBackground();
 
-  // препятствия
+  // препятствия и птицы
   obstacles.forEach(o => {
-    const imgs = [IMG_OBS1, IMG_OBS2, IMG_OBS3];
-    if (imgOk(imgs[o.type])) {
-      ctx.drawImage(imgs[o.type], o.x, o.y, o.w, o.h);
+    if (o.isBird) {
+      drawBirdPlaceholder(o);
     } else {
-      drawObsPlaceholder(o);
+      const imgs = [IMG_OBS1, IMG_OBS2, IMG_OBS3];
+      if (imgOk(imgs[o.type])) {
+        ctx.drawImage(imgs[o.type], o.x, o.y, o.w, o.h);
+      } else {
+        drawObsPlaceholder(o);
+      }
     }
   });
 
