@@ -205,11 +205,13 @@
 // ║  Когда нарисует — сфоткай, положи файлы рядом с runner.html  ║
 // ║  и замени null на loadImg('имя_файла.png')                   ║
 // ╠══════════════════════════════════════════════════════════════╣
-let IMG_HERO = loadImg('zayka.png'); // заяц — нарисовала Катя! 🎨
-let IMG_OBS1 = loadImg('grib.png');  // гриб — нарисовала Катя! 🎨
-let IMG_OBS2 = loadImg('kust.png');  // дерево — рисунок дочки! 🎨
-let IMG_OBS3 = loadImg('kamen.png'); // камень — нарисовала Катя! 🎨
-let IMG_BIRD = loadImg('bird.png');  // птичка — рисунок дочки! 🎨
+let IMG_HERO    = loadImg('zayka.png');   // заяц — нарисовала Катя! 🎨
+let IMG_OBS1    = loadImg('grib.png');    // гриб — нарисовала Катя! 🎨
+let IMG_OBS2    = loadImg('kust.png');    // дерево — рисунок дочки! 🎨
+let IMG_OBS3    = loadImg('kamen.png');   // камень — нарисовала Катя! 🎨
+let IMG_BIRD    = loadImg('bird.png');    // птичка — рисунок дочки! 🎨
+let IMG_FLOWER1 = loadImg('flower1.png'); // цветок жёлтый — нарисовала Катя! 🎨
+let IMG_FLOWER2 = loadImg('flower2.png'); // цветок синий — нарисовала Катя! 🎨
 // ╚══════════════════════════════════════════════════════════════╝
 
 function loadImg(src) {
@@ -376,102 +378,10 @@ function drawObsPlaceholder(o) {
 // РИСОВАНИЕ: фон
 // ═══════════════════════════════════════════════════════════════
 
-function _stem(x, y, h) {
-  ctx.strokeStyle = '#558B2F'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h); ctx.stroke();
-}
-
-// Ромашка — белые лепестки, жёлтый центр
-function flowerDaisy(x, y) {
-  _stem(x, y, 15);
-  const cy = y - 15;
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.ellipse(x + Math.cos(a)*7, cy + Math.sin(a)*7, 2.5, 5, a, 0, Math.PI*2); ctx.fill();
-  }
-  ctx.fillStyle = '#FFD600'; ctx.beginPath(); ctx.arc(x, cy, 4, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#F9A825'; ctx.beginPath(); ctx.arc(x, cy, 2, 0, Math.PI*2); ctx.fill();
-}
-
-// Тюльпан — красный
-function flowerTulip(x, y) {
-  _stem(x, y, 18);
-  const cy = y - 18;
-  ctx.fillStyle = '#E53935';
-  ctx.beginPath();
-  ctx.moveTo(x - 7, cy + 4);
-  ctx.bezierCurveTo(x - 9, cy - 10, x - 3, cy - 14, x, cy - 12);
-  ctx.bezierCurveTo(x + 3, cy - 14, x + 9, cy - 10, x + 7, cy + 4);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#EF9A9A';
-  ctx.beginPath(); ctx.ellipse(x, cy - 5, 3, 7, 0, 0, Math.PI*2); ctx.fill();
-}
-
-// Подсолнух — жёлтые лепестки, коричневый центр
-function flowerSunflower(x, y) {
-  _stem(x, y, 16);
-  const cy = y - 16;
-  for (let i = 0; i < 10; i++) {
-    const a = (i / 10) * Math.PI * 2;
-    ctx.fillStyle = i % 2 === 0 ? '#FFB300' : '#FFA000';
-    ctx.beginPath(); ctx.ellipse(x + Math.cos(a)*8, cy + Math.sin(a)*8, 2.5, 5.5, a, 0, Math.PI*2); ctx.fill();
-  }
-  ctx.fillStyle = '#4E342E'; ctx.beginPath(); ctx.arc(x, cy, 5, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#6D4C41'; ctx.beginPath(); ctx.arc(x, cy, 3, 0, Math.PI*2); ctx.fill();
-}
-
-// Клевер — три зелёных листика
-function flowerClover(x, y) {
-  _stem(x, y, 13);
-  const cy = y - 13;
-  ctx.fillStyle = '#43A047';
-  [[-5,-5],[5,-5],[0,-11]].forEach(([dx,dy]) => {
-    ctx.beginPath(); ctx.arc(x+dx, cy+dy, 5.5, 0, Math.PI*2); ctx.fill();
-  });
-  ctx.fillStyle = '#66BB6A';
-  [[-5,-5],[5,-5],[0,-11]].forEach(([dx,dy]) => {
-    ctx.beginPath(); ctx.arc(x+dx+0.5, cy+dy-0.5, 2.5, 0, Math.PI*2); ctx.fill();
-  });
-}
-
-// Мак — оранжевые лепестки
-function flowerPoppy(x, y) {
-  _stem(x, y, 15);
-  const cy = y - 15;
-  for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * Math.PI * 2;
-    ctx.fillStyle = i % 2 === 0 ? '#FF5722' : '#FF7043';
-    ctx.beginPath(); ctx.ellipse(x + Math.cos(a)*6, cy + Math.sin(a)*6, 4.5, 7, a, 0, Math.PI*2); ctx.fill();
-  }
-  ctx.fillStyle = '#212121'; ctx.beginPath(); ctx.arc(x, cy, 3.5, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#FFF176';
-  for (let i = 0; i < 5; i++) {
-    const a = (i/5)*Math.PI*2;
-    ctx.beginPath(); ctx.arc(x+Math.cos(a)*2, cy+Math.sin(a)*2, 0.8, 0, Math.PI*2); ctx.fill();
-  }
-}
-
-// Колокольчик — фиолетовый
-function flowerBell(x, y) {
-  _stem(x, y, 16);
-  const cy = y - 16;
-  // чашечка
-  ctx.fillStyle = '#8E24AA';
-  ctx.beginPath();
-  ctx.moveTo(x - 7, cy);
-  ctx.bezierCurveTo(x - 8, cy - 14, x + 8, cy - 14, x + 7, cy);
-  ctx.bezierCurveTo(x + 4, cy + 4, x - 4, cy + 4, x - 7, cy);
-  ctx.fill();
-  ctx.fillStyle = '#CE93D8';
-  ctx.beginPath(); ctx.ellipse(x, cy - 7, 4, 5, 0, 0, Math.PI*2); ctx.fill();
-  // тычинка
-  ctx.strokeStyle = '#F3E5F5'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x, cy + 5); ctx.stroke();
-  ctx.fillStyle = '#FFD54F'; ctx.beginPath(); ctx.arc(x, cy+5, 1.5, 0, Math.PI*2); ctx.fill();
-}
-
-const FLOWER_FNS = [flowerDaisy, flowerTulip, flowerSunflower, flowerClover, flowerPoppy, flowerBell];
+const FLOWER_IMGS = [
+  { img: () => IMG_FLOWER1, w: 40, h: 53 },  // жёлтый цветок
+  { img: () => IMG_FLOWER2, w: 27, h: 55 },  // синий цветок
+];
 
 function drawBackground() {
   // небо
@@ -501,10 +411,12 @@ function drawBackground() {
   ctx.fillStyle = '#558B2F';
   ctx.fillRect(0, GROUND, W, 5);
 
-  // цветочки на земле (прокручиваются)
+  // цветочки на земле (прокручиваются) — рисунки Кати
   for (let i = 0; i < 8; i++) {
     const fx = ((i * 105 - groundX * 0.6) % (W + 80) + W + 80) % (W + 80) - 40;
-    FLOWER_FNS[i % FLOWER_FNS.length](fx, GROUND + 2);
+    const f = FLOWER_IMGS[i % FLOWER_IMGS.length];
+    const img = f.img();
+    if (imgOk(img)) ctx.drawImage(img, fx - f.w / 2, GROUND - f.h + 4, f.w, f.h);
   }
 }
 
