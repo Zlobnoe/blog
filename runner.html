@@ -313,9 +313,12 @@ function resetGame() {
 function spawnObs() {
   const type = Math.floor(Math.random() * 3);
   const t = OBS_TYPES[type];
+  const isDouble = score > 40 && Math.random() < 0.28;
   obstacles.push({ type, x: W + 8, y: GROUND - t.h, w: t.w, h: t.h });
-  // интервал уменьшается по мере роста счёта
-  spawnInterval = 80 + Math.random() * 60 + Math.max(0, 60 - score * 0.22);
+  if (isDouble) {
+    obstacles.push({ type, x: W + 8 + t.w + 10, y: GROUND - t.h, w: t.w, h: t.h });
+  }
+  spawnInterval = 80 + Math.random() * 60 + Math.max(0, 60 - score * 0.22) + (isDouble ? 35 : 0);
 }
 
 function checkCollision(o) {
