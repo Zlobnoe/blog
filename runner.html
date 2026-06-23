@@ -54,9 +54,9 @@
 // ╠══════════════════════════════════════════════════════════════╣
 let IMG_HERO = null;       // loadImg('zayka.png')   ← главный герой
 let IMG_OBS1 = null;      // loadImg('luzha.png')   ← лужа
-let IMG_OBS2 = loadImg('kust.jpg');  // дерево — рисунок дочки! 🎨
+let IMG_OBS2 = loadImg('kust.png');  // дерево — рисунок дочки! 🎨
 let IMG_OBS3 = null;      // loadImg('kamen.png')   ← камень
-let IMG_BIRD = loadImg('bird.jpg');  // птичка — рисунок дочки! 🎨
+let IMG_BIRD = loadImg('bird.png');  // птичка — рисунок дочки! 🎨
 // ╚══════════════════════════════════════════════════════════════╝
 
 function loadImg(src) {
@@ -82,7 +82,7 @@ const JUMP_SPD = -10.5;
 // ── Виды препятствий (w/h — размер заглушки) ───────────────────
 const OBS_TYPES = [
   { w:62, h:20 },  // 0 — лужа     (широкая, низкая)
-  { w:28, h:60 },  // 1 — куст     (узкий, высокий)
+  { w:54, h:54 },  // 1 — дерево   (квадрат, как рисунок)
   { w:44, h:40 },  // 2 — камень   (средний)
 ];
 
@@ -405,7 +405,7 @@ function drawOverlay(emoji, line1, line2) {
 // ═══════════════════════════════════════════════════════════════
 function spawnBird() {
   const y = BIRD_HEIGHTS[Math.floor(Math.random() * BIRD_HEIGHTS.length)];
-  obstacles.push({ isBird: true, x: W + 8, y, w: 40, h: 24, wing: 0 });
+  obstacles.push({ isBird: true, x: W + 8, y, w: 50, h: 42, wing: 0 });
   birdInterval = 150 + Math.random() * 110;
 }
 
