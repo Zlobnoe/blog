@@ -249,7 +249,7 @@ function drawBackground() {
   ctx.font = '14px serif';
   ctx.textAlign = 'center';
   for (let i = 0; i < 6; i++) {
-    const fx = ((groundX * 0.6 + i * 130) % (W + 60)) - 30;
+    const fx = ((i * 130 - groundX * 0.6) % (W + 60) + W + 60) % (W + 60) - 30;
     ctx.fillText(flowers[i % 3], fx, GROUND + 26);
   }
 }
