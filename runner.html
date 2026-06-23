@@ -44,7 +44,7 @@
 <body>
 <h1>🐰 Беги, зверюшка!</h1>
 <canvas id="c"></canvas>
-<p>Пробел / стрелка вверх / тап — прыжок</p>
+<p>Пробел / стрелка вверх / тап — прыжок (можно два раза!)</p>
 <script>
 
 // ╔══════════════════════════════════════════════════════════════╗
@@ -76,7 +76,7 @@ const GROUND = H - 54; // y поверхности земли
 
 // ── Физика ─────────────────────────────────────────────────────
 const GRAVITY  = 0.57;
-const JUMP_SPD = -13.8;
+const JUMP_SPD = -10.5;
 
 // ── Виды препятствий (w/h — размер заглушки) ───────────────────
 const OBS_TYPES = [
@@ -92,7 +92,7 @@ let speed = 0, gframe = 0;
 let groundX = 0; // прокрутка узора земли
 
 // ── Герой ──────────────────────────────────────────────────────
-const hero = { x:90, y:GROUND, vy:0, onGround:true, legPhase:0, squash:1 };
+const hero = { x:90, y:GROUND, vy:0, onGround:true, jumps:2, legPhase:0, squash:1 };
 
 // ── Препятствия ────────────────────────────────────────────────
 let obstacles = [], spawnTimer = 0, spawnInterval = 90;
@@ -304,7 +304,7 @@ function drawOverlay(emoji, line1, line2) {
 // ═══════════════════════════════════════════════════════════════
 function resetGame() {
   hero.x = 90; hero.y = GROUND - 62; hero.vy = 0;
-  hero.onGround = true; hero.legPhase = 0; hero.squash = 1;
+  hero.onGround = true; hero.jumps = 2; hero.legPhase = 0; hero.squash = 1;
   obstacles = []; spawnTimer = 0; spawnInterval = 140;
   score = 0; speed = 3.0; gframe = 0; groundX = 0;
   gs = 'run';
@@ -328,10 +328,10 @@ function checkCollision(o) {
 
 function jump() {
   if (gs === 'wait' || gs === 'dead') { resetGame(); return; }
-  if (hero.onGround) {
-    // прыжок масштабируется со скоростью — высота постоянна, дуга пропорциональна
+  if (hero.jumps > 0) {
     hero.vy = JUMP_SPD * Math.sqrt(speed / 5.0);
     hero.onGround = false;
+    hero.jumps--;
     hero.squash = 0.72;
   }
 }
@@ -348,8 +348,8 @@ function update() {
   hero.y  += hero.vy;
   if (hero.y + 62 >= GROUND) {
     hero.y = GROUND - 62;
-    if (!hero.onGround) hero.squash = 1.38; // сплющивается при посадке
-    hero.vy = 0; hero.onGround = true;
+    if (!hero.onGround) hero.squash = 1.38;
+    hero.vy = 0; hero.onGround = true; hero.jumps = 2;
   }
   if (hero.onGround) hero.legPhase += 0.28;
   // squash плавно возвращается к 1
