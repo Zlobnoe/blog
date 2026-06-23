@@ -152,10 +152,11 @@
       <div class="help-section-title">Препятствия на земле — все надо перепрыгивать!</div>
       <div class="help-cards">
         <div class="help-card">
-          <canvas class="help-card-canvas" id="hcPuddle"></canvas>
+          <img src="grib.png" class="help-card-img" alt="Гриб">
           <div class="help-card-text">
-            <div class="name">Лужа</div>
+            <div class="name">Гриб</div>
             <div class="desc">Просто препятствие — перепрыгивай!</div>
+            <div class="author">✏️ нарисовала Катя</div>
           </div>
         </div>
         <div class="help-card">
@@ -204,7 +205,7 @@
 // ║  и замени null на loadImg('имя_файла.png')                   ║
 // ╠══════════════════════════════════════════════════════════════╣
 let IMG_HERO = loadImg('zayka.png'); // заяц — нарисовала Катя! 🎨
-let IMG_OBS1 = null;      // loadImg('luzha.png')   ← лужа
+let IMG_OBS1 = loadImg('grib.png');  // гриб — нарисовала Катя! 🎨
 let IMG_OBS2 = loadImg('kust.png');  // дерево — рисунок дочки! 🎨
 let IMG_OBS3 = null;      // loadImg('kamen.png')   ← камень
 let IMG_BIRD = loadImg('bird.png');  // птичка — рисунок дочки! 🎨
@@ -232,7 +233,7 @@ const JUMP_SPD = -10.5;
 
 // ── Виды препятствий (w/h — размер заглушки) ───────────────────
 const OBS_TYPES = [
-  { w:62, h:20 },  // 0 — лужа     (широкая, низкая)
+  { w:44, h:46 },  // 0 — гриб     (почти квадрат, как рисунок)
   { w:36, h:60 },  // 1 — дерево   (вертикальный, под рисунок)
   { w:44, h:40 },  // 2 — камень   (средний)
 ];
@@ -746,21 +747,12 @@ cv.addEventListener('pointerdown', e => { e.preventDefault(); jump(); });
 
 // ── Справка ────────────────────────────────────────────────────
 function openHelp() {
-  // рисуем заглушки на мини-канвасах
-  ['hcPuddle','hcRock'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.width = 56; el.height = 56;
-    const c = el.getContext('2d');
-    const fakeObs = id === 'hcPuddle'
-      ? { type:0, x:4, y:26, w:48, h:18 }
-      : { type:2, x:8, y:14, w:40, h:34 };
-    // переиспользуем функцию отрисовки заглушки
-    const savedCtx = ctx;
-    // временно перенаправляем ctx
-    window._tmpCtx = c;
-    drawObsPlaceholderOn(c, fakeObs);
-  });
+  // рисуем заглушку камня
+  const rockEl = document.getElementById('hcRock');
+  if (rockEl) {
+    rockEl.width = 56; rockEl.height = 56;
+    drawObsPlaceholderOn(rockEl.getContext('2d'), { type:2, x:8, y:14, w:40, h:34 });
+  }
   // рекорд
   const b = +localStorage.getItem('zb') || 0;
   document.getElementById('helpBest').innerHTML =
