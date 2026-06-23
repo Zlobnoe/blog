@@ -52,10 +52,11 @@
 // ║  Когда нарисует — сфоткай, положи файлы рядом с runner.html  ║
 // ║  и замени null на loadImg('имя_файла.png')                   ║
 // ╠══════════════════════════════════════════════════════════════╣
-let IMG_HERO = null;  // loadImg('zayka.png')   ← главный герой
-let IMG_OBS1 = null;  // loadImg('luzha.png')   ← лужа
+let IMG_HERO = null;       // loadImg('zayka.png')   ← главный герой
+let IMG_OBS1 = null;      // loadImg('luzha.png')   ← лужа
 let IMG_OBS2 = loadImg('kust.jpg');  // дерево — рисунок дочки! 🎨
-let IMG_OBS3 = null;  // loadImg('kamen.png')   ← камень
+let IMG_OBS3 = null;      // loadImg('kamen.png')   ← камень
+let IMG_BIRD = loadImg('bird.jpg');  // птичка — рисунок дочки! 🎨
 // ╚══════════════════════════════════════════════════════════════╝
 
 function loadImg(src) {
@@ -551,7 +552,11 @@ function render() {
   // препятствия и птицы
   obstacles.forEach(o => {
     if (o.isBird) {
-      drawBirdPlaceholder(o);
+      if (imgOk(IMG_BIRD)) {
+        ctx.drawImage(IMG_BIRD, o.x, o.y, o.w, o.h);
+      } else {
+        drawBirdPlaceholder(o);
+      }
     } else {
       const imgs = [IMG_OBS1, IMG_OBS2, IMG_OBS3];
       if (imgOk(imgs[o.type])) {
