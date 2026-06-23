@@ -404,6 +404,8 @@ const FLOWER_IMGS = [
   { img: () => IMG_FLOWER1, w: 40, h: 53 },  // жёлтый цветок
   { img: () => IMG_FLOWER2, w: 27, h: 55 },  // синий цветок
 ];
+// случайный порядок цветков — генерируется один раз при загрузке
+const FLOWER_SEQ = Array.from({length: 32}, () => Math.floor(Math.random() * FLOWER_IMGS.length));
 
 function drawBackground() {
   // небо
@@ -436,7 +438,7 @@ function drawBackground() {
   // цветочки на земле (прокручиваются) — рисунки Кати
   for (let i = 0; i < 8; i++) {
     const fx = ((i * 105 - groundX * 0.6) % (W + 80) + W + 80) % (W + 80) - 40;
-    const f = FLOWER_IMGS[i % FLOWER_IMGS.length];
+    const f = FLOWER_IMGS[FLOWER_SEQ[i % FLOWER_SEQ.length]];
     const img = f.img();
     if (imgOk(img)) ctx.drawImage(img, fx - f.w / 2, GROUND - f.h + 4, f.w, f.h);
   }
