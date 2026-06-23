@@ -306,7 +306,7 @@ function resetGame() {
   hero.x = 90; hero.y = GROUND - 62; hero.vy = 0;
   hero.onGround = true; hero.legPhase = 0; hero.squash = 1;
   obstacles = []; spawnTimer = 0; spawnInterval = 140;
-  score = 0; speed = 2.5; gframe = 0; groundX = 0;
+  score = 0; speed = 3.0; gframe = 0; groundX = 0;
   gs = 'run';
 }
 
@@ -329,9 +329,10 @@ function checkCollision(o) {
 function jump() {
   if (gs === 'wait' || gs === 'dead') { resetGame(); return; }
   if (hero.onGround) {
-    hero.vy = JUMP_SPD;
+    // прыжок масштабируется со скоростью — высота постоянна, дуга пропорциональна
+    hero.vy = JUMP_SPD * Math.sqrt(speed / 5.0);
     hero.onGround = false;
-    hero.squash = 0.72; // стретч при прыжке
+    hero.squash = 0.72;
   }
 }
 
@@ -339,11 +340,11 @@ function update() {
   if (gs !== 'run') return;
   gframe++;
   score  += 0.07 + speed * 0.014;
-  speed   = Math.min(10, 2.5 + score * 0.006);
+  speed   = Math.min(10, 3.0 + score * 0.006);
   groundX += speed;
 
-  // герой: гравитация
-  hero.vy += GRAVITY;
+  // гравитация масштабируется со скоростью (высота прыжка остаётся постоянной)
+  hero.vy += GRAVITY * (speed / 5.0);
   hero.y  += hero.vy;
   if (hero.y + 62 >= GROUND) {
     hero.y = GROUND - 62;
