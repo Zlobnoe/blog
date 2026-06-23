@@ -39,12 +39,149 @@
     text-align: center;
     text-shadow: 0 1px 4px rgba(0,0,0,0.15);
   }
+  .help-btn {
+    position: absolute; top: 18px; right: 18px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5);
+    color: #fff; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; transition: background .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .help-btn:hover { background: rgba(255,255,255,0.45); }
+
+  /* ── Справка ── */
+  .help-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,8,30,0.55); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; z-index: 100;
+    padding: 16px;
+  }
+  .help-bg.show { display: flex; }
+  .help-modal {
+    background: linear-gradient(145deg,#1a1040,#2a1860);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 22px; padding: 28px 24px 24px;
+    max-width: 540px; width: 100%; max-height: 90vh;
+    overflow-y: auto; position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    color: #fff; font-family: 'Segoe UI', sans-serif;
+  }
+  .help-close {
+    position: absolute; top: 14px; right: 16px;
+    background: rgba(255,255,255,0.12); border: none;
+    border-radius: 50%; width: 30px; height: 30px;
+    color: #fff; font-size: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .help-close:hover { background: rgba(255,255,255,0.25); }
+  .help-modal h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+  .help-modal .sub {
+    font-size: .82rem; color: rgba(255,255,255,.6);
+    margin-bottom: 20px; line-height: 1.5;
+  }
+  .help-section { margin-bottom: 18px; }
+  .help-section-title {
+    font-size: .72rem; font-weight: 700; letter-spacing: .07em;
+    text-transform: uppercase; color: rgba(255,255,255,.45);
+    margin-bottom: 10px;
+  }
+  .help-cards { display: flex; flex-wrap: wrap; gap: 10px; }
+  .help-card {
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px; padding: 12px; display: flex; align-items: center;
+    gap: 12px; flex: 1 1 200px; min-width: 0;
+  }
+  .help-card-img {
+    width: 56px; height: 56px; flex-shrink: 0;
+    object-fit: contain; border-radius: 8px;
+    background: rgba(255,255,255,.06);
+  }
+  .help-card-canvas {
+    width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px;
+  }
+  .help-card-text .name { font-weight: 700; font-size: .9rem; margin-bottom: 3px; }
+  .help-card-text .desc { font-size: .78rem; color: rgba(255,255,255,.62); line-height: 1.4; }
+  .help-card-text .author {
+    font-size: .68rem; color: #f9a8d4; margin-top: 4px;
+  }
+  .help-controls {
+    background: rgba(255,255,255,.07); border-radius: 12px;
+    padding: 12px 14px; font-size: .82rem; line-height: 1.8;
+    color: rgba(255,255,255,.75);
+  }
+  .help-controls b { color: #fff; }
 </style>
 </head>
 <body>
+<button class="help-btn" onclick="openHelp()" title="Справка">?</button>
 <h1>🐰 Беги, зверюшка!</h1>
 <canvas id="c"></canvas>
 <p>Пробел / стрелка вверх / тап — прыжок (можно два раза!)</p>
+
+<!-- ── Справка ── -->
+<div class="help-bg" id="helpBg" onclick="closeHelpOutside(event)">
+  <div class="help-modal">
+    <button class="help-close" onclick="closeHelp()">✕</button>
+    <h2>🐰 Беги, зверюшка!</h2>
+    <p class="sub">Игра сделана вместе с дочкой — она сама нарисовала всех персонажей!</p>
+
+    <div class="help-section">
+      <div class="help-section-title">Управление</div>
+      <div class="help-controls">
+        <b>Пробел / стрелка ↑ / тап</b> — прыжок<br>
+        Прыгнуть можно <b>два раза подряд</b> прямо в воздухе<br>
+        Скорость постепенно <b>растёт</b> — чем дольше бежишь, тем сложнее
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">Препятствия на земле — перепрыгивай!</div>
+      <div class="help-cards">
+        <div class="help-card">
+          <canvas class="help-card-canvas" id="hcPuddle"></canvas>
+          <div class="help-card-text">
+            <div class="name">Лужа</div>
+            <div class="desc">Широкая и низкая — один прыжок</div>
+          </div>
+        </div>
+        <div class="help-card">
+          <img src="kust.png" class="help-card-img" alt="Дерево">
+          <div class="help-card-text">
+            <div class="name">Дерево</div>
+            <div class="desc">Высокое — прыгай повыше!</div>
+            <div class="author">✏️ нарисовала дочка</div>
+          </div>
+        </div>
+        <div class="help-card">
+          <canvas class="help-card-canvas" id="hcRock"></canvas>
+          <div class="help-card-text">
+            <div class="name">Камень</div>
+            <div class="desc">Средний — обычный прыжок</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">Птицы — появляются позже, летят в воздухе</div>
+      <div class="help-cards">
+        <div class="help-card">
+          <img src="bird.png" class="help-card-img" alt="Птичка">
+          <div class="help-card-text">
+            <div class="name">Птичка</div>
+            <div class="desc">Летит на разной высоте. Можно пробежать под ней или перепрыгнуть</div>
+            <div class="author">✏️ нарисовала дочка</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">Рекорд</div>
+      <div class="help-controls" id="helpBest"></div>
+    </div>
+  </div>
+</div>
 <script>
 
 // ╔══════════════════════════════════════════════════════════════╗
@@ -592,6 +729,52 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); }
 });
 cv.addEventListener('pointerdown', e => { e.preventDefault(); jump(); });
+
+// ── Справка ────────────────────────────────────────────────────
+function openHelp() {
+  // рисуем заглушки на мини-канвасах
+  ['hcPuddle','hcRock'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.width = 56; el.height = 56;
+    const c = el.getContext('2d');
+    const fakeObs = id === 'hcPuddle'
+      ? { type:0, x:4, y:26, w:48, h:18 }
+      : { type:2, x:8, y:14, w:40, h:34 };
+    // переиспользуем функцию отрисовки заглушки
+    const savedCtx = ctx;
+    // временно перенаправляем ctx
+    window._tmpCtx = c;
+    drawObsPlaceholderOn(c, fakeObs);
+  });
+  // рекорд
+  const b = +localStorage.getItem('zb') || 0;
+  document.getElementById('helpBest').innerHTML =
+    b > 0 ? `Твой рекорд: <b>${b} очков</b> 🏆` : 'Рекорда пока нет — беги!';
+  document.getElementById('helpBg').classList.add('show');
+}
+function closeHelp() { document.getElementById('helpBg').classList.remove('show'); }
+function closeHelpOutside(e) { if (e.target === e.currentTarget) closeHelp(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHelp(); });
+
+function drawObsPlaceholderOn(c, o) {
+  if (o.type === 0) {
+    c.fillStyle = '#29B6F6';
+    c.beginPath(); c.ellipse(o.x+o.w/2, o.y+o.h/2+4, o.w/2, o.h/2+2, 0, 0, Math.PI*2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.42)';
+    c.beginPath(); c.ellipse(o.x+o.w*0.33, o.y+o.h*0.45, o.w*0.18, o.h*0.22, -0.3, 0, Math.PI*2); c.fill();
+  } else {
+    c.fillStyle = '#78909C';
+    c.beginPath();
+    c.moveTo(o.x+8, o.y+o.h); c.quadraticCurveTo(o.x, o.y+o.h, o.x+4, o.y+o.h*0.55);
+    c.quadraticCurveTo(o.x+o.w*0.2, o.y+2, o.x+o.w/2, o.y+2);
+    c.quadraticCurveTo(o.x+o.w*0.8, o.y+2, o.x+o.w-4, o.y+o.h*0.55);
+    c.quadraticCurveTo(o.x+o.w, o.y+o.h, o.x+o.w-8, o.y+o.h);
+    c.closePath(); c.fill();
+    c.fillStyle = '#90A4AE';
+    c.beginPath(); c.ellipse(o.x+o.w*0.4, o.y+o.h*0.28, o.w*0.22, o.h*0.12, -0.3, 0, Math.PI*2); c.fill();
+  }
+}
 
 loop();
 </script>
