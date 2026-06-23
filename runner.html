@@ -168,10 +168,11 @@
           </div>
         </div>
         <div class="help-card">
-          <canvas class="help-card-canvas" id="hcRock"></canvas>
+          <img src="kamen.png" class="help-card-img" alt="Камень">
           <div class="help-card-text">
             <div class="name">Камень</div>
             <div class="desc">Просто препятствие — перепрыгивай!</div>
+            <div class="author">✏️ нарисовала Катя</div>
           </div>
         </div>
       </div>
@@ -207,7 +208,7 @@
 let IMG_HERO = loadImg('zayka.png'); // заяц — нарисовала Катя! 🎨
 let IMG_OBS1 = loadImg('grib.png');  // гриб — нарисовала Катя! 🎨
 let IMG_OBS2 = loadImg('kust.png');  // дерево — рисунок дочки! 🎨
-let IMG_OBS3 = null;      // loadImg('kamen.png')   ← камень
+let IMG_OBS3 = loadImg('kamen.png'); // камень — нарисовала Катя! 🎨
 let IMG_BIRD = loadImg('bird.png');  // птичка — рисунок дочки! 🎨
 // ╚══════════════════════════════════════════════════════════════╝
 
@@ -747,12 +748,6 @@ cv.addEventListener('pointerdown', e => { e.preventDefault(); jump(); });
 
 // ── Справка ────────────────────────────────────────────────────
 function openHelp() {
-  // рисуем заглушку камня
-  const rockEl = document.getElementById('hcRock');
-  if (rockEl) {
-    rockEl.width = 56; rockEl.height = 56;
-    drawObsPlaceholderOn(rockEl.getContext('2d'), { type:2, x:8, y:14, w:40, h:34 });
-  }
   // рекорд
   const b = +localStorage.getItem('zb') || 0;
   document.getElementById('helpBest').innerHTML =
