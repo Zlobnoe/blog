@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Беги, зверюшка!</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: linear-gradient(160deg, #a8edea 0%, #fed6e3 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  h1 {
+    color: #fff;
+    font-size: 1.9rem;
+    font-weight: 800;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.18);
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+  canvas {
+    border-radius: 22px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.22);
+    display: block;
+    touch-action: none;
+  }
+  p {
+    color: rgba(255,255,255,0.82);
+    font-size: 0.88rem;
+    margin-top: 12px;
+    text-align: center;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+</style>
+</head>
+<body>
+<h1>🐰 Беги, зверюшка!</h1>
+<canvas id="c"></canvas>
+<p>Пробел / стрелка вверх / тап — прыжок</p>
+<script>
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  РИСУНКИ ДОЧКИ                                               ║
+// ║  Когда нарисует — сфоткай, положи файлы рядом с runner.html  ║
+// ║  и замени null на loadImg('имя_файла.png')                   ║
+// ╠══════════════════════════════════════════════════════════════╣
+let IMG_HERO = null;  // loadImg('zayka.png')   ← главный герой
+let IMG_OBS1 = null;  // loadImg('luzha.png')   ← лужа
+let IMG_OBS2 = null;  // loadImg('kust.png')    ← куст / дерево
+let IMG_OBS3 = null;  // loadImg('kamen.png')   ← камень
+// ╚══════════════════════════════════════════════════════════════╝
+
+function loadImg(src) {
+  const img = new Image(); img.src = src; return img;
+}
+function imgOk(img) {
+  return img && img.complete && img.naturalWidth > 0;
+}
+
+// ── Размер холста ──────────────────────────────────────────────
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W = Math.min(800, window.innerWidth - 24);
+const H = 270;
+cv.width = W; cv.height = H;
+
+const GROUND = H - 54; // y поверхности земли
+
+// ── Физика ─────────────────────────────────────────────────────
+const GRAVITY  = 0.57;
+const JUMP_SPD = -13.8;
+
+// ── Виды препятствий (w/h — размер заглушки) ───────────────────
+const OBS_TYPES = [
+  { w:62, h:20 },  // 0 — лужа     (широкая, низкая)
+  { w:28, h:60 },  // 1 — куст     (узкий, высокий)
+  { w:44, h:40 },  // 2 — камень   (средний)
+];
+
+// ── Игровое состояние ──────────────────────────────────────────
+let gs = 'wait'; // wait | run | dead
+let score = 0, best = +localStorage.getItem('zb') || 0;
+let speed = 0, gframe = 0;
+let groundX = 0; // прокрутка узора земли
+
+// ── Герой ──────────────────────────────────────────────────────
+const hero = { x:90, y:GROUND, vy:0, onGround:true, legPhase:0, squash:1 };
+
+// ── Препятствия ────────────────────────────────────────────────
+let obstacles = [], spawnTimer = 0, spawnInterval = 90;
+
+// ── Облака ─────────────────────────────────────────────────────
+const clouds = Array.from({length:5}, (_,i) => ({
+  x: W * (0.05 + i*0.22) + Math.random()*50,
+  y: 18 + Math.random()*45,
+  r: 28 + Math.random()*28,
+  sp: 0.15 + Math.random()*0.18,
+}));
+
+// ═══════════════════════════════════════════════════════════════
+// РИСОВАНИЕ: заяц-заглушка
+// ═══════════════════════════════════════════════════════════════
+function drawHeroPlaceholder(x, y, onGround, legPhase, squash) {
+  ctx.save();
+  // squash / stretch: приседает при приземлении
+  ctx.translate(x + 28, y + 62);
+  ctx.scale(squash > 1 ? squash : 1/squash*0.85+0.15, squash < 1 ? squash : 1/squash*0.8+0.2);
+  ctx.translate(-28, -62);
+
+  // хвостик
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(4, 44, 9, 0, Math.PI*2); ctx.fill();
+
+  // тело
+  ctx.fillStyle = '#FFDDE2';
+  ctx.beginPath(); ctx.ellipse(28, 44, 21, 22, 0, 0, Math.PI*2); ctx.fill();
+
+  // голова
+  ctx.beginPath(); ctx.arc(28, 20, 17, 0, Math.PI*2); ctx.fill();
+
+  // уши
+  [[-10, -0.18],[10, 0.18]].forEach(([dx, tilt]) => {
+    ctx.save(); ctx.translate(28+dx, 10); ctx.rotate(tilt);
+    ctx.fillStyle = '#FFDDE2';
+    ctx.beginPath(); ctx.ellipse(0, -17, 7, 19, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F48FB1';
+    ctx.beginPath(); ctx.ellipse(0, -17, 3.5, 13, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+
+  // глаза
+  [[-6, 18],[6, 18]].forEach(([dx, dy]) => {
+    ctx.fillStyle = '#2D2D2D';
+    ctx.beginPath(); ctx.arc(28+dx, dy, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(29+dx, dy-1.5, 1.5, 0, Math.PI*2); ctx.fill();
+  });
+
+  // нос + рот
+  ctx.fillStyle = '#E91E63';
+  ctx.beginPath(); ctx.arc(28, 24, 3, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#E91E63'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(28, 26.5, 4, 0.15, Math.PI-0.15); ctx.stroke();
+
+  // лапки
+  ctx.fillStyle = '#FFDDE2';
+  if (onGround) {
+    const sw = Math.sin(legPhase) * 12;
+    [[15, sw], [38, -sw]].forEach(([lx, ly]) => {
+      ctx.beginPath(); ctx.ellipse(lx, 56+ly, 7, 12, -0.2, 0, Math.PI*2); ctx.fill();
+    });
+  } else {
+    // в прыжке лапки подобраны
+    [[12, 46, 0.7],[44, 46, -0.7]].forEach(([lx,ly,r]) => {
+      ctx.beginPath(); ctx.ellipse(lx, ly, 7, 12, r, 0, Math.PI*2); ctx.fill();
+    });
+  }
+
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// РИСОВАНИЕ: препятствия-заглушки
+// ═══════════════════════════════════════════════════════════════
+function drawObsPlaceholder(o) {
+  if (o.type === 0) {
+    // лужа
+    ctx.fillStyle = '#29B6F6';
+    ctx.beginPath();
+    ctx.ellipse(o.x+o.w/2, o.y+o.h/2+5, o.w/2, o.h/2+2, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    ctx.beginPath();
+    ctx.ellipse(o.x+o.w*0.33, o.y+o.h*0.45, o.w*0.18, o.h*0.22, -0.3, 0, Math.PI*2);
+    ctx.fill();
+  } else if (o.type === 1) {
+    // куст — несколько кругов
+    [
+      [o.x+o.w/2,   o.y+o.h*0.68, o.w*0.48, '#43A047'],
+      [o.x+o.w*0.24, o.y+o.h*0.62, o.w*0.3,  '#388E3C'],
+      [o.x+o.w*0.76, o.y+o.h*0.62, o.w*0.3,  '#388E3C'],
+      [o.x+o.w/2,   o.y+o.h*0.36, o.w*0.3,  '#66BB6A'],
+    ].forEach(([ex,ey,er,ec]) => {
+      ctx.fillStyle = ec;
+      ctx.beginPath(); ctx.arc(ex, ey, er, 0, Math.PI*2); ctx.fill();
+    });
+    // ствол
+    ctx.fillStyle = '#795548';
+    ctx.fillRect(o.x+o.w/2-4, o.y+o.h*0.8, 8, o.h*0.22);
+  } else {
+    // камень — органичная форма
+    ctx.fillStyle = '#78909C';
+    ctx.beginPath();
+    ctx.moveTo(o.x+12, o.y+o.h);
+    ctx.quadraticCurveTo(o.x,    o.y+o.h,   o.x+5,    o.y+o.h*0.58);
+    ctx.quadraticCurveTo(o.x+o.w*0.2, o.y+2, o.x+o.w/2, o.y+3);
+    ctx.quadraticCurveTo(o.x+o.w*0.8, o.y+2, o.x+o.w-5, o.y+o.h*0.58);
+    ctx.quadraticCurveTo(o.x+o.w, o.y+o.h,  o.x+o.w-12, o.y+o.h);
+    ctx.closePath(); ctx.fill();
+    // блик
+    ctx.fillStyle = '#90A4AE';
+    ctx.beginPath();
+    ctx.ellipse(o.x+o.w*0.4, o.y+o.h*0.28, o.w*0.22, o.h*0.12, -0.3, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// РИСОВАНИЕ: фон
+// ═══════════════════════════════════════════════════════════════
+function drawBackground() {
+  // небо
+  const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
+  sky.addColorStop(0, '#81D4FA');
+  sky.addColorStop(1, '#E1F5FE');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, GROUND);
+
+  // облака
+  clouds.forEach(c => {
+    ctx.fillStyle = 'rgba(255,255,255,0.86)';
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x - c.r*0.5, c.y + c.r*0.25, c.r*0.65, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x + c.r*0.52, c.y + c.r*0.2,  c.r*0.6,  0, Math.PI*2); ctx.fill();
+  });
+
+  // трава
+  const grass = ctx.createLinearGradient(0, GROUND, 0, H);
+  grass.addColorStop(0,   '#66BB6A');
+  grass.addColorStop(0.25,'#81C784');
+  grass.addColorStop(1,   '#A5D6A7');
+  ctx.fillStyle = grass;
+  ctx.fillRect(0, GROUND, W, H - GROUND);
+
+  // тёмная полоска границы
+  ctx.fillStyle = '#558B2F';
+  ctx.fillRect(0, GROUND, W, 5);
+
+  // цветочки на земле (прокручиваются)
+  const flowers = ['🌼','🌸','🌺'];
+  ctx.font = '14px serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < 6; i++) {
+    const fx = ((groundX * 0.6 + i * 130) % (W + 60)) - 30;
+    ctx.fillText(flowers[i % 3], fx, GROUND + 26);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// РИСОВАНИЕ: HUD и оверлеи
+// ═══════════════════════════════════════════════════════════════
+function drawHUD() {
+  ctx.fillStyle = 'rgba(50,50,80,0.75)';
+  ctx.beginPath();
+  ctx.roundRect(W - 120, 8, 112, best > 0 ? 52 : 34, 10);
+  ctx.fill();
+
+  ctx.fillStyle = '#FFD54F';
+  ctx.font = 'bold 17px Segoe UI';
+  ctx.textAlign = 'right';
+  ctx.fillText('⭐ ' + Math.floor(score), W - 14, 28);
+
+  if (best > 0) {
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '12px Segoe UI';
+    ctx.fillText('Рекорд: ' + Math.floor(best), W - 14, 48);
+  }
+}
+
+function drawOverlay(emoji, line1, line2) {
+  ctx.fillStyle = 'rgba(20,10,50,0.48)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+
+  // карточка
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath(); ctx.roundRect(W/2-160, H/2-58, 320, 116, 18); ctx.fill();
+
+  ctx.font = '36px serif';
+  ctx.fillText(emoji, W/2, H/2 - 18);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 20px Segoe UI';
+  ctx.fillText(line1, W/2, H/2 + 12);
+
+  if (line2) {
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = '14px Segoe UI';
+    ctx.fillText(line2, W/2, H/2 + 36);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ЛОГИКА
+// ═══════════════════════════════════════════════════════════════
+function resetGame() {
+  hero.x = 90; hero.y = GROUND; hero.vy = 0;
+  hero.onGround = true; hero.legPhase = 0; hero.squash = 1;
+  obstacles = []; spawnTimer = 0; spawnInterval = 90;
+  score = 0; speed = 4.5; gframe = 0; groundX = 0;
+  gs = 'run';
+}
+
+function spawnObs() {
+  const type = Math.floor(Math.random() * 3);
+  const t = OBS_TYPES[type];
+  obstacles.push({ type, x: W + 8, y: GROUND - t.h, w: t.w, h: t.h });
+  // интервал уменьшается по мере роста счёта
+  spawnInterval = 60 + Math.random() * 50 + Math.max(0, 38 - score * 0.2);
+}
+
+function checkCollision(o) {
+  const pad = 9;
+  return (hero.x + pad)       < (o.x + o.w) &&
+         (hero.x + 50 - pad)  > o.x &&
+         (hero.y + pad)       < (o.y + o.h) &&
+         (hero.y + 62 - pad)  > o.y;
+}
+
+function jump() {
+  if (gs === 'wait' || gs === 'dead') { resetGame(); return; }
+  if (hero.onGround) {
+    hero.vy = JUMP_SPD;
+    hero.onGround = false;
+    hero.squash = 0.72; // стретч при прыжке
+  }
+}
+
+function update() {
+  if (gs !== 'run') return;
+  gframe++;
+  score  += 0.07 + speed * 0.014;
+  speed   = Math.min(12, 4.5 + score * 0.009);
+  groundX += speed;
+
+  // герой: гравитация
+  hero.vy += GRAVITY;
+  hero.y  += hero.vy;
+  if (hero.y >= GROUND) {
+    hero.y = GROUND;
+    if (!hero.onGround) hero.squash = 1.38; // сплющивается при посадке
+    hero.vy = 0; hero.onGround = true;
+  }
+  if (hero.onGround) hero.legPhase += 0.28;
+  // squash плавно возвращается к 1
+  hero.squash += (1 - hero.squash) * 0.22;
+
+  // облака
+  clouds.forEach(c => { c.x -= c.sp; if (c.x + c.r * 2 < 0) c.x = W + c.r; });
+
+  // препятствия
+  spawnTimer++;
+  if (spawnTimer >= spawnInterval) { spawnTimer = 0; spawnObs(); }
+
+  obstacles = obstacles.filter(o => {
+    o.x -= speed;
+    if (checkCollision(o)) {
+      gs = 'dead';
+      if (score > best) { best = score; localStorage.setItem('zb', Math.floor(best)); }
+    }
+    return o.x + o.w > -10;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// РЕНДЕР
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+
+  // препятствия
+  obstacles.forEach(o => {
+    const imgs = [IMG_OBS1, IMG_OBS2, IMG_OBS3];
+    if (imgOk(imgs[o.type])) {
+      ctx.drawImage(imgs[o.type], o.x, o.y, o.w, o.h);
+    } else {
+      drawObsPlaceholder(o);
+    }
+  });
+
+  // герой
+  if (imgOk(IMG_HERO)) {
+    ctx.save();
+    ctx.translate(hero.x + 28, hero.y + 62);
+    ctx.scale(hero.squash > 1 ? hero.squash : 1, hero.squash < 1 ? hero.squash : 1);
+    ctx.translate(-28, -62);
+    ctx.drawImage(IMG_HERO, 0, 0, 56, 62);
+    ctx.restore();
+  } else {
+    drawHeroPlaceholder(hero.x, hero.y, hero.onGround, hero.legPhase, hero.squash);
+  }
+
+  drawHUD();
+
+  if (gs === 'wait') drawOverlay('🐰', 'Беги, зверюшка!', 'Нажми пробел или тапни — и вперёд!');
+  if (gs === 'dead') drawOverlay('😢', 'Счёт: ' + Math.floor(score), 'Тапни чтобы попробовать снова!');
+}
+
+function loop() { update(); render(); requestAnimationFrame(loop); }
+
+// ── Управление ──────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); }
+});
+cv.addEventListener('pointerdown', e => { e.preventDefault(); jump(); });
+
+loop();
+</script>
+</body>
+</html>
