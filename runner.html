@@ -126,6 +126,20 @@
     <p class="sub">Игра сделана вместе с дочкой — она сама нарисовала всех персонажей!</p>
 
     <div class="help-section">
+      <div class="help-section-title">Главный герой</div>
+      <div class="help-cards">
+        <div class="help-card">
+          <img src="zayka.png" class="help-card-img" alt="Заяц" style="object-position:center top">
+          <div class="help-card-text">
+            <div class="name">Зайка</div>
+            <div class="desc">Бежит сам, ты только прыгаешь!</div>
+            <div class="author">✏️ нарисовала Катя</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section">
       <div class="help-section-title">Управление</div>
       <div class="help-controls">
         <b>Пробел / стрелка ↑ / тап</b> — прыжок<br>
@@ -189,7 +203,7 @@
 // ║  Когда нарисует — сфоткай, положи файлы рядом с runner.html  ║
 // ║  и замени null на loadImg('имя_файла.png')                   ║
 // ╠══════════════════════════════════════════════════════════════╣
-let IMG_HERO = null;       // loadImg('zayka.png')   ← главный герой
+let IMG_HERO = loadImg('zayka.png'); // заяц — нарисовала Катя! 🎨
 let IMG_OBS1 = null;      // loadImg('luzha.png')   ← лужа
 let IMG_OBS2 = loadImg('kust.png');  // дерево — рисунок дочки! 🎨
 let IMG_OBS3 = null;      // loadImg('kamen.png')   ← камень
@@ -710,7 +724,7 @@ function render() {
     ctx.translate(hero.x + 28, hero.y + 62);
     ctx.scale(hero.squash > 1 ? hero.squash : 1, hero.squash < 1 ? hero.squash : 1);
     ctx.translate(-28, -62);
-    ctx.drawImage(IMG_HERO, 0, 0, 56, 62);
+    ctx.drawImage(IMG_HERO, 0, 0, 45, 60);
     ctx.restore();
   } else {
     drawHeroPlaceholder(hero.x, hero.y, hero.onGround, hero.legPhase, hero.squash);
