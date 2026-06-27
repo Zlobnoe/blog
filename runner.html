@@ -24,6 +24,7 @@
     font-weight: 800;
     text-shadow: 0 2px 10px rgba(0,0,0,0.18);
     margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
     letter-spacing: 1px;
   }
   canvas {
@@ -115,7 +116,7 @@
 </head>
 <body>
 <button class="help-btn" onclick="openHelp()" title="Справка">?</button>
-<h1>🐰 Беги, зверюшка!</h1>
+<h1><img src="zayka.png" style="height:48px;width:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))"> Беги, зверюшка!</h1>
 <canvas id="c"></canvas>
 <p>Пробел / стрелка вверх / тап — прыжок (можно два раза!)</p>
 
