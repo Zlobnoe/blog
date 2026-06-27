@@ -515,7 +515,7 @@ function resetGame() {
   hero.onGround = true; hero.jumps = 2; hero.legPhase = 0; hero.squash = 1;
   obstacles = []; spawnTimer = 0; spawnInterval = 140;
   birdTimer = 0; birdInterval = 200; spawnCooldown = 0;
-  score = 0; speed = 3.0; gframe = 0; groundX = 0;
+  score = 0; speed = 2.2; gframe = 0; groundX = 0;
   gs = 'run';
 }
 
@@ -552,7 +552,7 @@ function update() {
   if (gs !== 'run') return;
   gframe++;
   score  += 0.07 + speed * 0.014;
-  speed   = Math.min(10, 3.0 + score * 0.006);
+  speed   = Math.min(8, 2.2 + score * 0.004);
   groundX += speed;
 
   // гравитация масштабируется со скоростью (высота прыжка остаётся постоянной)
