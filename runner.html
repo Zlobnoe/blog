@@ -235,6 +235,7 @@ let IMG_OBS3    = loadImg('kamen.png');   // камень — нарисовал
 let IMG_BIRD    = loadImg('bird.png');    // птичка — рисунок дочки! 🎨
 let IMG_FLOWER1 = loadImg('flower1.png'); // цветок жёлтый — нарисовала Катя! 🎨
 let IMG_FLOWER2 = loadImg('flower2.png'); // цветок синий — нарисовала Катя! 🎨
+let IMG_FLOWER3 = loadImg('flower3.png'); // цветок красный — нарисовала Катя! 🎨
 let IMG_CLOUD1  = loadImg('cloud1.png');  // облако 1 — нарисовала Катя! 🎨
 let IMG_CLOUD2  = loadImg('cloud2.png');  // облако 2 — нарисовала Катя! 🎨
 let IMG_CLOUD3  = loadImg('cloud3.png');  // облако 3 — нарисовала Катя! 🎨
@@ -413,6 +414,7 @@ function drawObsPlaceholder(o) {
 const FLOWER_IMGS = [
   { img: () => IMG_FLOWER1, w: 40, h: 53 },  // жёлтый цветок
   { img: () => IMG_FLOWER2, w: 27, h: 55 },  // синий цветок
+  { img: () => IMG_FLOWER3, w: 38, h: 57 },  // красный цветок
 ];
 // случайный порядок цветков — генерируется один раз при загрузке
 const FLOWER_SEQ = Array.from({length: 32}, () => Math.floor(Math.random() * FLOWER_IMGS.length));
