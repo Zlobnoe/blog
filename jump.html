@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Прыгай, пёсик!</title>
+<link rel="icon" type="image/png" href="dog.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:linear-gradient(160deg,#5ba4e5 0%,#c8e8ff 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;font-family:'Segoe UI',Tahoma,sans-serif;
+  overflow:hidden;user-select:none;-webkit-user-select:none;
+}
+h1{
+  color:#fff;font-size:1.6rem;font-weight:800;
+  text-shadow:0 2px 8px rgba(0,0,0,0.2);
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+canvas{border-radius:18px;box-shadow:0 16px 48px rgba(0,0,0,0.25);display:block;touch-action:none}
+p{color:rgba(255,255,255,0.8);font-size:.82rem;margin-top:10px;text-align:center}
+.back-link{
+  position:absolute;top:20px;left:18px;
+  font-size:.8rem;color:rgba(255,255,255,0.65);
+  text-decoration:none;transition:color .15s;
+}
+.back-link:hover{color:#fff}
+</style>
+</head>
+<body>
+<a class="back-link" href="index.html">← Назад</a>
+<h1>
+  <img src="dog.png" style="height:44px;width:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3))">
+  Прыгай, пёсик!
+</h1>
+<canvas id="c"></canvas>
+<p>← → стрелки или касание левой / правой части экрана</p>
+
+<script>
+const cv  = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W   = Math.min(390, window.innerWidth  - 16);
+const H   = Math.min(580, window.innerHeight - 120);
+cv.width = W; cv.height = H;
+
+// ── Картинка пса ───────────────────────────────────────────────
+const dogImg = new Image(); dogImg.src = 'dog.png';
+function imgOk(i){ return i && i.complete && i.naturalWidth > 0; }
+
+// ── Физика / размеры ───────────────────────────────────────────
+const GRAVITY  = 0.38;
+const JUMP_V   = -13.5;
+const MOVE_SPD = 5;
+const DOG_W    = 52;
+const DOG_H    = 66;
+const PLAT_W   = 74;
+const PLAT_H   = 13;
+
+// ── Ввод: клавиатура ───────────────────────────────────────────
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (gs !== 'run') startGame();
+  }
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// ── Ввод: касание ──────────────────────────────────────────────
+let touchLeft = false, touchRight = false;
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (gs !== 'run') { startGame(); return; }
+  const rect = cv.getBoundingClientRect();
+  if (e.clientX - rect.left < W / 2) touchLeft = true;
+  else touchRight = true;
+});
+cv.addEventListener('pointerup',    e => { e.preventDefault(); touchLeft = false; touchRight = false; });
+cv.addEventListener('pointerleave', e => { touchLeft = false;  touchRight = false; });
+
+// ── Состояние ─────────────────────────────────────────────────
+let gs    = 'wait'; // wait | run | dead
+let score = 0;
+let best  = +localStorage.getItem('djBest') || 0;
+
+// ── Пёс ───────────────────────────────────────────────────────
+const dog = { x:0, y:0, vy:0, facing:1 };
+
+// ── Камера ────────────────────────────────────────────────────
+// cameraY = world-Y верхнего края экрана (уменьшается при подъёме)
+let cameraY = 0;
+let topY    = 0; // минимальный cameraY = наибольшая высота
+
+// ── Платформы ─────────────────────────────────────────────────
+let platforms = [];
+let genY = 0; // до какого world-Y уже сгенерированы платформы
+
+function mkPlat(x, y, type) {
+  return {
+    x, y, w: PLAT_W, h: PLAT_H, type, broken: false,
+    vx: type === 'moving' ? (Math.random() > .5 ? 1.8 : -1.8) : 0,
+  };
+}
+
+function genPlatforms() {
+  while (genY > cameraY - H * 1.5) {
+    const gap = Math.min(52 + score * 0.07, 115);
+    let type = 'normal';
+    if (score > 150) {
+      const r = Math.random();
+      type = r < 0.18 ? 'moving' : r < 0.27 ? 'breaking' : 'normal';
+    } else if (score > 50) {
+      if (Math.random() < 0.12) type = 'moving';
+    }
+    platforms.push(mkPlat(4 + Math.random() * (W - PLAT_W - 8), genY, type));
+    genY -= gap;
+  }
+}
+
+// ── Старт / рестарт ───────────────────────────────────────────
+function startGame() {
+  const startPlatY = H - 80;
+  dog.x = W / 2 - DOG_W / 2;
+  dog.y = startPlatY - DOG_H;
+  dog.vy = JUMP_V;
+  dog.facing = 1;
+  cameraY = 0; topY = 0; score = 0;
+  platforms = [ mkPlat(W/2 - PLAT_W/2, startPlatY, 'normal') ];
+  genY = startPlatY - 60;
+  genPlatforms();
+  gs = 'run';
+}
+
+// ── Обновление ────────────────────────────────────────────────
+function update() {
+  if (gs !== 'run') return;
+
+  // Движение влево/вправо
+  let moveX = 0;
+  if (keys['ArrowLeft']  || keys['KeyA'] || touchLeft)  { moveX = -MOVE_SPD; dog.facing = -1; }
+  if (keys['ArrowRight'] || keys['KeyD'] || touchRight) { moveX =  MOVE_SPD; dog.facing =  1; }
+
+  // Физика
+  dog.vy += GRAVITY;
+  dog.x  += moveX;
+  dog.y  += dog.vy;
+
+  // Перенос через боковые края
+  if (dog.x + DOG_W < 0) dog.x = W;
+  if (dog.x > W)         dog.x = -DOG_W;
+
+  // Коллизия с платформами (только при падении вниз)
+  if (dog.vy > 0) {
+    const dogBottom  = dog.y + DOG_H;
+    const prevBottom = dogBottom - dog.vy;
+    const centerX    = dog.x + DOG_W / 2;
+    for (const p of platforms) {
+      if (p.broken) continue;
+      if (centerX > p.x + 4 && centerX < p.x + p.w - 4 &&
+          prevBottom <= p.y + 2 && dogBottom >= p.y) {
+        dog.vy = JUMP_V;
+        if (p.type === 'breaking') p.broken = true;
+        break;
+      }
+    }
+  }
+
+  // Камера: следит за псом вверх, но не опускается
+  const target = dog.y - H / 3;
+  if (target < cameraY) cameraY = target;
+
+  // Счёт
+  if (cameraY < topY) {
+    topY  = cameraY;
+    score = Math.floor(-topY / 9);
+    if (score > best) { best = score; localStorage.setItem('djBest', best); }
+  }
+
+  // Движущиеся платформы
+  for (const p of platforms) {
+    if (p.type !== 'moving') continue;
+    p.x += p.vx;
+    if (p.x <= 2 || p.x + p.w >= W - 2) p.vx *= -1;
+  }
+
+  // Генерация новых платформ впереди
+  genPlatforms();
+
+  // Удаляем платформы далеко ниже экрана
+  platforms = platforms.filter(p => p.y - cameraY < H + 80);
+
+  // Смерть: упал ниже экрана
+  if (dog.y - cameraY > H + 40) gs = 'dead';
+}
+
+// ── Рисование ─────────────────────────────────────────────────
+function drawBg() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#4a93d8');
+  g.addColorStop(1, '#c8e8ff');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawPlatforms() {
+  for (const p of platforms) {
+    if (p.broken) continue;
+    const sy = Math.round(p.y - cameraY);
+    if (sy > H || sy + p.h < 0) continue;
+
+    const col    = p.type === 'moving'   ? '#f5a623'
+                 : p.type === 'breaking' ? '#e05252'
+                 :                         '#5dbb63';
+    const shadow = p.type === 'moving'   ? '#b87318'
+                 : p.type === 'breaking' ? '#a03030'
+                 :                         '#3d8b45';
+
+    // тень
+    ctx.fillStyle = shadow;
+    ctx.beginPath(); ctx.roundRect(p.x, sy + 5, p.w, p.h, 7); ctx.fill();
+    // основа
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, 7); ctx.fill();
+    // блик
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath(); ctx.roundRect(p.x + 6, sy + 2, p.w - 12, 4, 3); ctx.fill();
+  }
+}
+
+function drawDog() {
+  const sy = Math.round(dog.y - cameraY);
+  ctx.save();
+  ctx.translate(dog.x + (dog.facing === -1 ? DOG_W : 0), sy);
+  ctx.scale(dog.facing, 1);
+  if (imgOk(dogImg)) {
+    ctx.drawImage(dogImg, 0, 0, DOG_W, DOG_H);
+  } else {
+    ctx.fillStyle = '#c87941';
+    ctx.beginPath(); ctx.roundRect(0, 0, DOG_W, DOG_H, 10); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(DOG_W/2, DOG_H*0.35, 10, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawHUD() {
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.font = 'bold 22px Segoe UI';
+  ctx.fillText(score, W - 12, 30);
+  ctx.font = '13px Segoe UI';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fillText('рекорд ' + best, W - 12, 48);
+  ctx.textAlign = 'left';
+}
+
+function drawOverlay(title, sub, sub2) {
+  ctx.fillStyle = 'rgba(10,20,50,0.52)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 26px Segoe UI';
+  ctx.fillText(title, W/2, H/2 - 18);
+  ctx.font = '15px Segoe UI';
+  ctx.fillStyle = 'rgba(255,255,255,0.78)';
+  ctx.fillText(sub, W/2, H/2 + 14);
+  if (sub2) {
+    ctx.font = '13px Segoe UI';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillText(sub2, W/2, H/2 + 38);
+  }
+  ctx.textAlign = 'left';
+}
+
+// ── Главный цикл ──────────────────────────────────────────────
+function frame() {
+  update();
+  drawBg();
+  drawPlatforms();
+  drawDog();
+  drawHUD();
+  if (gs === 'wait') drawOverlay('🐾 Прыгай, пёсик!', 'Нажми пробел или тапни — и вперёд!');
+  if (gs === 'dead') drawOverlay('Счёт: ' + score, 'Тапни или нажми пробел — снова!', 'Рекорд: ' + best);
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>
