@@ -45,9 +45,12 @@ const W   = Math.min(390, window.innerWidth  - 16);
 const H   = Math.min(580, window.innerHeight - 120);
 cv.width = W; cv.height = H;
 
-// ── Картинка пса ───────────────────────────────────────────────
-const dogImg = new Image(); dogImg.src = 'dog.png';
+// ── Картинки ───────────────────────────────────────────────────
+const dogImg  = new Image(); dogImg.src  = 'dog.png';
+const boneImg = new Image(); boneImg.src = 'bone.png';
 function imgOk(i){ return i && i.complete && i.naturalWidth > 0; }
+// кроп косточки в исходнике
+const BONE_SX = 98, BONE_SY = 572, BONE_SW = 584, BONE_SH = 230;
 
 // ── Физика / размеры ───────────────────────────────────────────
 const GRAVITY  = 0.38;
@@ -55,8 +58,8 @@ const JUMP_V   = -13.5;
 const MOVE_SPD = 5;
 const DOG_W    = 52;
 const DOG_H    = 66;
-const PLAT_W   = 74;
-const PLAT_H   = 13;
+const PLAT_W   = 82;
+const PLAT_H   = 32;
 
 // ── Ввод: клавиатура ───────────────────────────────────────────
 const keys = {};
@@ -211,22 +214,22 @@ function drawPlatforms() {
     const sy = Math.round(p.y - cameraY);
     if (sy > H || sy + p.h < 0) continue;
 
-    const col    = p.type === 'moving'   ? '#f5a623'
-                 : p.type === 'breaking' ? '#e05252'
-                 :                         '#5dbb63';
-    const shadow = p.type === 'moving'   ? '#b87318'
-                 : p.type === 'breaking' ? '#a03030'
-                 :                         '#3d8b45';
+    ctx.save();
+    // тип платформы — цветовой фильтр
+    if (p.type === 'moving') {
+      ctx.filter = 'sepia(1) saturate(5) hue-rotate(10deg)';   // оранжевая
+    } else if (p.type === 'breaking') {
+      ctx.filter = 'sepia(1) saturate(5) hue-rotate(300deg)';  // красная
+    }
 
-    // тень
-    ctx.fillStyle = shadow;
-    ctx.beginPath(); ctx.roundRect(p.x, sy + 5, p.w, p.h, 7); ctx.fill();
-    // основа
-    ctx.fillStyle = col;
-    ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, 7); ctx.fill();
-    // блик
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.beginPath(); ctx.roundRect(p.x + 6, sy + 2, p.w - 12, 4, 3); ctx.fill();
+    if (imgOk(boneImg)) {
+      ctx.drawImage(boneImg, BONE_SX, BONE_SY, BONE_SW, BONE_SH, p.x, sy, p.w, p.h);
+    } else {
+      // заглушка пока картинка грузится
+      ctx.fillStyle = p.type === 'moving' ? '#f5a623' : p.type === 'breaking' ? '#e05252' : '#5dbb63';
+      ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, 7); ctx.fill();
+    }
+    ctx.restore();
   }
 }
 
