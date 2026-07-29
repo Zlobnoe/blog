@@ -467,7 +467,8 @@ function drawDie(canvas, val, dieSides, isRolling){
     const pos   = PIP[val];
     const pipR  = S*0.056;
     const spread= r*0.5;
-    ctx.fillStyle = isRolling ? accentC : textC;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    ctx.fillStyle = (isRolling && isDark) ? accentC : textC;
     for(const [dx,dy] of pos){
       ctx.beginPath();
       ctx.arc(cx+dx*spread, cy+dy*spread, pipR, 0, Math.PI*2);
