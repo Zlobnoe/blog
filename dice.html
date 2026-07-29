@@ -592,7 +592,8 @@ function drawDie(canvas, val, dieSides, isRolling){
     const s = String(val);
     const fs = s.length>2 ? r*0.5 : s.length>1 ? r*0.75 : r*0.88;
     const yOff = (dieSides===4||dieSides===20) ? r*0.18 : 0;
-    ctx.fillStyle = isRolling ? accentC : textC;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    ctx.fillStyle = (isRolling && isDark) ? accentC : textC;
     ctx.font = `900 ${fs}px 'Helvetica Neue','Arial Black',Arial,sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
