@@ -250,6 +250,16 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 .roll-label strong{color:var(--text);font-weight:600}
 .roll-label .rv{color:var(--accent);font-weight:700;font-size:.98rem}
 
+/* ── fox mode ── */
+.icon-btn.on{border-color:var(--accent);color:var(--accent);background:var(--acc-fade)}
+.fox-counter{font-size:.78rem;color:var(--sub);margin-bottom:16px;min-height:18px}
+.fox-hint{font-size:.76rem;color:var(--sub);margin-bottom:8px;min-height:36px;text-align:center;line-height:1.5}
+.fox-result{font-size:.9rem;text-align:center;margin-bottom:20px;min-height:24px;font-weight:500;line-height:1.5}
+.fox-success{color:#4caf84;font-weight:700}
+.fox-fail{color:#e05558;font-weight:700}
+.fox-new{background:none;color:var(--text);border:2px solid var(--border);margin-top:10px;min-width:180px;border-radius:18px;padding:14px 40px;font-size:.9rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all .15s}
+.fox-new:hover{border-color:var(--accent);color:var(--accent)}
+
 /* ── help modal ── */
 .help-section{margin-bottom:22px}
 .help-section:last-child{margin-bottom:0}
@@ -268,12 +278,13 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
   <a class="back" href="index.html">← Назад</a>
   <div class="nav-right">
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Тема">☀</button>
+    <button class="icon-btn" onclick="toggleFoxMode()" id="foxBtn" title="Коварный лис">🦊</button>
     <button class="icon-btn" onclick="openHelp()" title="Справка">?</button>
     <button class="icon-btn" onclick="openSettings()" title="Настройки">⚙</button>
   </div>
 </nav>
 
-<main class="main">
+<main class="main" id="mainSection">
   <div class="die-label" id="dieLabel">d6</div>
   <div class="roll-label" id="rollLabel"></div>
   <div class="dice-area" id="diceArea"></div>
@@ -285,6 +296,27 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
     <div class="stats-title">Статистика</div>
     <table class="stats-table"><tbody id="statsTable"></tbody></table>
   </div>
+</main>
+
+<!-- Fox Mode -->
+<main class="main" id="foxSection" style="display:none">
+  <div class="die-label">🦊 Коварный лис</div>
+  <div class="fox-counter">Бросок <span id="foxRollNum">—</span> из 3</div>
+
+  <div style="text-align:center;margin-bottom:20px">
+    <div class="s-lbl" style="margin-bottom:10px">Что ищем?</div>
+    <div class="toggle-row" style="max-width:260px;margin:0 auto">
+      <button class="t-btn on" id="fgEye" onclick="setFoxGoal('eye')">👁 Глаза</button>
+      <button class="t-btn"    id="fgPaw" onclick="setFoxGoal('paw')">🐾 Лапки</button>
+    </div>
+  </div>
+
+  <div class="dice-area" id="foxDiceArea"></div>
+  <div class="fox-hint" id="foxHint"></div>
+  <div class="fox-result" id="foxResult"></div>
+
+  <button class="roll-btn" id="foxRollBtn" onclick="foxRoll()">Бросить</button>
+  <button class="fox-new" id="foxNewBtn" onclick="foxNewTurn()" style="display:none">Новый ход</button>
 </main>
 
 <!-- Settings -->
@@ -883,6 +915,186 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){ closeSettings(); closeHelp(); }
   if(e.code==='Space'&&!e.target.matches('input,button')){ e.preventDefault(); rollAll(); }
 });
+
+// ── Fox mode ──────────────────────────────────────────────────
+let foxMode    = false;
+let foxGoal    = 'eye';         // 'eye' | 'paw'
+let foxFaces   = [null,null,null]; // null | 'eye' | 'paw1' | 'paw2'
+let foxLocked  = [false,false,false];
+let foxRolls   = 0;
+let foxRolling = false;
+let foxDone    = false;
+let foxCvs     = [];
+
+function rFox(){
+  const r = Math.random();
+  return r < 0.5 ? 'eye' : r < 5/6 ? 'paw1' : 'paw2';
+}
+function foxMatch(f){ return foxGoal==='eye' ? f==='eye' : (f==='paw1'||f==='paw2'); }
+function foxAllMatch(){ return foxFaces.every(f=>foxMatch(f)); }
+function foxPaws(){ return foxFaces.reduce((s,f)=>s+(f==='paw1'?1:f==='paw2'?2:0),0); }
+
+function drawEyeSym(ctx,cx,cy,sz,col){
+  ctx.save();
+  ctx.strokeStyle=col; ctx.fillStyle=col;
+  ctx.lineWidth=Math.max(2,sz*0.13); ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(cx-sz,cy);
+  ctx.bezierCurveTo(cx-sz*.4,cy-sz*.65, cx+sz*.4,cy-sz*.65, cx+sz,cy);
+  ctx.bezierCurveTo(cx+sz*.4,cy+sz*.65, cx-sz*.4,cy+sz*.65, cx-sz,cy);
+  ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,sz*.3,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawPawSym(ctx,cx,cy,sz,col){
+  ctx.save(); ctx.fillStyle=col;
+  const tr=sz*.19;
+  ctx.beginPath(); ctx.arc(cx,cy-sz*.38,tr,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx-sz*.31,cy-sz*.22,tr*.9,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+sz*.31,cy-sz*.22,tr*.9,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx,cy+sz*.18,sz*.36,sz*.3,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawFoxDie(canvas,face,locked){
+  const ctx=canvas.getContext('2d');
+  const S=canvas.width;
+  ctx.clearRect(0,0,S,S);
+  const cx=S/2,cy=S/2,r=S*.38;
+  const faceC=cv('--die-bg');
+  const strC =locked ? cv('--accent') : cv('--die-str');
+  const textC=cv('--text');
+  const accC =cv('--accent');
+
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.22)'; ctx.shadowBlur=S*.13; ctx.shadowOffsetY=S*.04;
+  ctx.fillStyle=faceC; ctx.strokeStyle=strC;
+  ctx.lineWidth=locked ? Math.max(3,S*.045) : Math.max(2,S*.02);
+  rrect(ctx,cx-r,cy-r,r*2,r*2,r*.18);
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  if(!face) return;
+  const col = locked ? accC : textC;
+  const sz  = r*.52;
+  if(face==='eye'){
+    drawEyeSym(ctx,cx,cy,sz,col);
+  } else if(face==='paw1'){
+    drawPawSym(ctx,cx,cy,sz,col);
+  } else {
+    drawPawSym(ctx,cx-r*.3,cy,sz*.64,col);
+    drawPawSym(ctx,cx+r*.3,cy,sz*.64,col);
+  }
+}
+
+function buildFoxDice(){
+  const area=document.getElementById('foxDiceArea');
+  area.innerHTML=''; foxCvs=[];
+  const sz=140;
+  for(let i=0;i<3;i++){
+    const c=document.createElement('canvas');
+    c.className='die'; c.width=sz; c.height=sz;
+    c.style.width=sz+'px'; c.style.height=sz+'px';
+    c.onclick=()=>{
+      if(foxDone||foxRolls===0||foxRolling) return;
+      foxLocked[i]=!foxLocked[i];
+      drawFoxDie(c,foxFaces[i],foxLocked[i]);
+      updateFoxHint();
+    };
+    area.appendChild(c); foxCvs.push(c);
+    drawFoxDie(c,null,false);
+  }
+}
+
+function updateFoxHint(){
+  const el=document.getElementById('foxHint');
+  if(foxRolls===0){ el.textContent=''; return; }
+  const locked=foxLocked.filter(Boolean).length;
+  const left=3-foxRolls;
+  const lockMsg = locked>0 ? `Зафиксировано: ${locked}. ` : '';
+  const rollMsg = left>0 ? `Осталось ${left} ${left===1?'бросок':'броска'}.` : '';
+  el.textContent = lockMsg + rollMsg + (left>0&&locked<3 ? ' Нажми на кубик, чтобы зафиксировать.' : '');
+}
+
+function foxRoll(){
+  if(foxRolling||foxDone||foxRolls>=3) return;
+  foxRolling=true;
+  document.getElementById('foxRollBtn').disabled=true;
+  foxRolls++;
+  document.getElementById('foxRollNum').textContent=foxRolls;
+
+  const newFaces=foxFaces.map((f,i)=>foxLocked[i]?f:rFox());
+  const all=['eye','paw1','paw2'];
+  const slots=[[28,320],[58,210],[105,155]];
+  let phase=0,elapsed=0;
+
+  function tick(){
+    foxCvs.forEach((c,i)=>{ if(!foxLocked[i]) drawFoxDie(c,all[Math.floor(Math.random()*3)],false); });
+    elapsed+=slots[phase][0];
+    if(elapsed>=slots[phase][1]){ phase++; elapsed=0; }
+    if(phase<slots.length){
+      setTimeout(tick,slots[phase][0]);
+    } else {
+      foxFaces=newFaces;
+      foxFaces.forEach((f,i)=>{ if(foxMatch(f)) foxLocked[i]=true; });
+      foxCvs.forEach((c,i)=>{
+        drawFoxDie(c,foxFaces[i],foxLocked[i]);
+        c.classList.add('pop');
+        c.addEventListener('animationend',()=>c.classList.remove('pop'),{once:true});
+      });
+      foxRolling=false;
+      document.getElementById('foxRollBtn').disabled=false;
+
+      if(foxAllMatch()||foxRolls>=3){
+        foxDone=true;
+        const el=document.getElementById('foxResult');
+        if(foxAllMatch()){
+          if(foxGoal==='eye'){
+            el.innerHTML='<span class="fox-success">✓ Успех!</span> Открой две карточки подозреваемых';
+          } else {
+            const p=foxPaws();
+            const w=p===1?'клетку':p<5?'клетки':'клеток';
+            el.innerHTML=`<span class="fox-success">✓ Успех!</span> Продвинься на <strong>${p}</strong> ${w} по следу улик`;
+          }
+        } else {
+          el.innerHTML='<span class="fox-fail">✗ Неудача.</span> Лис убегает на 3 клетки вперёд';
+        }
+        document.getElementById('foxRollBtn').style.display='none';
+        document.getElementById('foxNewBtn').style.display='';
+        document.getElementById('foxHint').textContent='';
+      } else {
+        updateFoxHint();
+      }
+    }
+  }
+  tick();
+}
+
+function foxNewTurn(){
+  foxFaces=[null,null,null]; foxLocked=[false,false,false];
+  foxRolls=0; foxDone=false;
+  document.getElementById('foxRollNum').textContent='—';
+  document.getElementById('foxResult').innerHTML='';
+  document.getElementById('foxRollBtn').style.display='';
+  document.getElementById('foxNewBtn').style.display='none';
+  document.getElementById('foxHint').textContent='';
+  buildFoxDice();
+}
+
+function setFoxGoal(g){
+  foxGoal=g;
+  document.getElementById('fgEye').classList.toggle('on',g==='eye');
+  document.getElementById('fgPaw').classList.toggle('on',g==='paw');
+  foxNewTurn();
+}
+
+function toggleFoxMode(){
+  foxMode=!foxMode;
+  document.getElementById('mainSection').style.display=foxMode?'none':'';
+  document.getElementById('foxSection').style.display=foxMode?'flex':'none';
+  document.getElementById('foxBtn').classList.toggle('on',foxMode);
+  if(foxMode){ buildFoxDice(); }
+}
 
 // ── Init ──────────────────────────────────────────────────────
 buildDice();
