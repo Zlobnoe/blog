@@ -397,6 +397,12 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
         <button class="add-player-btn" onclick="addPlayer()">+ Добавить игрока</button>
       </div>
     </div>
+
+    <div class="s-block" style="border-top:1px solid var(--border);padding-top:22px">
+      <div class="s-lbl">Данные</div>
+      <button class="new-game-btn" style="margin:0" onclick="resetAllStorage()">Сбросить все сохранения</button>
+      <div class="s-desc" style="margin-top:8px">Удаляет список игроков, статистику и историю бросков</div>
+    </div>
   </div>
 </div>
 
@@ -412,7 +418,7 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
       <h3>Бросок</h3>
       <div class="help-row">
         <span class="help-key">Бросить</span>
-        <span class="help-desc">Нажми кнопку внизу или кликни прямо по кубику</span>
+        <span class="help-desc">Нажми кнопку или кликни прямо по кубику</span>
       </div>
       <div class="help-row">
         <span class="help-key"><span class="help-kbd">Пробел</span></span>
@@ -428,11 +434,11 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
       </div>
       <div class="help-row">
         <span class="help-key">Кол-во</span>
-        <span class="help-desc">От 1 до 6 кубиков одновременно. Итог — сумма всех бросков</span>
+        <span class="help-desc">От 1 до 6 кубиков. Итог — сумма всех бросков</span>
       </div>
       <div class="help-row">
         <span class="help-key">Мод.</span>
-        <span class="help-desc">Фиксированная добавка к итогу. Например: 2d6 +3 = сумма двух кубиков плюс 3</span>
+        <span class="help-desc">Фиксированная добавка к итогу. Например: 2d6 +3 = бросок плюс 3</span>
       </div>
       <div class="help-row">
         <span class="help-key">↑ Преим.</span>
@@ -448,15 +454,59 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
       <h3>Режим игроков</h3>
       <div class="help-row">
         <span class="help-key">Вкл.</span>
-        <span class="help-desc">Включается в настройках → «Режим игроков». Имена игроков можно изменить там же</span>
+        <span class="help-desc">Включается в настройках → «Режим игроков». Имена можно изменить там же — они сохраняются между сессиями</span>
       </div>
       <div class="help-row">
         <span class="help-key">Ход</span>
-        <span class="help-desc">Кнопки с именами показывают, чья очередь. После броска очередь переходит к следующему автоматически — или нажми нужное имя вручную</span>
+        <span class="help-desc">Над кнопкой «Бросить» видно чья очередь. После броска переходит к следующему автоматически — или нажми имя вручную</span>
       </div>
       <div class="help-row">
         <span class="help-key">Стат.</span>
-        <span class="help-desc">Под историей появляется таблица: среднее и максимум по каждому. Кликни по строке — раскроются все броски игрока</span>
+        <span class="help-desc">Под историей таблица: количество бросков, среднее и сумма. Нажми на строку — раскроются все броски игрока, максимальный выделен цветом</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">Сохр.</span>
+        <span class="help-desc">Статистика и список игроков сохраняются автоматически. «Новая игра» сбрасывает счёт, но оставляет игроков. Полный сброс — в настройках ⚙</span>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>🦊 Коварный лис</h3>
+      <div class="help-row">
+        <span class="help-key">Цель</span>
+        <span class="help-desc">Выбери что ищешь: <strong style="color:#5b8dee">Глаза</strong> или <strong style="color:#4caf84">Лапки</strong>. Нужно собрать все три кубика с одним символом</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">Броски</span>
+        <span class="help-desc">До трёх бросков за ход. Совпавшие кубики фиксируются автоматически (синяя/зелёная рамка). Нажми на кубик чтобы снять фиксацию</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">Итог</span>
+        <span class="help-desc">Успех с глазами → открой карточки подозреваемых. С лапками → продвинься на столько клеток, сколько лапок выпало (3–6). Неудача → лис убегает на 3 клетки</span>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>🐇 Ушастые гонки</h3>
+      <div class="help-row">
+        <span class="help-key"><span style="color:#4caf84">×1</span></span>
+        <span class="help-desc">Прыгайте на 1 клетку вперёд (выпадает чаще всего — 2 грани из 6)</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key"><span style="color:#5b8dee">×2</span></span>
+        <span class="help-desc">Прыгайте на 2 клетки вперёд</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key"><span style="color:#7c6ff7">×3</span></span>
+        <span class="help-desc">Мегапрыжок — прыгайте на 3 клетки вперёд</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key"><span style="color:#f5a623">🥕</span></span>
+        <span class="help-desc">Крутите морковку в центре поля — новые ловушки открываются</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key"><span style="color:#e8805a">🃏</span></span>
+        <span class="help-desc">Возьмите карточку из колоды и выполните действие</span>
       </div>
     </div>
 
@@ -465,6 +515,10 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
       <div class="help-row">
         <span class="help-key"><span class="help-kbd">Esc</span></span>
         <span class="help-desc">Закрыть это окно или настройки</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key"><span class="help-kbd">Пробел</span></span>
+        <span class="help-desc">Бросить кубик (в обычном режиме)</span>
       </div>
     </div>
   </div>
@@ -1294,6 +1348,21 @@ function newGame(){
   updatePlayersRow();
   updateStats();
   buildDice();
+}
+
+function resetAllStorage(){
+  Object.values(LS).forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+  players=['Игрок 1','Игрок 2']; currentPlayer=0; playerMode=false;
+  playerStats={}; rollHistory=[]; hasRolled=false; lastRollInfo=null;
+  expandedPlayers=new Set();
+  document.getElementById('tPlayerOff').classList.add('on');
+  document.getElementById('tPlayerOn').classList.remove('on');
+  document.getElementById('playerListWrap').style.display='none';
+  document.getElementById('playersRow').classList.remove('show');
+  document.getElementById('history').innerHTML='';
+  renderPlayerList();
+  updateRollLabel(); updateStats(); buildDice();
+  closeSettings();
 }
 
 // ── Init ──────────────────────────────────────────────────────
