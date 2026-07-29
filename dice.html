@@ -249,6 +249,17 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 .roll-label.show{display:block}
 .roll-label strong{color:var(--text);font-weight:600}
 .roll-label .rv{color:var(--accent);font-weight:700;font-size:.98rem}
+
+/* ── help modal ── */
+.help-section{margin-bottom:22px}
+.help-section:last-child{margin-bottom:0}
+.help-section h3{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin-bottom:10px}
+.help-row{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border)}
+.help-row:last-child{border-bottom:none}
+.help-key{flex-shrink:0;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:3px 9px;font-size:.76rem;font-weight:600;color:var(--text);min-width:52px;text-align:center;font-family:inherit}
+.help-desc{font-size:.82rem;color:var(--sub);line-height:1.5}
+.help-desc strong{color:var(--text);font-weight:600}
+.help-kbd{display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.73rem;font-weight:600;color:var(--text);font-family:inherit}
 </style>
 </head>
 <body>
@@ -257,6 +268,7 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
   <a class="back" href="index.html">← Назад</a>
   <div class="nav-right">
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Тема">☀</button>
+    <button class="icon-btn" onclick="openHelp()" title="Справка">?</button>
     <button class="icon-btn" onclick="openSettings()" title="Настройки">⚙</button>
   </div>
 </nav>
@@ -339,6 +351,76 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
       <div id="playerListWrap" style="display:none;margin-top:16px">
         <div id="playerList"></div>
         <button class="add-player-btn" onclick="addPlayer()">+ Добавить игрока</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help -->
+<div class="modal-bg" id="helpBg" onclick="closeHelpOut(event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2>Справка</h2>
+      <button class="modal-x" onclick="closeHelp()">✕</button>
+    </div>
+
+    <div class="help-section">
+      <h3>Бросок</h3>
+      <div class="help-row">
+        <span class="help-key">Бросить</span>
+        <span class="help-desc">Нажми кнопку внизу или кликни прямо по кубику</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key"><span class="help-kbd">Пробел</span></span>
+        <span class="help-desc">Бросить с клавиатуры (не работает если курсор в поле ввода)</span>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>Настройки ⚙</h3>
+      <div class="help-row">
+        <span class="help-key">Тип</span>
+        <span class="help-desc"><strong>d4 d6 d8 d10 d12 d20 d%</strong> — стандартные кубики. Или введи любое число граней в поле «Свой»</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">Кол-во</span>
+        <span class="help-desc">От 1 до 6 кубиков одновременно. Итог — сумма всех бросков</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">Мод.</span>
+        <span class="help-desc">Фиксированная добавка к итогу. Например: 2d6 +3 = сумма двух кубиков плюс 3</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">↑ Преим.</span>
+        <span class="help-desc">Два броска, берётся <strong>лучший</strong>. Только при одном кубике</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">↓ Помеха</span>
+        <span class="help-desc">Два броска, берётся <strong>худший</strong>. Только при одном кубике</span>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>Режим игроков</h3>
+      <div class="help-row">
+        <span class="help-key">Вкл.</span>
+        <span class="help-desc">Включается в настройках → «Режим игроков». Имена игроков можно изменить там же</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">Ход</span>
+        <span class="help-desc">Кнопки с именами показывают, чья очередь. После броска очередь переходит к следующему автоматически — или нажми нужное имя вручную</span>
+      </div>
+      <div class="help-row">
+        <span class="help-key">Стат.</span>
+        <span class="help-desc">Под историей появляется таблица: среднее и максимум по каждому. Кликни по строке — раскроются все броски игрока</span>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>Клавиши</h3>
+      <div class="help-row">
+        <span class="help-key"><span class="help-kbd">Esc</span></span>
+        <span class="help-desc">Закрыть это окно или настройки</span>
       </div>
     </div>
   </div>
@@ -792,8 +874,13 @@ function resetHistory(){
 function openSettings() { document.getElementById('modalBg').classList.add('show'); }
 function closeSettings(){ document.getElementById('modalBg').classList.remove('show'); }
 function closeOut(e){ if(e.target===e.currentTarget) closeSettings(); }
+
+function openHelp()  { document.getElementById('helpBg').classList.add('show'); }
+function closeHelp() { document.getElementById('helpBg').classList.remove('show'); }
+function closeHelpOut(e){ if(e.target===e.currentTarget) closeHelp(); }
+
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape') closeSettings();
+  if(e.key==='Escape'){ closeSettings(); closeHelp(); }
   if(e.code==='Space'&&!e.target.matches('input,button')){ e.preventDefault(); rollAll(); }
 });
 
