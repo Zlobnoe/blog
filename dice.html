@@ -976,15 +976,16 @@ function drawFoxDie(canvas,face,locked){
   ctx.restore();
 
   if(!face) return;
-  const col = locked ? accC : textC;
+  const eyeC2 = '#5b8dee';  // blue — like the game
+  const pawC2 = '#4caf84';  // green — like the game
   const sz  = r*.52;
   if(face==='eye'){
-    drawEyeSym(ctx,cx,cy,sz,col);
+    drawEyeSym(ctx,cx,cy,sz,eyeC2);
   } else if(face==='paw1'){
-    drawPawSym(ctx,cx,cy,sz,col);
+    drawPawSym(ctx,cx,cy,sz,pawC2);
   } else {
-    drawPawSym(ctx,cx-r*.3,cy,sz*.64,col);
-    drawPawSym(ctx,cx+r*.3,cy,sz*.64,col);
+    drawPawSym(ctx,cx-r*.3,cy,sz*.64,pawC2);
+    drawPawSym(ctx,cx+r*.3,cy,sz*.64,pawC2);
   }
 }
 
