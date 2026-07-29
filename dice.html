@@ -278,6 +278,7 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
   <a class="back" href="index.html">← Назад</a>
   <div class="nav-right">
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Тема">☀</button>
+    <button class="icon-btn" onclick="toggleHareMode()" id="hareBtn" title="Ушастые гонки">🐇</button>
     <button class="icon-btn" onclick="toggleFoxMode()" id="foxBtn" title="Коварный лис">🦊</button>
     <button class="icon-btn" onclick="openHelp()" title="Справка">?</button>
     <button class="icon-btn" onclick="openSettings()" title="Настройки">⚙</button>
@@ -317,6 +318,14 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 
   <button class="roll-btn" id="foxRollBtn" onclick="foxRoll()">Бросить</button>
   <button class="fox-new" id="foxNewBtn" onclick="foxNewTurn()" style="display:none">Новый ход</button>
+</main>
+
+<!-- Hare Mode -->
+<main class="main" id="hareSection" style="display:none">
+  <div class="die-label">🐇 Ушастые гонки</div>
+  <div class="dice-area" id="hareDiceArea"></div>
+  <div class="fox-result" id="hareResult"></div>
+  <button class="roll-btn" id="hareRollBtn" onclick="hareRoll()">Бросить</button>
 </main>
 
 <!-- Settings -->
@@ -1091,10 +1100,139 @@ function setFoxGoal(g){
 
 function toggleFoxMode(){
   foxMode=!foxMode;
-  document.getElementById('mainSection').style.display=foxMode?'none':'';
+  if(foxMode) hareMode=false;
+  document.getElementById('mainSection').style.display=(!foxMode&&!hareMode)?'':'none';
   document.getElementById('foxSection').style.display=foxMode?'flex':'none';
+  document.getElementById('hareSection').style.display='none';
   document.getElementById('foxBtn').classList.toggle('on',foxMode);
+  document.getElementById('hareBtn').classList.remove('on');
   if(foxMode){ buildFoxDice(); }
+}
+
+// ── Hare mode ──────────────────────────────────────────────────
+let hareMode    = false;
+let hareRolling = false;
+let hareCvs     = [];
+
+const HARE_FACES = ['jump1','jump1','jump2','jump3','carrot','card'];
+const HARE_COLS  = { jump1:'#4caf84', jump2:'#5b8dee', jump3:'#7c6ff7', carrot:'#f5a623', card:'#e8805a' };
+const HARE_DESC  = {
+  jump1:  'Прыгайте на <b>1 клетку</b> вперёд!',
+  jump2:  'Прыгайте на <b>2 клетки</b> вперёд!',
+  jump3:  'Мегапрыжок! Прыгайте на <b>3 клетки</b> вперёд!',
+  carrot: '<b>Крутите морковку!</b>',
+  card:   '<b>Возьмите карточку</b> и выполните действие!',
+};
+
+function rHare(){ return HARE_FACES[Math.floor(Math.random()*6)]; }
+
+function drawHareEars(ctx,cx,cy,r,col){
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.ellipse(cx-r*.2,cy-r*.08,r*.155,r*.36,-0.1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+r*.2,cy-r*.08,r*.155,r*.36, 0.1,0,Math.PI*2); ctx.fill();
+}
+function drawHareCarrot(ctx,cx,cy,r){
+  ctx.fillStyle='#f5a623';
+  ctx.beginPath();
+  ctx.moveTo(cx,cy+r*.46);
+  ctx.bezierCurveTo(cx-r*.06,cy+r*.22,cx-r*.33,cy-r*.12,cx-r*.28,cy-r*.3);
+  ctx.lineTo(cx+r*.28,cy-r*.3);
+  ctx.bezierCurveTo(cx+r*.33,cy-r*.12,cx+r*.06,cy+r*.22,cx,cy+r*.46);
+  ctx.fill();
+  ctx.fillStyle='#4caf84';
+  [[0,0],[-.45,-r*.16],[.45,-r*.16]].forEach(([rot,ox])=>{
+    ctx.save(); ctx.translate(cx+ox,cy-r*.3); ctx.rotate(rot);
+    ctx.beginPath(); ctx.ellipse(0,-r*.2,r*.08,r*.22,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+}
+function drawHareCard(ctx,cx,cy,r){
+  ctx.fillStyle='#e8805a';
+  const cw=r*.4,ch=r*.56;
+  rrect(ctx,cx-cw,cy-ch/2,cw*2,ch,r*.07); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.9)';
+  const ds=r*.18;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy-ds); ctx.lineTo(cx+ds*.65,cy);
+  ctx.lineTo(cx,cy+ds); ctx.lineTo(cx-ds*.65,cy);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawHareDie(canvas,face){
+  const ctx=canvas.getContext('2d');
+  const S=canvas.width;
+  ctx.clearRect(0,0,S,S);
+  const cx=S/2,cy=S/2,r=S*.38;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.22)'; ctx.shadowBlur=S*.13; ctx.shadowOffsetY=S*.04;
+  ctx.fillStyle=cv('--die-bg'); ctx.strokeStyle=cv('--die-str');
+  ctx.lineWidth=Math.max(2,S*.02);
+  rrect(ctx,cx-r,cy-r,r*2,r*2,r*.18);
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+  if(!face) return;
+  if(face==='carrot'){ drawHareCarrot(ctx,cx,cy,r); return; }
+  if(face==='card'){   drawHareCard(ctx,cx,cy,r);   return; }
+  const num=face==='jump1'?1:face==='jump2'?2:3;
+  const col=HARE_COLS[face];
+  drawHareEars(ctx,cx,cy-r*.08,r,col);
+  ctx.fillStyle=col;
+  ctx.font=`900 ${r*.52}px 'Helvetica Neue','Arial Black',Arial,sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(num),cx,cy+r*.4);
+}
+
+function buildHareDie(){
+  const area=document.getElementById('hareDiceArea');
+  area.innerHTML=''; hareCvs=[];
+  const sz=220;
+  const c=document.createElement('canvas');
+  c.className='die'; c.width=sz; c.height=sz;
+  c.style.width=sz+'px'; c.style.height=sz+'px';
+  c.onclick=()=>hareRoll();
+  area.appendChild(c); hareCvs=[c];
+  drawHareDie(c,null);
+  document.getElementById('hareResult').innerHTML='';
+}
+
+function hareRoll(){
+  if(hareRolling) return;
+  hareRolling=true;
+  document.getElementById('hareRollBtn').disabled=true;
+  document.getElementById('hareResult').innerHTML='';
+  const final=rHare();
+  const allF=['jump1','jump2','jump3','carrot','card'];
+  const slots=[[28,320],[58,210],[105,155]];
+  let phase=0,elapsed=0;
+  function tick(){
+    drawHareDie(hareCvs[0],allF[Math.floor(Math.random()*allF.length)]);
+    elapsed+=slots[phase][0];
+    if(elapsed>=slots[phase][1]){ phase++; elapsed=0; }
+    if(phase<slots.length){
+      setTimeout(tick,slots[phase][0]);
+    } else {
+      drawHareDie(hareCvs[0],final);
+      hareCvs[0].classList.add('pop');
+      hareCvs[0].addEventListener('animationend',()=>hareCvs[0].classList.remove('pop'),{once:true});
+      const col=HARE_COLS[final];
+      document.getElementById('hareResult').innerHTML=
+        `<span style="color:${col}">${HARE_DESC[final]}</span>`;
+      hareRolling=false;
+      document.getElementById('hareRollBtn').disabled=false;
+    }
+  }
+  tick();
+}
+
+function toggleHareMode(){
+  hareMode=!hareMode;
+  if(hareMode) foxMode=false;
+  document.getElementById('mainSection').style.display=(!foxMode&&!hareMode)?'':'none';
+  document.getElementById('hareSection').style.display=hareMode?'flex':'none';
+  document.getElementById('foxSection').style.display='none';
+  document.getElementById('hareBtn').classList.toggle('on',hareMode);
+  document.getElementById('foxBtn').classList.remove('on');
+  if(hareMode){ buildHareDie(); }
 }
 
 // ── Init ──────────────────────────────────────────────────────
