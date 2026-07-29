@@ -237,6 +237,14 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 .s-c{color:var(--sub);text-align:right;font-size:.76rem}
 .s-a{color:var(--accent);font-weight:700;text-align:right}
 .s-b{color:var(--sub);text-align:right;font-size:.76rem}
+.stats-player-row{cursor:pointer;transition:background .15s;user-select:none}
+.stats-player-row:hover{background:var(--acc-fade)}
+.expand-arrow{font-size:.6rem;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:5px;vertical-align:middle}
+.expand-arrow.open{transform:rotate(90deg)}
+.player-detail-row td{padding:2px 6px 10px}
+.rolls-list{display:flex;flex-wrap:wrap;gap:5px;padding-top:4px}
+.roll-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px 9px;font-size:.78rem;color:var(--sub);font-variant-numeric:tabular-nums}
+.roll-chip.top{color:var(--accent);border-color:var(--acc-fade);background:var(--acc-fade);font-weight:700}
 </style>
 </head>
 <body>
@@ -345,7 +353,8 @@ let hasRolled = false;
 let playerMode = false;
 let players = ['Игрок 1', 'Игрок 2'];
 let currentPlayer = 0;
-let playerStats = {}; // name -> { count, total, min, max }
+let playerStats = {}; // name -> { count, total, min, max, rolls[] }
+let expandedPlayers = new Set();
 
 // ── Theme ──────────────────────────────────────────────────────
 (function(){
@@ -605,11 +614,12 @@ function addHistory(){
 
   if(playerMode){
     const name = players[currentPlayer];
-    if(!playerStats[name]) playerStats[name] = {count:0,total:0,min:Infinity,max:-Infinity};
+    if(!playerStats[name]) playerStats[name] = {count:0,total:0,min:Infinity,max:-Infinity,rolls:[]};
     const s = playerStats[name];
     s.count++; s.total += result;
     s.min = Math.min(s.min, result);
     s.max = Math.max(s.max, result);
+    s.rolls.unshift(result);
     updateStats();
   }
 
@@ -679,21 +689,32 @@ function updatePlayersRow(){
   ).join('');
 }
 
+function togglePlayerDetail(i){
+  const name = players[i];
+  if(expandedPlayers.has(name)) expandedPlayers.delete(name);
+  else expandedPlayers.add(name);
+  updateStats();
+}
+
 function updateStats(){
   const wrap = document.getElementById('statsWrap');
   const hasData = playerMode && Object.values(playerStats).some(s=>s&&s.count>0);
   wrap.classList.toggle('show', hasData);
   if(!hasData) return;
-  document.getElementById('statsTable').innerHTML = players.map(name=>{
+  document.getElementById('statsTable').innerHTML = players.map((name,i)=>{
     const s = playerStats[name];
-    if(!s||s.count===0) return `<tr><td class="s-n">${name}</td><td class="s-c" colspan="3" style="color:var(--muted,var(--sub))">—</td></tr>`;
+    if(!s||s.count===0) return `<tr><td class="s-n">${name}</td><td class="s-c" colspan="3">—</td></tr>`;
     const avg = (s.total/s.count).toFixed(1);
-    return `<tr>
-      <td class="s-n">${name}</td>
+    const open = expandedPlayers.has(name);
+    const detailRow = open ? `<tr class="player-detail-row"><td colspan="4"><div class="rolls-list">${
+      s.rolls.map(v=>`<span class="roll-chip${v===s.max?' top':''}">${v}</span>`).join('')
+    }</div></td></tr>` : '';
+    return `<tr class="stats-player-row" onclick="togglePlayerDetail(${i})">
+      <td class="s-n">${name}<span class="expand-arrow${open?' open':''}">▶</span></td>
       <td class="s-c">${s.count}&nbsp;бр.</td>
       <td class="s-a">⌀&nbsp;${avg}</td>
       <td class="s-b">макс&nbsp;${s.max}</td>
-    </tr>`;
+    </tr>${detailRow}`;
   }).join('');
 }
 
