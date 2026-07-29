@@ -237,6 +237,8 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 .s-c{color:var(--sub);text-align:right;font-size:.76rem}
 .s-a{color:var(--accent);font-weight:700;text-align:right}
 .s-b{color:var(--sub);text-align:right;font-size:.76rem}
+.new-game-btn{display:block;margin:16px auto 0;background:none;border:1px solid var(--border);border-radius:20px;padding:5px 18px;font-size:.74rem;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit;transition:all .15s}
+.new-game-btn:hover{border-color:#e05558;color:#e05558}
 .stats-player-row{cursor:pointer;transition:background .15s;user-select:none}
 .stats-player-row:hover{background:var(--acc-fade)}
 .expand-arrow{font-size:.6rem;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:5px;vertical-align:middle}
@@ -296,6 +298,7 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
   <div class="stats-wrap" id="statsWrap">
     <div class="stats-title">Статистика</div>
     <table class="stats-table"><tbody id="statsTable"></tbody></table>
+    <button class="new-game-btn" onclick="newGame()">Новая игра</button>
   </div>
 </main>
 
@@ -754,6 +757,7 @@ function addHistory(){
     lastRollInfo = { player: name, result };
     updateRollLabel();
     updateStats();
+    saveGameState();
     // auto-advance to next player
     currentPlayer = (currentPlayer + 1) % players.length;
     updatePlayersRow();
@@ -771,6 +775,7 @@ function addHistory(){
 function setPlayerMode(on){
   playerMode = on;
   lastRollInfo = null;
+  saveGameState();
   document.getElementById('tPlayerOff').classList.toggle('on', !on);
   document.getElementById('tPlayerOn').classList.toggle('on', on);
   document.getElementById('playerListWrap').style.display = on ? '' : 'none';
@@ -785,6 +790,7 @@ function addPlayer(){
   players.push('Игрок ' + (players.length + 1));
   renderPlayerList();
   updatePlayersRow();
+  saveGameState();
 }
 
 function removePlayer(i){
@@ -796,6 +802,7 @@ function removePlayer(i){
   renderPlayerList();
   updatePlayersRow();
   updateStats();
+  saveGameState();
 }
 
 function renamePlayer(i, newName){
@@ -805,6 +812,7 @@ function renamePlayer(i, newName){
   players[i] = newName;
   updatePlayersRow();
   updateStats();
+  saveGameState();
 }
 
 function selectPlayer(i){
@@ -864,7 +872,7 @@ function updateStats(){
       <td class="s-n">${name}<span class="expand-arrow${open?' open':''}">▶</span></td>
       <td class="s-c">${s.count}&nbsp;бр.</td>
       <td class="s-a">⌀&nbsp;${avg}</td>
-      <td class="s-b">макс&nbsp;${s.max}</td>
+      <td class="s-b">∑&nbsp;${s.total}</td>
     </tr>${detailRow}`;
   }).join('');
 }
@@ -1235,8 +1243,80 @@ function toggleHareMode(){
   if(hareMode){ buildHareDie(); }
 }
 
+// ── LocalStorage ──────────────────────────────────────────────
+const LS = {
+  players:       'dicePlayers',
+  playerMode:    'dicePlayerMode',
+  stats:         'dicePlayerStats',
+  currentPlayer: 'diceCurrentPlayer',
+  rollHistory:   'diceRollHistory',
+};
+
+function saveGameState(){
+  try{
+    localStorage.setItem(LS.players,       JSON.stringify(players));
+    localStorage.setItem(LS.playerMode,    playerMode ? '1':'0');
+    localStorage.setItem(LS.stats,         JSON.stringify(playerStats));
+    localStorage.setItem(LS.currentPlayer, String(currentPlayer));
+    localStorage.setItem(LS.rollHistory,   JSON.stringify(rollHistory));
+  }catch(e){}
+}
+
+function loadGameState(){
+  try{
+    const sp = localStorage.getItem(LS.players);
+    if(sp){ const p=JSON.parse(sp); if(Array.isArray(p)&&p.length) players=p; }
+
+    const sm = localStorage.getItem(LS.playerMode);
+    if(sm==='1') playerMode=true;
+
+    const ss = localStorage.getItem(LS.stats);
+    if(ss) playerStats=JSON.parse(ss);
+
+    const sc = localStorage.getItem(LS.currentPlayer);
+    if(sc!==null) currentPlayer=Math.max(0,Math.min(parseInt(sc)||0,players.length-1));
+
+    const sh = localStorage.getItem(LS.rollHistory);
+    if(sh){ const h=JSON.parse(sh); if(Array.isArray(h)) rollHistory=h; }
+  }catch(e){}
+}
+
+function newGame(){
+  playerStats={}; rollHistory=[]; hasRolled=false;
+  lastRollInfo=null; currentPlayer=0; expandedPlayers=new Set();
+  try{
+    localStorage.removeItem(LS.stats);
+    localStorage.removeItem(LS.rollHistory);
+    localStorage.setItem(LS.currentPlayer,'0');
+  }catch(e){}
+  document.getElementById('history').innerHTML='';
+  updateRollLabel();
+  updatePlayersRow();
+  updateStats();
+  buildDice();
+}
+
 // ── Init ──────────────────────────────────────────────────────
+loadGameState();
 buildDice();
+// Restore player mode UI
+if(playerMode){
+  document.getElementById('tPlayerOff').classList.remove('on');
+  document.getElementById('tPlayerOn').classList.add('on');
+  document.getElementById('playerListWrap').style.display='';
+  document.getElementById('playersRow').classList.add('show');
+  renderPlayerList();
+  updatePlayersRow();
+}
+// Restore roll history chips
+if(rollHistory.length>0){
+  hasRolled=true;
+  document.getElementById('history').innerHTML=rollHistory.map((v,i)=>
+    `<span class="h-chip${i===0?' fresh':''}">${v}</span>`
+  ).join('');
+}
+updateStats();
+updateLabel();
 </script>
 </body>
 </html>
