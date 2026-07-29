@@ -397,11 +397,11 @@ function drawDie(canvas, val, dieSides, isRolling){
   ctx.restore();
 
   // Pips for d6
-  if(dieSides===6 && !isRolling && val>=1 && val<=6){
+  if(dieSides===6 && val>=1 && val<=6){
     const pos   = PIP[val];
     const pipR  = S*0.056;
     const spread= r*0.5;
-    ctx.fillStyle = textC;
+    ctx.fillStyle = isRolling ? accentC : textC;
     for(const [dx,dy] of pos){
       ctx.beginPath();
       ctx.arc(cx+dx*spread, cy+dy*spread, pipR, 0, Math.PI*2);
