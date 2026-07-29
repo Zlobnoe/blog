@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кубик</title>
+<style>
+:root {
+  --bg:       #F0EDE8;
+  --card:     #FFFFFF;
+  --text:     #18191E;
+  --sub:      #74717E;
+  --border:   #DCDAD4;
+  --accent:   #5048D4;
+  --acc-fade: rgba(80,72,212,.1);
+  --die-bg:   #FFFFFF;
+  --die-str:  #C4C0B8;
+  --btn-bg:   #18191E;
+  --btn-txt:  #F0EDE8;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg:       #0A0C14;
+  --card:     #13151F;
+  --text:     #E2E4F0;
+  --sub:      #7880A8;
+  --border:   #20233A;
+  --accent:   #8B82F8;
+  --acc-fade: rgba(139,130,248,.12);
+  --die-bg:   #1C1F32;
+  --die-str:  #353960;
+  --btn-bg:   #8B82F8;
+  --btn-txt:  #0A0C14;
+}}
+:root[data-theme="light"] {
+  --bg:#F0EDE8;--card:#FFFFFF;--text:#18191E;--sub:#74717E;--border:#DCDAD4;
+  --accent:#5048D4;--acc-fade:rgba(80,72,212,.1);--die-bg:#FFFFFF;--die-str:#C4C0B8;
+  --btn-bg:#18191E;--btn-txt:#F0EDE8;
+}
+:root[data-theme="dark"] {
+  --bg:#0A0C14;--card:#13151F;--text:#E2E4F0;--sub:#7880A8;--border:#20233A;
+  --accent:#8B82F8;--acc-fade:rgba(139,130,248,.12);--die-bg:#1C1F32;--die-str:#353960;
+  --btn-bg:#8B82F8;--btn-txt:#0A0C14;
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  min-height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  transition:background .2s,color .2s;
+}
+
+/* ── nav ── */
+.nav{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px;
+}
+.back{font-size:.82rem;color:var(--sub);text-decoration:none;transition:color .15s}
+.back:hover{color:var(--text)}
+.nav-right{display:flex;gap:8px}
+.icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--card);border:1px solid var(--border);
+  color:var(--sub);font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--text)}
+
+/* ── main layout ── */
+.main{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:12px 20px 60px;width:100%;
+}
+
+/* ── die label ── */
+.die-label{
+  font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--sub);margin-bottom:16px;min-height:18px;
+  transition:color .2s;
+}
+
+/* ── dice area ── */
+.dice-area{
+  display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:12px;margin-bottom:20px;
+}
+canvas.die{
+  display:block;cursor:pointer;
+  transition:transform .1s,opacity .3s;
+  border-radius:4px;
+}
+canvas.die:hover{transform:translateY(-2px)}
+canvas.die:active{transform:scale(.96)}
+canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* ── result / total ── */
+.total{
+  min-height:36px;text-align:center;
+  font-size:1rem;color:var(--sub);
+  font-variant-numeric:tabular-nums;
+  margin-bottom:28px;line-height:1.5;
+  transition:all .2s;
+}
+.total .big{font-size:1.5rem;font-weight:800;color:var(--text)}
+.total .muted{color:var(--sub);font-size:.9rem}
+
+/* ── roll button ── */
+.roll-btn{
+  background:var(--btn-bg);color:var(--btn-txt);
+  border:none;border-radius:18px;
+  padding:18px 64px;font-size:1rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);
+  min-width:220px;font-family:inherit;
+}
+.roll-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.2)}
+.roll-btn:active{transform:translateY(1px);box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.roll-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+/* ── history ── */
+.history{
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  margin-top:28px;max-width:380px;
+}
+.h-chip{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:4px 13px;
+  font-size:.8rem;color:var(--sub);
+  font-variant-numeric:tabular-nums;
+  transition:background .15s,color .15s;
+}
+.h-chip.fresh{
+  color:var(--accent);
+  border-color:var(--acc-fade);
+  background:var(--acc-fade);
+}
+
+/* ── modal ── */
+.modal-bg{
+  display:none;position:fixed;inset:0;
+  background:rgba(8,8,16,.5);backdrop-filter:blur(6px);
+  align-items:flex-end;justify-content:center;
+  z-index:100;padding:16px;
+}
+.modal-bg.show{display:flex}
+.modal{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:26px;padding:28px 24px 32px;
+  width:100%;max-width:460px;
+  box-shadow:0 28px 72px rgba(0,0,0,.35);
+  animation:up .25s ease;
+  max-height:90vh;overflow-y:auto;
+}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+.modal-hd h2{font-size:1.1rem;font-weight:700}
+.modal-x{background:none;border:none;color:var(--sub);font-size:1.05rem;cursor:pointer;padding:4px;border-radius:8px;transition:color .15s;font-family:inherit}
+.modal-x:hover{color:var(--text)}
+
+.s-block{margin-bottom:22px}
+.s-lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin-bottom:10px}
+.s-desc{font-size:.78rem;color:var(--sub);margin-top:7px;line-height:1.55}
+
+/* preset chips */
+.presets{display:flex;flex-wrap:wrap;gap:7px}
+.p-btn{
+  background:none;border:1px solid var(--border);border-radius:10px;
+  padding:7px 15px;font-size:.86rem;font-weight:600;color:var(--sub);
+  cursor:pointer;transition:all .15s;font-family:inherit;
+}
+.p-btn:hover{border-color:var(--accent);color:var(--text)}
+.p-btn.on{background:var(--acc-fade);border-color:var(--accent);color:var(--accent)}
+
+/* custom input */
+.custom-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.custom-lbl{font-size:.82rem;color:var(--sub)}
+.c-input{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:7px 12px;font-size:.9rem;color:var(--text);width:80px;
+  font-family:inherit;outline:none;transition:border-color .15s;
+}
+.c-input:focus{border-color:var(--accent)}
+
+/* stepper */
+.stepper{display:flex;align-items:center;gap:14px}
+.s-btn{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;font-family:inherit;
+}
+.s-btn:hover{border-color:var(--accent);color:var(--accent)}
+.s-val{font-size:1.1rem;font-weight:700;min-width:36px;text-align:center;font-variant-numeric:tabular-nums}
+
+/* advantage toggle */
+.toggle-row{display:flex;gap:7px;flex-wrap:wrap}
+.t-btn{
+  flex:1;min-width:0;padding:9px 8px;border-radius:11px;
+  border:1px solid var(--border);background:none;
+  color:var(--sub);cursor:pointer;font-size:.8rem;font-weight:600;
+  transition:all .15s;font-family:inherit;text-align:center;
+}
+.t-btn:hover{border-color:var(--accent);color:var(--text)}
+.t-btn.on{background:var(--acc-fade);border-color:var(--accent);color:var(--accent)}
+
+.dim{opacity:.4;pointer-events:none}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="back" href="index.html">← Назад</a>
+  <div class="nav-right">
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Тема">☀</button>
+    <button class="icon-btn" onclick="openSettings()" title="Настройки">⚙</button>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="die-label" id="dieLabel">d6</div>
+  <div class="dice-area" id="diceArea"></div>
+  <div class="total" id="total"></div>
+  <button class="roll-btn" id="rollBtn" onclick="rollAll()">Бросить</button>
+  <div class="history" id="history"></div>
+</main>
+
+<!-- Settings -->
+<div class="modal-bg" id="modalBg" onclick="closeOut(event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2>Настройки</h2>
+      <button class="modal-x" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div class="s-block">
+      <div class="s-lbl">Тип кубика</div>
+      <div class="presets" id="presets">
+        <button class="p-btn" data-s="4"   onclick="setSides(4,this)">d4</button>
+        <button class="p-btn on" data-s="6"  onclick="setSides(6,this)">d6</button>
+        <button class="p-btn" data-s="8"   onclick="setSides(8,this)">d8</button>
+        <button class="p-btn" data-s="10"  onclick="setSides(10,this)">d10</button>
+        <button class="p-btn" data-s="12"  onclick="setSides(12,this)">d12</button>
+        <button class="p-btn" data-s="20"  onclick="setSides(20,this)">d20</button>
+        <button class="p-btn" data-s="100" onclick="setSides(100,this)">d%</button>
+      </div>
+      <div class="custom-row">
+        <span class="custom-lbl">Свой:</span>
+        <input class="c-input" id="custInput" type="number" min="2" max="9999" placeholder="N граней"
+               onchange="setCustom(+this.value)">
+      </div>
+    </div>
+
+    <div class="s-block">
+      <div class="s-lbl">Количество кубиков</div>
+      <div class="stepper">
+        <button class="s-btn" onclick="setCount(count-1)">−</button>
+        <span class="s-val" id="countVal">1</span>
+        <button class="s-btn" onclick="setCount(count+1)">+</button>
+      </div>
+    </div>
+
+    <div class="s-block">
+      <div class="s-lbl">Модификатор</div>
+      <div class="stepper">
+        <button class="s-btn" onclick="setMod(mod-1)">−</button>
+        <span class="s-val" id="modVal">0</span>
+        <button class="s-btn" onclick="setMod(mod+1)">+</button>
+      </div>
+      <div class="s-desc">Прибавляется к итогу. Например: 2d6 +3 → бросок + 3.</div>
+    </div>
+
+    <div class="s-block" id="advBlock">
+      <div class="s-lbl">Преимущество / Помеха</div>
+      <div class="toggle-row">
+        <button class="t-btn on" id="tNorm" onclick="setAdv('n')">Обычный</button>
+        <button class="t-btn"    id="tAdv"  onclick="setAdv('a')">↑ Преимущество</button>
+        <button class="t-btn"    id="tDis"  onclick="setAdv('d')">↓ Помеха</button>
+      </div>
+      <div class="s-desc">Преимущество: бросок делается дважды, берётся лучший. Помеха — берётся худший. Работает при одном кубике.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let sides  = 6;
+let count  = 1;
+let mod    = 0;
+let adv    = 'n';   // n | a | d
+let rolling = false;
+let rollHistory = [];
+let hasRolled = false;
+
+// ── Theme ──────────────────────────────────────────────────────
+(function(){
+  const saved = localStorage.getItem('theme');
+  const sys = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  applyTheme(saved || sys);
+})();
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeBtn').textContent = t === 'dark' ? '☀' : '☾';
+}
+function toggleTheme(){
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+  setTimeout(redrawAll, 10);
+}
+
+// ── Canvas helpers ─────────────────────────────────────────────
+function cv(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const PIP = {
+  1:[[0,0]],
+  2:[[-1,-1],[1,1]],
+  3:[[-1,-1],[0,0],[1,1]],
+  4:[[-1,-1],[1,-1],[-1,1],[1,1]],
+  5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],
+  6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]],
+};
+
+function polyPath(ctx, cx, cy, r, n, a0){
+  ctx.beginPath();
+  for(let i=0;i<n;i++){
+    const a = a0 + i/n * Math.PI*2;
+    i===0 ? ctx.moveTo(cx+r*Math.cos(a), cy+r*Math.sin(a))
+           : ctx.lineTo(cx+r*Math.cos(a), cy+r*Math.sin(a));
+  }
+  ctx.closePath();
+}
+
+function rrect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+function drawDie(canvas, val, dieSides, isRolling){
+  const ctx = canvas.getContext('2d');
+  const S = canvas.width;
+  ctx.clearRect(0,0,S,S);
+
+  const cx=S/2, cy=S/2, r=S*0.38;
+  const faceC  = cv('--die-bg');
+  const strC   = cv('--die-str');
+  const textC  = cv('--text');
+  const accentC= cv('--accent');
+
+  // Shadow layer
+  ctx.save();
+  ctx.shadowColor   = 'rgba(0,0,0,.22)';
+  ctx.shadowBlur    = S*0.13;
+  ctx.shadowOffsetY = S*0.04;
+  ctx.fillStyle = faceC;
+  ctx.strokeStyle = strC;
+  ctx.lineWidth = Math.max(2, S*0.02);
+
+  if(dieSides===6||dieSides===100){
+    rrect(ctx, cx-r, cy-r, r*2, r*2, r*0.18);
+  } else if(dieSides===4){
+    polyPath(ctx, cx, cy+r*0.14, r*1.1, 3, -Math.PI/2);
+  } else if(dieSides===8){
+    polyPath(ctx, cx, cy, r, 4, 0);
+  } else if(dieSides===10){
+    polyPath(ctx, cx, cy, r, 5, -Math.PI/2);
+  } else if(dieSides===12){
+    polyPath(ctx, cx, cy, r, 6, -Math.PI/2);
+  } else if(dieSides===20){
+    polyPath(ctx, cx, cy+r*0.14, r*1.1, 3, -Math.PI/2);
+  } else {
+    // generic: octagon
+    polyPath(ctx, cx, cy, r, 8, -Math.PI/8);
+  }
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // Inner edge hint
+  ctx.save();
+  ctx.globalAlpha = 0.07;
+  ctx.strokeStyle = textC;
+  ctx.lineWidth = Math.max(1, S*0.01);
+  if(dieSides===6||dieSides===100){
+    rrect(ctx, cx-r+S*0.04, cy-r+S*0.04, (r-S*0.04)*2, (r-S*0.04)*2, r*0.12);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // Pips for d6
+  if(dieSides===6 && !isRolling && val>=1 && val<=6){
+    const pos   = PIP[val];
+    const pipR  = S*0.056;
+    const spread= r*0.5;
+    ctx.fillStyle = textC;
+    for(const [dx,dy] of pos){
+      ctx.beginPath();
+      ctx.arc(cx+dx*spread, cy+dy*spread, pipR, 0, Math.PI*2);
+      ctx.fill();
+    }
+  } else {
+    const s = String(val);
+    const fs = s.length>2 ? r*0.5 : s.length>1 ? r*0.75 : r*0.88;
+    const yOff = (dieSides===4||dieSides===20) ? r*0.18 : 0;
+    ctx.fillStyle = isRolling ? accentC : textC;
+    ctx.font = `900 ${fs}px 'Helvetica Neue','Arial Black',Arial,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(s, cx, cy+yOff);
+
+    // Underline 6 and 9 ambiguity
+    if(!isRolling && (val===6||val===9) && dieSides!==6){
+      const uw = fs*0.4;
+      ctx.fillStyle = textC;
+      ctx.fillRect(cx-uw/2, cy+yOff+fs*0.55, uw, 2);
+    }
+  }
+}
+
+// ── Canvas pool ─────────────────────────────────────────────────
+let canvases   = [];
+let displayed  = [];
+let finals     = [];
+
+function showCount(){
+  return (adv!=='n' && count===1) ? 2 : count;
+}
+
+function dieSize(){
+  const n = showCount();
+  return n===1?240:n===2?180:n<=4?140:110;
+}
+
+function buildDice(){
+  const area = document.getElementById('diceArea');
+  area.innerHTML = '';
+  canvases = []; displayed = []; finals = [];
+  const n = showCount(), sz = dieSize();
+  for(let i=0;i<n;i++){
+    const c = document.createElement('canvas');
+    c.className = 'die';
+    c.width = sz; c.height = sz;
+    c.style.width = sz+'px'; c.style.height = sz+'px';
+    c.onclick = () => rollAll();
+    area.appendChild(c);
+    canvases.push(c);
+    displayed.push(sides);
+    finals.push(sides);
+    drawDie(c, sides, sides, false);
+  }
+  updateLabel();
+  updateTotal();
+}
+
+function redrawAll(){
+  for(let i=0;i<canvases.length;i++){
+    drawDie(canvases[i], hasRolled ? finals[i] : sides, sides, false);
+  }
+}
+
+function updateLabel(){
+  const base = 'd'+(sides===100?'%':sides);
+  const cStr = count>1 ? count+'×' : '';
+  const aStr = adv==='a' ? ' ↑' : adv==='d' ? ' ↓' : '';
+  const mStr = mod>0 ? ' +'+mod : mod<0 ? ' '+mod : '';
+  document.getElementById('dieLabel').textContent = cStr + base + mStr + aStr;
+}
+
+function updateTotal(){
+  const el = document.getElementById('total');
+  if(!hasRolled){ el.innerHTML=''; return; }
+
+  if(adv!=='n' && count===1){
+    const best  = Math.max(...finals);
+    const worst = Math.min(...finals);
+    const pick  = adv==='a' ? best : worst;
+    const total = pick + mod;
+    const modStr = mod!==0 ? ` <span class="muted">(${pick}${mod>0?'+':''}${mod})</span>` : '';
+    el.innerHTML = `<span class="big">${total}</span>${modStr}`;
+  } else {
+    const vals  = finals.slice(0, count);
+    const sum   = vals.reduce((a,b)=>a+b, 0);
+    const total = sum + mod;
+    const parts = count>1 ? ` <span class="muted">(${vals.join(' + ')}${mod!==0?(mod>0?'+':'')+mod:''})</span>` :
+                  mod!==0 ? ` <span class="muted">(${sum}${mod>0?'+':''}${mod})</span>` : '';
+    el.innerHTML = `<span class="big">${total}</span>${parts}`;
+  }
+}
+
+// ── Roll animation ─────────────────────────────────────────────
+function randSide(){ return 1 + Math.floor(Math.random()*sides); }
+
+function rollAll(){
+  if(rolling) return;
+  rolling = true;
+  document.getElementById('rollBtn').disabled = true;
+  canvases.forEach(c => c.style.opacity='1');
+
+  finals = canvases.map(() => randSide());
+
+  // Slots: [interval_ms, phase_duration_ms]
+  const slots = [[32,420],[65,260],[120,200],[210,140]];
+  let phase=0, elapsed=0;
+
+  function tick(){
+    canvases.forEach((c,i)=>{
+      displayed[i] = randSide();
+      drawDie(c, displayed[i], sides, true);
+    });
+    elapsed += slots[phase][0];
+    if(elapsed >= slots[phase][1]){ phase++; elapsed=0; }
+
+    if(phase < slots.length){
+      setTimeout(tick, slots[phase][0]);
+    } else {
+      // Land
+      canvases.forEach((c,i)=>{
+        drawDie(c, finals[i], sides, false);
+        c.classList.add('pop');
+        c.addEventListener('animationend', ()=>c.classList.remove('pop'), {once:true});
+      });
+      // Dim non-winner in advantage mode
+      if(adv!=='n' && count===1){
+        const pick = adv==='a' ? Math.max(...finals) : Math.min(...finals);
+        canvases.forEach((c,i)=>{ c.style.opacity = finals[i]===pick?'1':'0.38'; });
+      }
+      hasRolled = true;
+      rolling = false;
+      document.getElementById('rollBtn').disabled = false;
+      addHistory();
+      updateTotal();
+    }
+  }
+  tick();
+}
+
+function addHistory(){
+  let result;
+  if(adv!=='n' && count===1){
+    const pick = adv==='a' ? Math.max(...finals) : Math.min(...finals);
+    result = pick + mod;
+  } else {
+    result = finals.slice(0,count).reduce((a,b)=>a+b,0) + mod;
+  }
+  rollHistory.unshift(result);
+  if(rollHistory.length>8) rollHistory.pop();
+  const el = document.getElementById('history');
+  el.innerHTML = rollHistory.map((v,i)=>
+    `<span class="h-chip${i===0?' fresh':''}">${v}</span>`
+  ).join('');
+}
+
+// ── Settings ───────────────────────────────────────────────────
+function setSides(n, btn){
+  sides = n;
+  document.querySelectorAll('.p-btn').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  document.getElementById('custInput').value='';
+  resetHistory();
+}
+function setCustom(n){
+  if(!n||n<2) return;
+  sides=n;
+  document.querySelectorAll('.p-btn').forEach(b=>b.classList.remove('on'));
+  resetHistory();
+}
+function setCount(n){
+  n = Math.max(1,Math.min(6,n));
+  count = n;
+  document.getElementById('countVal').textContent = n;
+  document.getElementById('advBlock').classList.toggle('dim', n>1);
+  if(n>1) setAdv('n');
+  resetHistory();
+}
+function setMod(n){
+  n = Math.max(-20,Math.min(20,n));
+  mod = n;
+  document.getElementById('modVal').textContent = n>0?'+'+n:n;
+  updateLabel();
+  updateTotal();
+}
+function setAdv(m){
+  adv = m;
+  ['tNorm','tAdv','tDis'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById(m==='n'?'tNorm':m==='a'?'tAdv':'tDis').classList.add('on');
+  resetHistory();
+}
+function resetHistory(){
+  hasRolled = false;
+  rollHistory = [];
+  document.getElementById('history').innerHTML = '';
+  buildDice();
+}
+
+function openSettings() { document.getElementById('modalBg').classList.add('show'); }
+function closeSettings(){ document.getElementById('modalBg').classList.remove('show'); }
+function closeOut(e){ if(e.target===e.currentTarget) closeSettings(); }
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') closeSettings();
+  if(e.code==='Space'&&!e.target.matches('input,button')){ e.preventDefault(); rollAll(); }
+});
+
+// ── Init ──────────────────────────────────────────────────────
+buildDice();
+</script>
+</body>
+</html>
