@@ -245,6 +245,10 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 .rolls-list{display:flex;flex-wrap:wrap;gap:5px;padding-top:4px}
 .roll-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px 9px;font-size:.78rem;color:var(--sub);font-variant-numeric:tabular-nums}
 .roll-chip.top{color:var(--accent);border-color:var(--acc-fade);background:var(--acc-fade);font-weight:700}
+.roll-label{font-size:.83rem;color:var(--sub);min-height:22px;margin-bottom:10px;text-align:center;display:none;transition:opacity .2s}
+.roll-label.show{display:block}
+.roll-label strong{color:var(--text);font-weight:600}
+.roll-label .rv{color:var(--accent);font-weight:700;font-size:.98rem}
 </style>
 </head>
 <body>
@@ -259,6 +263,7 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 
 <main class="main">
   <div class="die-label" id="dieLabel">d6</div>
+  <div class="roll-label" id="rollLabel"></div>
   <div class="dice-area" id="diceArea"></div>
   <div class="total" id="total"></div>
   <div class="players-row" id="playersRow"></div>
@@ -355,6 +360,7 @@ let players = ['Игрок 1', 'Игрок 2'];
 let currentPlayer = 0;
 let playerStats = {}; // name -> { count, total, min, max, rolls[] }
 let expandedPlayers = new Set();
+let lastRollInfo = null; // { player, result } | null
 
 // ── Theme ──────────────────────────────────────────────────────
 (function(){
@@ -620,7 +626,12 @@ function addHistory(){
     s.min = Math.min(s.min, result);
     s.max = Math.max(s.max, result);
     s.rolls.unshift(result);
+    lastRollInfo = { player: name, result };
+    updateRollLabel();
     updateStats();
+    // auto-advance to next player
+    currentPlayer = (currentPlayer + 1) % players.length;
+    updatePlayersRow();
   }
 
   rollHistory.unshift(result);
@@ -634,11 +645,13 @@ function addHistory(){
 // ── Player mode functions ──────────────────────────────────────
 function setPlayerMode(on){
   playerMode = on;
+  lastRollInfo = null;
   document.getElementById('tPlayerOff').classList.toggle('on', !on);
   document.getElementById('tPlayerOn').classList.toggle('on', on);
   document.getElementById('playerListWrap').style.display = on ? '' : 'none';
   document.getElementById('playersRow').classList.toggle('show', on);
   if(on){ renderPlayerList(); updatePlayersRow(); }
+  updateRollLabel();
   updateStats();
 }
 
@@ -671,7 +684,20 @@ function renamePlayer(i, newName){
 
 function selectPlayer(i){
   currentPlayer = i;
+  lastRollInfo = null;
   updatePlayersRow();
+  updateRollLabel();
+}
+
+function updateRollLabel(){
+  const el = document.getElementById('rollLabel');
+  if(!playerMode){ el.classList.remove('show'); return; }
+  el.classList.add('show');
+  if(lastRollInfo){
+    el.innerHTML = `У <strong>${lastRollInfo.player}</strong> — выпало <span class="rv">${lastRollInfo.result}</span>`;
+  } else {
+    el.innerHTML = `Бросает: <strong>${players[currentPlayer]}</strong>`;
+  }
 }
 
 function renderPlayerList(){
@@ -756,7 +782,9 @@ function setAdv(m){
 function resetHistory(){
   hasRolled = false;
   rollHistory = [];
+  lastRollInfo = null;
   document.getElementById('history').innerHTML = '';
+  updateRollLabel();
   buildDice();
 }
 
