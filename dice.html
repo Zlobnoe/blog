@@ -209,6 +209,34 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
 .t-btn.on{background:var(--acc-fade);border-color:var(--accent);color:var(--accent)}
 
 .dim{opacity:.4;pointer-events:none}
+
+/* ── player mode ── */
+.players-row{display:none;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+.players-row.show{display:flex}
+.p-player{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 18px;font-size:.82rem;font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s;font-family:inherit}
+.p-player:hover{border-color:var(--accent);color:var(--text)}
+.p-player.on{background:var(--acc-fade);border-color:var(--accent);color:var(--accent)}
+.player-item{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.player-name-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:7px 12px;font-size:.9rem;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s}
+.player-name-input:focus{border-color:var(--accent)}
+.remove-player-btn{width:30px;height:30px;border-radius:50%;background:none;border:1px solid var(--border);color:var(--sub);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.remove-player-btn:hover{border-color:#e05558;color:#e05558}
+.remove-player-btn:disabled{opacity:.3;cursor:not-allowed}
+.add-player-btn{background:none;border:1px dashed var(--border);border-radius:10px;padding:7px 15px;font-size:.82rem;color:var(--sub);cursor:pointer;width:100%;text-align:center;transition:all .15s;font-family:inherit;margin-top:4px}
+.add-player-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── stats ── */
+.stats-wrap{display:none;margin-top:28px;width:100%;max-width:380px}
+.stats-wrap.show{display:block}
+.stats-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin-bottom:10px;text-align:center}
+.stats-table{width:100%;border-collapse:collapse}
+.stats-table td{padding:7px 6px;font-size:.82rem;font-variant-numeric:tabular-nums}
+.stats-table tr{border-bottom:1px solid var(--border)}
+.stats-table tr:last-child{border-bottom:none}
+.s-n{color:var(--text);font-weight:600}
+.s-c{color:var(--sub);text-align:right;font-size:.76rem}
+.s-a{color:var(--accent);font-weight:700;text-align:right}
+.s-b{color:var(--sub);text-align:right;font-size:.76rem}
 </style>
 </head>
 <body>
@@ -225,8 +253,13 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
   <div class="die-label" id="dieLabel">d6</div>
   <div class="dice-area" id="diceArea"></div>
   <div class="total" id="total"></div>
+  <div class="players-row" id="playersRow"></div>
   <button class="roll-btn" id="rollBtn" onclick="rollAll()">Бросить</button>
   <div class="history" id="history"></div>
+  <div class="stats-wrap" id="statsWrap">
+    <div class="stats-title">Статистика</div>
+    <table class="stats-table"><tbody id="statsTable"></tbody></table>
+  </div>
 </main>
 
 <!-- Settings -->
@@ -283,6 +316,18 @@ canvas.die.pop{animation:pop .38s cubic-bezier(.18,.9,.4,1.4)}
       </div>
       <div class="s-desc">Преимущество: бросок делается дважды, берётся лучший. Помеха — берётся худший. Работает при одном кубике.</div>
     </div>
+
+    <div class="s-block">
+      <div class="s-lbl">Режим игроков</div>
+      <div class="toggle-row">
+        <button class="t-btn on" id="tPlayerOff" onclick="setPlayerMode(false)">Выключен</button>
+        <button class="t-btn"    id="tPlayerOn"  onclick="setPlayerMode(true)">Включён</button>
+      </div>
+      <div id="playerListWrap" style="display:none;margin-top:16px">
+        <div id="playerList"></div>
+        <button class="add-player-btn" onclick="addPlayer()">+ Добавить игрока</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -295,6 +340,12 @@ let adv    = 'n';   // n | a | d
 let rolling = false;
 let rollHistory = [];
 let hasRolled = false;
+
+// ── Player mode state ──────────────────────────────────────────
+let playerMode = false;
+let players = ['Игрок 1', 'Игрок 2'];
+let currentPlayer = 0;
+let playerStats = {}; // name -> { count, total, min, max }
 
 // ── Theme ──────────────────────────────────────────────────────
 (function(){
@@ -551,12 +602,99 @@ function addHistory(){
   } else {
     result = finals.slice(0,count).reduce((a,b)=>a+b,0) + mod;
   }
+
+  if(playerMode){
+    const name = players[currentPlayer];
+    if(!playerStats[name]) playerStats[name] = {count:0,total:0,min:Infinity,max:-Infinity};
+    const s = playerStats[name];
+    s.count++; s.total += result;
+    s.min = Math.min(s.min, result);
+    s.max = Math.max(s.max, result);
+    updateStats();
+  }
+
   rollHistory.unshift(result);
   if(rollHistory.length>8) rollHistory.pop();
   const el = document.getElementById('history');
   el.innerHTML = rollHistory.map((v,i)=>
     `<span class="h-chip${i===0?' fresh':''}">${v}</span>`
   ).join('');
+}
+
+// ── Player mode functions ──────────────────────────────────────
+function setPlayerMode(on){
+  playerMode = on;
+  document.getElementById('tPlayerOff').classList.toggle('on', !on);
+  document.getElementById('tPlayerOn').classList.toggle('on', on);
+  document.getElementById('playerListWrap').style.display = on ? '' : 'none';
+  document.getElementById('playersRow').classList.toggle('show', on);
+  if(on){ renderPlayerList(); updatePlayersRow(); }
+  updateStats();
+}
+
+function addPlayer(){
+  if(players.length >= 8) return;
+  players.push('Игрок ' + (players.length + 1));
+  renderPlayerList();
+  updatePlayersRow();
+}
+
+function removePlayer(i){
+  if(players.length <= 1) return;
+  const name = players[i];
+  players.splice(i, 1);
+  delete playerStats[name];
+  if(currentPlayer >= players.length) currentPlayer = players.length - 1;
+  renderPlayerList();
+  updatePlayersRow();
+  updateStats();
+}
+
+function renamePlayer(i, newName){
+  const oldName = players[i];
+  newName = newName.trim() || oldName;
+  if(playerStats[oldName]){ playerStats[newName] = playerStats[oldName]; delete playerStats[oldName]; }
+  players[i] = newName;
+  updatePlayersRow();
+  updateStats();
+}
+
+function selectPlayer(i){
+  currentPlayer = i;
+  updatePlayersRow();
+}
+
+function renderPlayerList(){
+  document.getElementById('playerList').innerHTML = players.map((p,i)=>`
+    <div class="player-item">
+      <input class="player-name-input" value="${p.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
+             onchange="renamePlayer(${i},this.value)" onblur="renamePlayer(${i},this.value)">
+      <button class="remove-player-btn" onclick="removePlayer(${i})" ${players.length<=1?'disabled':''}>×</button>
+    </div>`).join('');
+}
+
+function updatePlayersRow(){
+  document.getElementById('playersRow').innerHTML = players.map((p,i)=>
+    `<button class="p-player${i===currentPlayer?' on':''}" onclick="selectPlayer(${i})">${p}</button>`
+  ).join('');
+}
+
+function updateStats(){
+  const wrap = document.getElementById('statsWrap');
+  const hasData = playerMode && Object.values(playerStats).some(s=>s&&s.count>0);
+  wrap.classList.toggle('show', hasData);
+  if(!hasData) return;
+  document.getElementById('statsTable').innerHTML = players.map(name=>{
+    const s = playerStats[name];
+    if(!s||s.count===0) return `<tr><td class="s-n">${name}</td><td class="s-c" colspan="3" style="color:var(--muted,var(--sub))">—</td></tr>`;
+    const avg = (s.total/s.count).toFixed(1);
+    return `<tr>
+      <td class="s-n">${name}</td>
+      <td class="s-c">${s.count}&nbsp;бр.</td>
+      <td class="s-a">⌀&nbsp;${avg}</td>
+      <td class="s-b">макс&nbsp;${s.max}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── Settings ───────────────────────────────────────────────────
