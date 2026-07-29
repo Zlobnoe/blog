@@ -963,9 +963,10 @@ function drawFoxDie(canvas,face,locked){
   ctx.clearRect(0,0,S,S);
   const cx=S/2,cy=S/2,r=S*.38;
   const faceC=cv('--die-bg');
-  const strC =locked ? cv('--accent') : cv('--die-str');
-  const textC=cv('--text');
-  const accC =cv('--accent');
+  const eyeC2='#5b8dee';
+  const pawC2='#4caf84';
+  const faceColor = face==='eye' ? eyeC2 : (face==='paw1'||face==='paw2') ? pawC2 : null;
+  const strC = locked && faceColor ? faceColor : cv('--die-str');
 
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,.22)'; ctx.shadowBlur=S*.13; ctx.shadowOffsetY=S*.04;
@@ -976,8 +977,6 @@ function drawFoxDie(canvas,face,locked){
   ctx.restore();
 
   if(!face) return;
-  const eyeC2 = '#5b8dee';  // blue — like the game
-  const pawC2 = '#4caf84';  // green — like the game
   const sz  = r*.52;
   if(face==='eye'){
     drawEyeSym(ctx,cx,cy,sz,eyeC2);
