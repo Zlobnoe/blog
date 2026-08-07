@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лесной пожар — zlobnoe</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root[data-theme="light"]{--bg:#fafaf8;--border:#e5e0d8;--text:#1a1a1a;--sub:#6b6b6b;--muted:#aaa;--accent:#5c6ac4;--surface:#f0ede8}
+:root[data-theme="dark"]{--bg:#0a0c12;--border:#1e2433;--text:#e8eaf0;--sub:#8890a8;--muted:#5a6278;--accent:#7c6ff7;--surface:#12151f}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;font-size:15px;line-height:1.6;transition:background .2s,color .2s}
+.wrap{width:min(680px,100%);margin:0 auto;padding:0 16px}
+header{padding:28px 0 20px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.h-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.back{font-size:.78rem;color:var(--muted);text-decoration:none;display:block;margin-bottom:4px}
+.back:hover{color:var(--accent)}
+.logo{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1rem;letter-spacing:-.03em}
+.tagline{font-size:.75rem;color:var(--muted);margin-top:3px}
+.theme-btn{flex-shrink:0;background:none;border:1px solid var(--border);border-radius:8px;padding:6px 11px;cursor:pointer;font-size:.82rem;color:var(--muted);transition:border-color .15s,color .15s;line-height:1}
+.theme-btn:hover{border-color:var(--accent);color:var(--text)}
+
+.sim-area{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:16px}
+#sim{display:block;width:100%;max-width:600px;height:auto;border-radius:8px;image-rendering:pixelated;cursor:crosshair;border:1px solid var(--border)}
+
+.stats-row{width:100%;max-width:600px}
+.stats-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.stats-lbl{font-size:.7rem;color:var(--muted)}
+.legend{display:flex;gap:12px}
+.leg{display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--sub)}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+#stats{display:block;width:100%;height:72px;border-radius:6px}
+
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px}
+@media(max-width:520px){.controls{grid-template-columns:1fr}}
+.cs{background:var(--surface);border-radius:10px;padding:14px}
+.cs-title{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.cg{margin-bottom:11px}.cg:last-child{margin-bottom:0}
+.cl{display:flex;justify-content:space-between;font-size:.77rem;color:var(--sub);margin-bottom:5px}
+.cv{font-weight:600;color:var(--text)}
+input[type=range]{width:100%;height:4px;accent-color:var(--accent);cursor:pointer;-webkit-appearance:none;appearance:none;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+
+.wind-grid{display:grid;grid-template-columns:repeat(3,30px);gap:3px;margin-bottom:11px;justify-content:center}
+.wb{width:30px;height:30px;border:1px solid var(--border);border-radius:5px;background:none;cursor:pointer;font-size:.85rem;color:var(--muted);transition:all .12s;display:flex;align-items:center;justify-content:center}
+.wb:hover{border-color:var(--accent);color:var(--text)}
+.wb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.btn-row{display:flex;gap:7px;margin-top:10px}
+.cbtn{flex:1;background:none;border:1px solid var(--border);border-radius:8px;padding:7px 8px;cursor:pointer;font-size:.74rem;font-family:'Manrope',sans-serif;color:var(--sub);transition:all .12s}
+.cbtn:hover{border-color:var(--accent);color:var(--text)}
+.cbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tick-info{font-size:.7rem;color:var(--muted);margin-top:8px}
+.hint{font-size:.7rem;color:var(--muted);margin-top:8px;line-height:1.5}
+
+footer{border-top:1px solid var(--border);padding:20px 0;text-align:center;font-size:.7rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="h-inner">
+    <div>
+      <a class="back" href="index.html">← zlobnoe</a>
+      <div class="logo">Лесной пожар</div>
+      <div class="tagline">модель клеточного автомата: рост леса, молнии, распространение огня</div>
+    </div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
+  </div>
+</header>
+
+<div class="sim-area">
+  <canvas id="sim" width="600" height="600"></canvas>
+  <div class="stats-row">
+    <div class="stats-head">
+      <span class="stats-lbl">Динамика (каждые 5 тиков)</span>
+      <div class="legend">
+        <span class="leg"><span class="leg-dot" style="background:#3d8c46"></span>Лес</span>
+        <span class="leg"><span class="leg-dot" style="background:#e84020"></span>Огонь</span>
+        <span class="leg"><span class="leg-dot" style="background:#888"></span>Пепел</span>
+      </div>
+    </div>
+    <canvas id="stats"></canvas>
+  </div>
+</div>
+
+<div class="controls">
+
+  <div class="cs">
+    <div class="cs-title">Параметры</div>
+    <div class="cg">
+      <div class="cl">Рост деревьев <span class="cv" id="growVal"></span></div>
+      <input type="range" id="growSlider" min="1" max="80" value="30">
+    </div>
+    <div class="cg">
+      <div class="cl">Молнии <span class="cv" id="lightVal"></span></div>
+      <input type="range" id="lightSlider" min="1" max="100" value="15">
+    </div>
+    <div class="cg">
+      <div class="cl">Распространение <span class="cv" id="spreadVal"></span></div>
+      <input type="range" id="spreadSlider" min="0" max="100" value="40">
+    </div>
+  </div>
+
+  <div class="cs">
+    <div class="cs-title">Ветер</div>
+    <div class="wind-grid">
+      <button class="wb" data-dx="-1" data-dy="-1">↖</button>
+      <button class="wb" data-dx="0"  data-dy="-1">↑</button>
+      <button class="wb" data-dx="1"  data-dy="-1">↗</button>
+      <button class="wb" data-dx="-1" data-dy="0">←</button>
+      <button class="wb on" data-dx="0" data-dy="0">·</button>
+      <button class="wb" data-dx="1"  data-dy="0">→</button>
+      <button class="wb" data-dx="-1" data-dy="1">↙</button>
+      <button class="wb" data-dx="0"  data-dy="1">↓</button>
+      <button class="wb" data-dx="1"  data-dy="1">↘</button>
+    </div>
+    <div class="cg">
+      <div class="cl">Сила ветра <span class="cv" id="windStrVal">0%</span></div>
+      <input type="range" id="windStrSlider" min="0" max="100" value="0">
+    </div>
+    <div class="hint">ЛКМ — поджечь / посадить<br>ПКМ — вырубить (противопожарная полоса)</div>
+  </div>
+
+  <div class="cs">
+    <div class="cs-title">Управление</div>
+    <div class="cg">
+      <div class="cl">Скорость <span class="cv" id="speedVal">×1</span></div>
+      <input type="range" id="speedSlider" min="1" max="5" step="1" value="1">
+    </div>
+    <div class="btn-row">
+      <button class="cbtn" id="pauseBtn" onclick="togglePause()">⏸ Пауза</button>
+      <button class="cbtn" onclick="resetSim()">↺ Сброс</button>
+    </div>
+    <div class="tick-info">Тик: <span id="tickNum">0</span> &nbsp;·&nbsp; Лес: <span id="treePct">–</span></div>
+  </div>
+
+</div>
+
+<footer>zlobnoe.github.io/blog</footer>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────
+const N=100, CELL=6, SZ=N*CELL; // 600px canvas
+
+const EMPTY=0, TREE=1, BURN1=2, BURN2=3, BURN3=4, ASH1=5, ASH2=6;
+const SPEEDS=[1,2,5,10,20];
+
+// ── State ──────────────────────────────────────────────────────
+let grid    = new Uint8Array(N*N);
+let nextG   = new Uint8Array(N*N); // double-buffer (no GC)
+let tick=0, paused=false, speedIdx=0;
+let pGrow=0.003, pLight=0.0000225, pSpread=0.40;
+let windX=0, windY=0, windStr=0;
+
+// Precomputed tree texture (random greens)
+const tR=new Uint8Array(N*N), tG=new Uint8Array(N*N), tB=new Uint8Array(N*N);
+
+// Canvas + pixel buffer
+const simCvs=document.getElementById('sim');
+const ctx=simCvs.getContext('2d');
+const imgD=ctx.createImageData(SZ,SZ);
+const px=imgD.data;
+const pxU32=new Uint32Array(px.buffer); // faster 32-bit writes
+
+// Stats history
+const HIST=300;
+const hT=new Float32Array(HIST), hF=new Float32Array(HIST), hA=new Float32Array(HIST);
+let hIdx=0, hLen=0, sAcc=0;
+
+const statsCvs=document.getElementById('stats');
+const sctx=statsCvs.getContext('2d');
+
+// ── Init ───────────────────────────────────────────────────────
+function initColors(){
+  for(let i=0;i<N*N;i++){
+    const v=Math.random();
+    tR[i]=18+Math.floor(v*24);
+    tG[i]=76+Math.floor(v*62);
+    tB[i]=16+Math.floor(v*24);
+  }
+}
+
+function initGrid(){
+  for(let i=0;i<N*N;i++) grid[i]=Math.random()<0.35?TREE:EMPTY;
+  tick=0; hIdx=0; hLen=0; sAcc=0;
+  hT.fill(0); hF.fill(0); hA.fill(0);
+  document.getElementById('tickNum').textContent='0';
+  document.getElementById('treePct').textContent='–';
+}
+
+function resetSim(){ initColors(); initGrid(); }
+
+// ── Simulation step ────────────────────────────────────────────
+function step(){
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const i=y*N+x;
+      const s=grid[i];
+      if(s===EMPTY){
+        nextG[i]=Math.random()<pGrow?TREE:EMPTY;
+      } else if(s===TREE){
+        if(Math.random()<pLight){
+          nextG[i]=BURN1;
+        } else {
+          // Probability of NOT catching from any neighbor
+          let noIgn=1;
+          for(let dy=-1;dy<=1;dy++){
+            for(let dx=-1;dx<=1;dx++){
+              if(!dx&&!dy) continue;
+              const nx=x+dx, ny=y+dy;
+              if(nx<0||nx>=N||ny<0||ny>=N) continue;
+              const ns=grid[ny*N+nx];
+              if(ns>=BURN1&&ns<=BURN3){
+                const len=Math.sqrt(dx*dx+dy*dy);
+                const dot=(dx*windX+dy*windY)/len;
+                const wf=Math.max(0,1+windStr*dot);
+                noIgn*=Math.max(0,1-pSpread*wf);
+              }
+            }
+          }
+          nextG[i]=Math.random()>noIgn?BURN1:TREE;
+        }
+      } else if(s===BURN1){ nextG[i]=BURN2; }
+        else if(s===BURN2){ nextG[i]=BURN3; }
+        else if(s===BURN3){ nextG[i]=ASH1; }
+        else if(s===ASH1) { nextG[i]=ASH2; }
+        else              { nextG[i]=EMPTY; } // ASH2 → EMPTY
+    }
+  }
+  // Swap buffers
+  const tmp=grid; grid=nextG; nextG=tmp;
+  tick++;
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function render(){
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const ci=y*N+x;
+      const s=grid[ci];
+      let rgba;
+
+      if(s===TREE){
+        rgba=tR[ci]|(tG[ci]<<8)|(tB[ci]<<16)|(255<<24);
+      } else if(s===BURN1){
+        const f=Math.floor(Math.random()*30);
+        rgba=(210+f)|((30+f)<<8)|(0<<16)|(255<<24);
+      } else if(s===BURN2){
+        const f=Math.floor(Math.random()*24);
+        rgba=235|((85+f)<<8)|(0<<16)|(255<<24);
+      } else if(s===BURN3){
+        const f=Math.floor(Math.random()*28);
+        rgba=245|((155+f)<<8)|(f<<16)|(255<<24);
+      } else if(s===ASH1){
+        rgba=48|(44<<8)|(42<<16)|(255<<24);
+      } else if(s===ASH2){
+        rgba=66|(61<<8)|(58<<16)|(255<<24);
+      } else { // EMPTY
+        rgba=14|(17<<8)|(24<<16)|(255<<24);
+      }
+
+      const bx=x*CELL, by=y*CELL;
+      for(let py=0;py<CELL;py++){
+        const row=(by+py)*SZ+bx;
+        for(let qx=0;qx<CELL;qx++) pxU32[row+qx]=rgba;
+      }
+    }
+  }
+  ctx.putImageData(imgD,0,0);
+}
+
+// ── Stats ──────────────────────────────────────────────────────
+function recordStats(){
+  let t=0,f=0,a=0;
+  for(let i=0;i<N*N;i++){
+    const s=grid[i];
+    if(s===TREE) t++;
+    else if(s>=BURN1&&s<=BURN3) f++;
+    else if(s>=ASH1&&s<=ASH2) a++;
+  }
+  const tot=N*N;
+  hT[hIdx]=t/tot; hF[hIdx]=f/tot; hA[hIdx]=a/tot;
+  hIdx=(hIdx+1)%HIST;
+  hLen=Math.min(hLen+1,HIST);
+  document.getElementById('treePct').textContent=(t/tot*100).toFixed(1)+'%';
+}
+
+function renderStats(){
+  const W=statsCvs.width, H=statsCvs.height;
+  if(!W||hLen<2) return;
+  const dark=document.documentElement.getAttribute('data-theme')!=='light';
+  sctx.fillStyle=dark?'#0d1018':'#eceae4';
+  sctx.fillRect(0,0,W,H);
+
+  function series(arr, stroke, fill){
+    const pts=[];
+    for(let j=0;j<hLen;j++){
+      const ri=(hIdx-hLen+j+HIST)%HIST;
+      pts.push([(j/Math.max(1,hLen-1))*W, H-arr[ri]*H]);
+    }
+    // fill area
+    sctx.beginPath();
+    sctx.moveTo(pts[0][0],pts[0][1]);
+    for(let j=1;j<pts.length;j++) sctx.lineTo(pts[j][0],pts[j][1]);
+    sctx.lineTo(pts[pts.length-1][0],H); sctx.lineTo(0,H); sctx.closePath();
+    sctx.fillStyle=fill; sctx.fill();
+    // stroke
+    sctx.beginPath();
+    sctx.moveTo(pts[0][0],pts[0][1]);
+    for(let j=1;j<pts.length;j++) sctx.lineTo(pts[j][0],pts[j][1]);
+    sctx.strokeStyle=stroke; sctx.lineWidth=1.5; sctx.stroke();
+  }
+
+  series(hA,'rgba(150,140,135,.7)','rgba(150,140,135,.12)');
+  series(hF,'rgba(232,64,32,.9)','rgba(232,64,32,.14)');
+  series(hT,'rgba(61,140,70,.9)','rgba(61,140,70,.14)');
+}
+
+// ── Game loop ──────────────────────────────────────────────────
+function loop(){
+  if(!paused){
+    const steps=SPEEDS[speedIdx];
+    for(let i=0;i<steps;i++) step();
+    sAcc+=steps;
+    if(sAcc>=5){ recordStats(); sAcc=0; }
+    document.getElementById('tickNum').textContent=tick;
+  }
+  render();
+  renderStats();
+  requestAnimationFrame(loop);
+}
+
+// ── Canvas interaction ─────────────────────────────────────────
+let drawing=false, drawBtn=0;
+
+function applyDraw(clientX, clientY){
+  const r=simCvs.getBoundingClientRect();
+  const cx=Math.floor((clientX-r.left)*(simCvs.width/r.width)/CELL);
+  const cy=Math.floor((clientY-r.top)*(simCvs.height/r.height)/CELL);
+  if(cx<0||cx>=N||cy<0||cy>=N) return;
+  const i=cy*N+cx;
+  if(drawBtn===2){ grid[i]=EMPTY; }               // RMB: clear
+  else if(grid[i]===TREE){ grid[i]=BURN1; }        // LMB on tree: ignite
+  else if(grid[i]===EMPTY){ grid[i]=TREE; }        // LMB on empty: plant
+}
+
+simCvs.addEventListener('mousedown',e=>{ e.preventDefault(); drawing=true; drawBtn=e.button; applyDraw(e.clientX,e.clientY); });
+simCvs.addEventListener('mousemove',e=>{ if(drawing) applyDraw(e.clientX,e.clientY); });
+document.addEventListener('mouseup',()=>drawing=false);
+simCvs.addEventListener('contextmenu',e=>e.preventDefault());
+
+simCvs.addEventListener('touchstart',e=>{ e.preventDefault(); drawing=true; drawBtn=0; applyDraw(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
+simCvs.addEventListener('touchmove',e=>{ e.preventDefault(); if(drawing) applyDraw(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
+document.addEventListener('touchend',()=>drawing=false);
+
+// ── Controls ───────────────────────────────────────────────────
+function setupControls(){
+  const gs=document.getElementById('growSlider');
+  function updGrow(){ pGrow=gs.value/10000; document.getElementById('growVal').textContent=(pGrow*100).toFixed(2)+'%'; }
+  gs.addEventListener('input',updGrow); updGrow();
+
+  const ls=document.getElementById('lightSlider');
+  function updLight(){ const v=ls.value/100; pLight=v*v*0.001; document.getElementById('lightVal').textContent=(pLight*1e5).toFixed(2)+'/100k'; }
+  ls.addEventListener('input',updLight); updLight();
+
+  const ss=document.getElementById('spreadSlider');
+  function updSpread(){ pSpread=ss.value/100; document.getElementById('spreadVal').textContent=ss.value+'%'; }
+  ss.addEventListener('input',updSpread); updSpread();
+
+  document.querySelectorAll('.wb').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.wb').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      const dx=+btn.dataset.dx, dy=+btn.dataset.dy;
+      const len=Math.sqrt(dx*dx+dy*dy);
+      windX=len>0?dx/len:0; windY=len>0?dy/len:0;
+    });
+  });
+
+  const ws=document.getElementById('windStrSlider');
+  ws.addEventListener('input',()=>{ windStr=ws.value/100; document.getElementById('windStrVal').textContent=ws.value+'%'; });
+
+  const spd=document.getElementById('speedSlider');
+  spd.addEventListener('input',()=>{ speedIdx=+spd.value-1; document.getElementById('speedVal').textContent='×'+SPEEDS[speedIdx]; });
+}
+
+function togglePause(){
+  paused=!paused;
+  const btn=document.getElementById('pauseBtn');
+  btn.textContent=paused?'▶ Играть':'⏸ Пауза';
+  btn.classList.toggle('on',paused);
+}
+
+// ── Theme ──────────────────────────────────────────────────────
+(function(){
+  const saved=localStorage.getItem('theme');
+  const sys=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  applyTheme(saved||sys);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{ if(!localStorage.getItem('theme')) applyTheme(e.matches?'dark':'light'); });
+})();
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=t==='dark'?'☀':'☾';
+}
+function toggleTheme(){
+  const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  localStorage.setItem('theme',next);
+  applyTheme(next);
+}
+
+// ── Start ──────────────────────────────────────────────────────
+setupControls();
+initColors();
+initGrid();
+
+function resizeStats(){
+  const w=statsCvs.offsetWidth;
+  if(w>0) statsCvs.width=w;
+}
+resizeStats();
+window.addEventListener('resize',resizeStats);
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
