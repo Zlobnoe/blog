@@ -215,8 +215,10 @@ function step(){
               const ns=grid[ny*N+nx];
               if(ns>=BURN1&&ns<=BURN3){
                 const len=Math.sqrt(dx*dx+dy*dy);
-                const dot=(dx*windX+dy*windY)/len;
-                const wf=Math.max(0,1+windStr*dot);
+                // Fire travels from burning neighbor (-dx,-dy) toward this cell.
+                // Align that travel direction with wind → negate dot.
+                const dot=-(dx*windX+dy*windY)/len;
+                const wf=Math.max(0,1+windStr*2.5*dot);
                 noIgn*=Math.max(0,1-pSpread*wf);
               }
             }
