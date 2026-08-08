@@ -82,6 +82,23 @@ footer{border-top:1px solid var(--border);padding:20px 0;text-align:center;font-
 .hcolor{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:middle;flex-shrink:0}
 .hrow-color{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.83rem;color:var(--sub)}
 .hrow-color:last-child{margin-bottom:0}
+
+/* ── article section ── */
+.article{border-top:1px solid var(--border);padding-top:28px;margin-bottom:48px}
+.art-h1{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:18px}
+.art-h2{font-size:.82rem;font-weight:600;color:var(--text);margin:20px 0 6px;letter-spacing:.01em}
+.art-p{font-size:.845rem;color:var(--sub);line-height:1.75;margin-bottom:0}
+.art-p+.art-p{margin-top:8px}
+.art-p b{color:var(--text);font-weight:600}
+.art-p a{color:var(--accent);text-underline-offset:3px}
+.art-p a:hover{opacity:.8}
+.refs{margin-top:24px;padding-top:18px;border-top:1px solid var(--border)}
+.refs-title{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.ref{font-size:.78rem;color:var(--sub);line-height:1.6;padding-left:14px;position:relative;margin-bottom:7px}
+.ref:last-child{margin-bottom:0}
+.ref::before{content:'—';position:absolute;left:0;color:var(--muted)}
+.ref a{color:var(--accent);text-underline-offset:3px}
+.ref a:hover{opacity:.8}
 </style>
 </head>
 <body>
@@ -219,6 +236,68 @@ footer{border-top:1px solid var(--border);padding:20px 0;text-align:center;font-
     <div class="tick-info">Тик: <span id="tickNum">0</span> &nbsp;·&nbsp; Лес: <span id="treePct">–</span></div>
   </div>
 
+</div>
+
+<div class="article">
+  <div class="art-h1">О модели и реальных пожарах</div>
+
+  <div class="art-h2">Откуда эта модель</div>
+  <p class="art-p">
+    Симуляция реализует <b>модель Дросселя–Шваба</b>, предложенную в 1992 году. Три простых правила — рост дерева, удар молнии, передача огня соседям — неожиданно точно воспроизводят статистику настоящих пожаров. Именно это и делает её интересной: сложность возникает из простоты.
+  </p>
+
+  <div class="art-h2">Большой пожар неизбежен</div>
+  <p class="art-p">
+    Если долго смотреть на симуляцию, можно заметить: небольших пожаров много, крупных — мало, но они <b>всё равно случаются</b>. Это не случайность и не дефект модели.
+  </p>
+  <p class="art-p">
+    Система находится в состоянии <b>самоорганизованной критичности</b> — понятие, введённое Пером Баком в 1987 году. Лес сам, без внешней настройки, эволюционирует к критической точке, где любая искра может вызвать и маленький местный пожар, и катастрофу, охватывающую всё поле. Никакой особенный набор параметров не защищает от крупного пожара — он лишь меняет, как часто и насколько большим он будет.
+  </p>
+
+  <div class="art-h2">Размеры пожаров подчиняются степенному закону</div>
+  <p class="art-p">
+    Маламуд, Морейн и Тёркотт (1998) взяли статистику <b>реальных лесных пожаров</b> в США, Австралии и Новой Зеландии и сравнили с моделью. Результат совпал: размер пожара и частота его возникновения связаны <b>степенным законом</b> — тем же, что действует в землетрясениях, лавинах и интернет-трафике.
+  </p>
+  <p class="art-p">
+    Это означает: если удвоить размер «катастрофы», она становится в четыре раза реже, но не исчезает совсем. Очень большие пожары редки, однако <b>гарантированно произойдут</b> при достаточном времени ожидания.
+  </p>
+
+  <div class="art-h2">Парадокс тушения</div>
+  <p class="art-p">
+    В США с 1944 года медвежонок Смоки агитировал тушить любой пожар как можно раньше. Несколько десятилетий это работало — <b>в краткосрочной перспективе</b>. Но накопившийся сухой валежник и подлесок сделали леса взрывоопасными. Пожары 1988 года в Йеллоустоне сожгли треть парка — именно потому что огонь не приходил туда 80 лет.
+  </p>
+  <p class="art-p">
+    В модели это легко проверить: поставьте распространение на минимум и наблюдайте долго. Лес вырастет плотным. Потом поднимите параметр — и один удар молнии охватит всё поле. Тот же механизм, что в природе.
+  </p>
+
+  <div class="art-h2">Циклы: рост — пожар — восстановление</div>
+  <p class="art-p">
+    На графике под полем хорошо видны волны: зелёная линия (лес) растёт, потом красный всплеск (огонь) её обрушивает, следом серый горб (пепел) — и цикл начинается заново. Это <b>не баг модели</b>, а то, как устроено большинство реальных лесных экосистем: секвойи, австралийские эвкалипты, бореальная тайга — все они адаптированы к периодическому огню и нуждаются в нём для обновления.
+  </p>
+
+  <div class="refs">
+    <div class="refs-title">Источники</div>
+    <div class="ref">
+      Drossel, B. &amp; Schwabl, F. (1992). <i>Self-organized critical forest-fire model.</i> Physical Review Letters, 69(11), 1629.
+      <a href="https://doi.org/10.1103/PhysRevLett.69.1629" target="_blank" rel="noopener">doi:10.1103/PhysRevLett.69.1629</a>
+    </div>
+    <div class="ref">
+      Bak, P., Tang, C. &amp; Wiesenfeld, K. (1987). <i>Self-organized criticality: An explanation of the 1/f noise.</i> Physical Review Letters, 59(4), 381.
+      <a href="https://doi.org/10.1103/PhysRevLett.59.381" target="_blank" rel="noopener">doi:10.1103/PhysRevLett.59.381</a>
+    </div>
+    <div class="ref">
+      Malamud, B.D., Morein, G. &amp; Turcotte, D.L. (1998). <i>Forest fires: An example of self-organized critical behavior.</i> Science, 281(5384), 1840–1842.
+      <a href="https://doi.org/10.1126/science.281.5384.1840" target="_blank" rel="noopener">doi:10.1126/science.281.5384.1840</a>
+    </div>
+    <div class="ref">
+      Wikipedia. <i>Forest-fire model</i> — описание клеточного автомата и его свойств.
+      <a href="https://en.wikipedia.org/wiki/Forest-fire_model" target="_blank" rel="noopener">en.wikipedia.org/wiki/Forest-fire_model</a>
+    </div>
+    <div class="ref">
+      Wikipedia. <i>Self-organized criticality</i> — введение в концепцию Пера Бака.
+      <a href="https://en.wikipedia.org/wiki/Self-organized_criticality" target="_blank" rel="noopener">en.wikipedia.org/wiki/Self-organized_criticality</a>
+    </div>
+  </div>
 </div>
 
 <footer>zlobnoe.github.io/blog</footer>
