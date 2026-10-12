@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Солнце по городам</title>
+<link rel="icon" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#fafaf8;--surface:#f0ede8;--border:#e5e0d8;--grid:#e9e5de;
+  --text:#1a1a1a;--sub:#6b6b6b;--muted:#8a8a8a;--accent:#5c6ac4;
+  --ghost:#ddd7cc;--winter:#2a78d6;--spring:#1baf7a;--summer:#eda100;--autumn:#e87ba4;
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0a0c12;--surface:#12151f;--border:#1e2433;--grid:#1a1f2c;
+  --text:#e8eaf0;--sub:#8890a8;--muted:#6a7290;--accent:#7c6ff7;
+  --ghost:#262c3d;--winter:#3987e5;--spring:#199e70;--summer:#c98500;--autumn:#d55181;
+}
+
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Manrope',sans-serif;font-size:15px;line-height:1.6;
+  transition:background .2s,color .2s;
+}
+.wrap{width:min(720px,100%);margin:0 auto;padding:0 16px 64px}
+
+header{padding:28px 0 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.back{font-size:.76rem;color:var(--muted);text-decoration:none}
+.back:hover{color:var(--accent)}
+h1{font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(1.15rem,4vw,1.6rem);letter-spacing:-.03em;margin-top:8px;line-height:1.25}
+.lead{font-size:.84rem;color:var(--sub);margin-top:6px}
+.theme-btn{
+  flex-shrink:0;background:none;border:1px solid var(--border);border-radius:8px;
+  padding:6px 11px;cursor:pointer;font-size:.82rem;color:var(--muted);line-height:1
+}
+.theme-btn:hover{border-color:var(--accent);color:var(--text)}
+
+.cities{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px}
+.c-btn{
+  background:none;border:1px solid var(--border);border-radius:20px;
+  padding:5px 14px;font-size:.78rem;font-family:'Manrope',sans-serif;
+  font-weight:500;color:var(--sub);cursor:pointer;transition:all .15s
+}
+.c-btn:hover{color:var(--text);border-color:var(--sub)}
+.c-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.opt{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;color:var(--sub);cursor:pointer;margin-top:6px}
+.opt input{accent-color:var(--accent)}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.stat-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat-val{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.25rem;margin-top:2px}
+.stat-val small{font-family:'Manrope',sans-serif;font-size:.75rem;font-weight:500;color:var(--sub);margin-left:3px}
+.stat-sub{font-size:.72rem;color:var(--sub)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px 14px;margin-bottom:18px}
+.card h2{font-size:.95rem;font-weight:600}
+.card .hint{font-size:.74rem;color:var(--muted);margin-top:2px}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:12px 0 4px;font-size:.76rem;color:var(--sub)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:'Manrope',sans-serif}
+
+.tip{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:7px 10px;font-size:.76rem;white-space:nowrap;z-index:2;
+  box-shadow:0 4px 14px rgba(0,0,0,.18)
+}
+.tip b{font-weight:600}
+.tip .row{display:flex;align-items:center;gap:6px;color:var(--sub)}
+.tip i{width:8px;height:8px;border-radius:2px;display:inline-block}
+
+details{margin-top:6px}
+summary{font-size:.78rem;color:var(--muted);cursor:pointer}
+summary:hover{color:var(--accent)}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.8rem}
+th,td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--sub);font-size:.72rem}
+td{font-variant-numeric:tabular-nums}
+
+.note{font-size:.74rem;color:var(--muted);line-height:1.6;margin-top:8px}
+
+@media (max-width:520px){
+  .stats{grid-template-columns:1fr 1fr}
+  .stats .stat:last-child{grid-column:span 2}
+}
+.legend i.ghost{background:var(--ghost)}
+.xlink{font-size:.76rem;color:var(--muted);text-decoration:none;margin-left:12px}
+.xlink:hover{color:var(--accent)}
+</style>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <a class="back" href="index.html">← zlobnoe</a><a class="xlink" href="precipitation.html">осадки →</a>
+    <h1 id="title">Солнце в Челябинске</h1>
+    <div class="lead">Сколько часов в месяц светит солнце и какую часть светового дня небо не закрыто облаками.</div>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
+</header>
+
+<div class="cities" id="cities"></div>
+
+<div class="stats" id="stats"></div>
+
+<section class="card">
+  <div class="card-head">
+    <div>
+      <h2>По месяцам, часов солнца</h2>
+      <div class="hint">Серый столбец — весь световой день, цветной — сколько из него светило солнце. Сверху — доля ясного времени</div>
+    </div>
+    <label class="opt"><input type="checkbox" id="shared"> общая шкала для всех городов</label>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="chart" id="monthChart"><div class="tip" id="monthTip"></div></div>
+</section>
+
+<section class="card">
+  <h2>По сезонам, часов солнца</h2>
+  <div class="hint">Сумма за три месяца и доля светового дня без облаков</div>
+  <div class="chart" id="seasonChart" style="margin-top:12px"><div class="tip" id="seasonTip"></div></div>
+</section>
+
+<section class="card">
+  <h2>Сравнение городов, часов солнца в год</h2>
+  <div class="hint">Годовая сумма по сезонам и доля светового дня без облаков. Нажмите на строку, чтобы открыть город</div>
+  <div class="chart" id="compareChart" style="margin-top:12px"><div class="tip" id="compareTip"></div></div>
+</section>
+
+<section class="card">
+  <details>
+    <summary>Показать таблицей</summary>
+    <table id="table"></table>
+  </details>
+  <p class="note" id="note"></p>
+</section>
+
+</div>
+
+<script>
+const MONTH_NAMES = [
+  ['Янв','Январь'],['Фев','Февраль'],['Мар','Март'],['Апр','Апрель'],['Май','Май'],['Июн','Июнь'],
+  ['Июл','Июль'],['Авг','Август'],['Сен','Сентябрь'],['Окт','Октябрь'],['Ноя','Ноябрь'],['Дек','Декабрь'],
+];
+const MONTH_SEASON = ['winter','winter','spring','spring','spring','summer','summer','summer','autumn','autumn','autumn','winter'];
+const DAYS = [31,28.25,31,30,31,30,31,31,30,31,30,31];
+
+// Приблизительные климатические нормы продолжительности солнечного сияния, часов (Янв…Дек)
+const CITIES = [
+  {key:'chelyabinsk', name:'Челябинск', where:'в Челябинске', lat:55.16,
+   h:[72,120,170,220,279,289,289,247,165,100,65,50],
+   note:'метеостанция Челябинск.'},
+  {key:'yekaterinburg', name:'Екатеринбург', where:'в Екатеринбурге', lat:56.84,
+   h:[59,107,159,217,266,300,295,234,146,89,61,45],
+   note:'метеостанция Екатеринбург.'},
+  {key:'moscow', name:'Москва', where:'в Москве', lat:55.76,
+   h:[33,69,129,185,254,265,283,236,155,81,33,21],
+   note:'метеостанция Москва (ВДНХ). Ноябрь–январь в Москве — одни из самых пасмурных месяцев в Европе.'},
+  {key:'kemer', name:'Кемер', where:'в Кемере', lat:36.89,
+   h:[170,177,220,249,310,351,375,350,306,251,196,167],
+   note:'своей многолетней станции у Кемера нет, взяты нормы ближайшей станции Анталья (≈ 40 км). Горы Бейдаглары к западу от Кемера закрывают вечернее солнце, так что на пляже его может быть чуть меньше.'},
+];
+const SEASONS = [
+  {key:'winter',name:'Зима',   range:'дек–фев'},
+  {key:'spring',name:'Весна',  range:'мар–май'},
+  {key:'summer',name:'Лето',   range:'июн–авг'},
+  {key:'autumn',name:'Осень',  range:'сен–ноя'},
+];
+
+// Астрономическая долгота дня (восход–заход, с рефракцией), усреднённая по дням месяца
+function dayLength(lat, doy){
+  const decl = 23.44 * Math.sin(2*Math.PI*(284+doy)/365) * Math.PI/180;
+  const phi = lat*Math.PI/180, h0 = -0.833*Math.PI/180;
+  const c = (Math.sin(h0) - Math.sin(phi)*Math.sin(decl)) / (Math.cos(phi)*Math.cos(decl));
+  return c <= -1 ? 24 : c >= 1 ? 0 : 2*Math.acos(c)*12/Math.PI;
+}
+function monthDaylight(lat){
+  const out = []; let doy = 1;
+  for (let m=0; m<12; m++){
+    const n = m===1 ? 28 : DAYS[m];
+    let s = 0; for (let d=0; d<n; d++) s += dayLength(lat, doy+d);
+    out.push(Math.round(s/n*DAYS[m])); doy += n;
+  }
+  return out;
+}
+const sum = a => a.reduce((x,y)=>x+y,0);
+const bySeason = arr => Object.fromEntries(SEASONS.map(s => [s.key, sum(arr.filter((_,i)=>MONTH_SEASON[i]===s.key))]));
+CITIES.forEach(c => {
+  c.day = monthDaylight(c.lat);
+  c.total = sum(c.h); c.dayTotal = sum(c.day);
+  c.seasons = bySeason(c.h); c.seasonDay = bySeason(c.day);
+});
+const share = (a,b) => Math.round(a/b*100);
+const fmt = n => String(n).replace('.', ',');
+const perDay = (h,m) => fmt(Math.round(h/DAYS[m]*10)/10);
+const niceMax = v => Math.ceil(v*1.04/100)*100;
+let city = CITIES[0];
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+// Bar with 4px rounded data-end, square at the baseline
+function barPath(x, y, w, h, r, horizontal){
+  r = Math.min(r, horizontal ? h/2 : w/2, horizontal ? w : h);
+  if (horizontal) return `M${x},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h-r}Q${x+w},${y+h} ${x+w-r},${y+h}H${x}Z`;
+  return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`;
+}
+
+function showTip(tip, chart, html, evt){
+  tip.innerHTML = html;
+  tip.style.opacity = 1;
+  const r = chart.getBoundingClientRect();
+  let x = evt.clientX - r.left + 12, y = evt.clientY - r.top - tip.offsetHeight - 10;
+  if (x + tip.offsetWidth > r.width) x = evt.clientX - r.left - tip.offsetWidth - 12;
+  if (y < 0) y = evt.clientY - r.top + 14;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function hideTip(tip){ tip.style.opacity = 0; }
+
+function renderText(){
+  document.getElementById('title').textContent = 'Солнце ' + city.where;
+  document.title = 'Солнце ' + city.where;
+  const months = city.h.map((v,i)=>({v,i,p:share(v,city.day[i])}));
+  const sunniest = months.reduce((a,m)=>m.p>a.p?m:a), gloomiest = months.reduce((a,m)=>m.p<a.p?m:a);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-label">За год</div><div class="stat-val">${city.total}<small>ч</small></div><div class="stat-sub">${share(city.total, city.dayTotal)}% светового дня без облаков</div></div>
+    <div class="stat"><div class="stat-label">Ясней всего</div><div class="stat-val">${sunniest.p}<small>%</small></div><div class="stat-sub">${MONTH_NAMES[sunniest.i][1].toLowerCase()} · ≈ ${perDay(sunniest.v, sunniest.i)} ч солнца в день</div></div>
+    <div class="stat"><div class="stat-label">Пасмурней всего</div><div class="stat-val">${gloomiest.p}<small>%</small></div><div class="stat-sub">${MONTH_NAMES[gloomiest.i][1].toLowerCase()} · ≈ ${perDay(gloomiest.v, gloomiest.i)} ч солнца в день</div></div>`;
+  document.getElementById('legend').innerHTML = `<span><i class="ghost"></i>Световой день</span>` + SEASONS.map(s =>
+    `<span><i style="background:var(--${s.key})"></i>${s.name} · ${city.seasons[s.key]} ч</span>`).join('');
+  document.getElementById('table').innerHTML =
+    `<tr><th>Месяц</th><th>Солнце, ч</th><th>в день, ч</th><th>Световой день, ч</th><th>Без облаков</th></tr>` +
+    city.h.map((v,i) => `<tr><td>${MONTH_NAMES[i][1]}</td><td>${v}</td><td>${perDay(v,i)}</td><td>${city.day[i]}</td><td>${share(v,city.day[i])}%</td></tr>`).join('') +
+    SEASONS.map(s => `<tr><td><b>${s.name}</b> <span style="color:var(--muted)">${s.range}</span></td><td><b>${city.seasons[s.key]}</b></td><td></td><td>${city.seasonDay[s.key]}</td><td>${share(city.seasons[s.key], city.seasonDay[s.key])}%</td></tr>`).join('') +
+    `<tr><td><b>Год</b></td><td><b>${city.total}</b></td><td></td><td>${city.dayTotal}</td><td>${share(city.total, city.dayTotal)}%</td></tr>`;
+  document.getElementById('note').textContent =
+    `Солнечное сияние — время, когда солнце не закрыто облаками (так его измеряет гелиограф). Данные — приблизительные многолетние нормы, округлено до часа. ${city.name}: ${city.note} Световой день посчитан астрономически по широте города, без учёта рельефа и застройки.`;
+  document.querySelectorAll('.c-btn').forEach(b => b.classList.toggle('on', b.dataset.city === city.key));
+}
+
+document.getElementById('cities').innerHTML = CITIES.map(c =>
+  `<button class="c-btn" data-city="${c.key}" onclick="selectCity('${c.key}')">${c.name}</button>`).join('');
+
+/* ── monthly: daylight (ghost) + sunshine ── */
+function drawMonths(){
+  const chart = document.getElementById('monthChart'), tip = document.getElementById('monthTip');
+  chart.querySelector('svg')?.remove();
+  const W = Math.max(300, chart.clientWidth), H = W < 460 ? 240 : 270, small = W < 460;
+  const m = {t:20, r:4, b:24, l:34};
+  const iw = W-m.l-m.r, ih = H-m.t-m.b;
+  const max = document.getElementById('shared').checked ? niceMax(Math.max(...CITIES.flatMap(c=>c.day))) : niceMax(Math.max(...city.day));
+  const step = iw/12, gap = Math.max(2, step*0.2), bw = step-gap;
+  const y = v => m.t + ih - v/max*ih;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img', 'aria-label':'Солнечное сияние по месяцам'});
+  chart.prepend(svg);
+  for (let v=0; v<=max; v+=100){
+    el('line',{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),stroke:v?'var(--grid)':'var(--border)','stroke-width':1},svg);
+    el('text',{x:m.l-6,y:y(v)+4,'text-anchor':'end','font-size':10.5,fill:'var(--muted)'},svg).textContent = v;
+  }
+  city.h.forEach((v,i) => {
+    const key = MONTH_SEASON[i], d = city.day[i], p = share(v,d);
+    const x = m.l + i*step + gap/2;
+    const g = el('g',{class:'mo'},svg);
+    el('path',{d:barPath(x, y(d), bw, y(0)-y(d), 4), fill:'var(--ghost)'},g);
+    // 2px surface gap between sunshine top and the ghost above it
+    el('path',{d:barPath(x, y(v), bw, y(0)-y(v), 4), fill:`var(--${key})`, stroke:'var(--surface)', 'stroke-width':2, 'paint-order':'stroke'},g);
+    el('text',{x:x+bw/2,y:y(d)-6,'text-anchor':'middle','font-size':small?9:11,'font-weight':600,fill:'var(--sub)'},g).textContent = p + (small ? '' : '%');
+    el('text',{x:x+bw/2,y:H-6,'text-anchor':'middle','font-size':small?9.5:11,fill:'var(--muted)'},g).textContent = MONTH_NAMES[i][0];
+    const hit = el('rect',{x:m.l+i*step,y:m.t,width:step,height:ih,fill:'transparent'},g);
+    const html = `<b>${MONTH_NAMES[i][1]}</b>
+      <div class="row"><i style="background:var(--${key})"></i>Солнце: ${v} ч · ≈ ${perDay(v,i)} ч в день</div>
+      <div class="row"><i style="background:var(--ghost)"></i>Световой день: ${d} ч · ≈ ${perDay(d,i)} ч в день</div>
+      <div>Без облаков ${p}% светового времени</div>`;
+    hit.addEventListener('pointermove', e => { svg.querySelectorAll('g.mo').forEach(o => o.style.opacity = o===g?1:.45); showTip(tip, chart, html, e); });
+    hit.addEventListener('pointerleave', () => { svg.querySelectorAll('g.mo').forEach(o => o.style.opacity=1); hideTip(tip); });
+  });
+}
+
+/* ── horizontal bars helper: sunshine vs daylight per row ── */
+function drawRows(chartId, tipId, rows, onClick){
+  const chart = document.getElementById(chartId), tip = document.getElementById(tipId);
+  chart.querySelector('svg')?.remove();
+  const W = Math.max(300, chart.clientWidth), rowH = 34, bh = 20, small = W < 460;
+  const m = {l: rows[0].wide ? (small ? 92 : 104) : 58, r: small ? 96 : 120};
+  const H = rows.length*rowH, max = Math.max(...rows.map(r=>r.day)), iw = W-m.l-m.r;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img'});
+  chart.prepend(svg);
+  el('line',{x1:m.l,x2:m.l,y1:0,y2:H,stroke:'var(--border)'},svg);
+  rows.forEach((r,i) => {
+    const yy = i*rowH + (rowH-bh)/2;
+    const g = el('g',{class:'row', style:onClick?'cursor:pointer':''},svg);
+    el('text',{x:0,y:yy+bh/2+4,'font-size':12.5,'font-weight':r.active===false?500:(r.active?700:600),fill:r.active===false?'var(--sub)':'var(--text)'},g).textContent = r.name;
+    el('path',{d:barPath(m.l, yy, r.day/max*iw, bh, 4, true), fill:'var(--ghost)'},g);
+    let x = m.l;
+    r.parts.forEach((pt,j) => {
+      const w = pt.v/max*iw, last = j === r.parts.length-1, segW = last ? w : Math.max(0, w-2);
+      if (last) el('path',{d:barPath(x, yy, segW, bh, 4, true), fill:`var(--${pt.key})`, stroke:'var(--surface)', 'stroke-width':2, 'paint-order':'stroke'},g);
+      else el('rect',{x, y:yy, width:segW, height:bh, fill:`var(--${pt.key})`},g);
+      x += w;
+    });
+    const t = el('text',{x:m.l+r.day/max*iw+8,y:yy+bh/2+4,'font-size':12,fill:'var(--sub)'},g);
+    t.innerHTML = `<tspan font-weight="600" fill="var(--text)">${r.v} ч</tspan> · ${share(r.v, r.day)}%`;
+    const hit = el('rect',{x:0,y:i*rowH,width:W,height:rowH,fill:'transparent'},g);
+    hit.addEventListener('pointermove', e => { svg.querySelectorAll('g.row').forEach(o => o.style.opacity = o===g?1:.45); showTip(tip, chart, r.html, e); });
+    hit.addEventListener('pointerleave', () => { svg.querySelectorAll('g.row').forEach(o => o.style.opacity=1); hideTip(tip); });
+    if (onClick) hit.addEventListener('click', () => { hideTip(tip); onClick(r.key); });
+  });
+}
+
+function drawSeasons(){
+  drawRows('seasonChart','seasonTip', SEASONS.map(s => {
+    const v = city.seasons[s.key], day = city.seasonDay[s.key];
+    return {key:s.key, name:s.name, v, day, parts:[{key:s.key, v}],
+      html:`<b>${s.name}</b> <span style="color:var(--sub)">(${s.range})</span><div>Солнце ${v} ч из ${day} ч светового дня</div><div class="row">без облаков ${share(v,day)}% · ≈ ${fmt(Math.round(v/90*10)/10)} ч солнца в день</div>`};
+  }));
+}
+
+function drawCompare(){
+  drawRows('compareChart','compareTip', CITIES.map(c => ({
+    key:c.key, name:c.name, v:c.total, day:c.dayTotal, wide:true, active:c===city,
+    parts: SEASONS.map(s => ({key:s.key, v:c.seasons[s.key]})),
+    html:`<b>${c.name}</b> · ${c.total} ч солнца в год<div>без облаков ${share(c.total,c.dayTotal)}% из ${c.dayTotal} ч светового дня</div>` + SEASONS.map(s =>
+      `<div class="row"><i style="background:var(--${s.key})"></i>${s.name}: ${c.seasons[s.key]} ч · ${share(c.seasons[s.key], c.seasonDay[s.key])}%</div>`).join(''),
+  })), selectCity);
+}
+
+function drawAll(){ drawMonths(); drawSeasons(); drawCompare(); }
+function selectCity(key){
+  city = CITIES.find(c => c.key === key) || CITIES[0];
+  renderText(); drawAll();
+  try { history.replaceState(null, '', '?city=' + city.key); } catch(e){}
+}
+document.getElementById('shared').addEventListener('change', () => drawMonths());
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 100); });
+
+(function(){
+  let saved = null;
+  try { saved = localStorage.getItem('theme'); } catch(e){}
+  const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  applyTheme(saved || sys);
+})();
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = t === 'dark' ? '☀' : '☾';
+}
+function toggleTheme(){
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('theme', next); } catch(e){}
+  applyTheme(next);
+}
+
+selectCity(new URLSearchParams(location.search).get('city'));
+</script>
+</body>
+</html>
